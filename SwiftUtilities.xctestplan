@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "DF342FF5-E856-4C8F-82DA-51F8866373BD",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUtilities.xcodeproj",
+        "identifier" : "05C5278A2DD8E36300843626",
+        "name" : "SwiftUtilitiesTests"
+      }
+    }
+  ],
+  "version" : 1
+}
