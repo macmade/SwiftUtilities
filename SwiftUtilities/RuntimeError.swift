@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct RuntimeError: LocalizedError, CustomStringConvertible
+public struct RuntimeError: LocalizedError, CustomStringConvertible, Equatable
 {
     private let message: String
 

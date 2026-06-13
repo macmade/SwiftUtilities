@@ -61,4 +61,11 @@ struct Test_RuntimeError
 
         #expect( error is CustomStringConvertible )
     }
+
+    @Test
+    func isEquatable() async throws
+    {
+        #expect( RuntimeError( message: "Foo" ) == RuntimeError( message: "Foo" ) )
+        #expect( RuntimeError( message: "Foo" ) != RuntimeError( message: "Bar" ) )
+    }
 }
