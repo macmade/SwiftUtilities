@@ -170,12 +170,35 @@ public final class GitHubUpdater: Sendable
             return
         }
 
-        guard let ( data, _ ) = try? await URLSession.shared.data( from: self.url )
-        else
+        let data:     Data
+        let response: URLResponse
+
+        do
+        {
+            ( data, response ) = try await URLSession.shared.data( from: self.url )
+        }
+        catch
         {
             if showMessages
             {
-                self.showErrorAlert( message: "Unable to fetch release information from GitHub." )
+                self.showErrorAlert( message: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
+            }
+
+            return
+        }
+
+        if let status = ( response as? HTTPURLResponse )?.statusCode, ( 200 ..< 300 ).contains( status ) == false
+        {
+            if showMessages
+            {
+                if status == 403 || status == 429
+                {
+                    self.showErrorAlert( message: "GitHub rate limit reached. Please try again later." )
+                }
+                else
+                {
+                    self.showErrorAlert( message: "Unable to fetch release information from GitHub (HTTP \( status ))." )
+                }
             }
 
             return
