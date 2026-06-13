@@ -1,4 +1,3 @@
-// swift-tools-version:6.0
 /*******************************************************************************
  * The MIT License (MIT)
  *
@@ -23,29 +22,28 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-import PackageDescription
+import Foundation
+@testable import SwiftUtilities
+import Testing
 
-let package = Package(
-    name: "SwiftUtilities",
-    defaultLocalization: "en",
-    platforms: [
-        .macOS( .v15 ),
-    ],
-    products: [
-        .library( name: "SwiftUtilities", targets: [ "SwiftUtilities" ] ),
-    ],
-    targets: [
-        .target(
-            name: "SwiftUtilities",
-            path: "SwiftUtilities",
-            resources: [
-                .process( "en.lproj" ),
-            ]
-        ),
-        .testTarget(
-            name: "SwiftUtilitiesTests",
-            dependencies: [ "SwiftUtilities" ],
-            path: "SwiftUtilitiesTests"
-        ),
-    ]
-)
+struct Test_Localization
+{
+    @Test
+    func stringResolvesTable() async throws
+    {
+        // A missing resource bundle would make NSLocalizedString echo the key
+        // back, so these assertions also verify the table ships and resolves
+        // under both Swift Package Manager and the Xcode framework.
+        #expect( Localization.string( "GitHubUpdater.alert.error.title" )                  == "Error" )
+        #expect( Localization.string( "GitHubUpdater.alert.upToDate.title" )               == "You're up-to-date!" )
+        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.title" )        == "Update Available" )
+        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.button.view" )  == "View and Download" )
+        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.button.later" ) == "Later" )
+    }
+
+    @Test
+    func stringReturnsKeyForMissingEntry() async throws
+    {
+        #expect( Localization.string( "nonexistent.key" ) == "nonexistent.key" )
+    }
+}

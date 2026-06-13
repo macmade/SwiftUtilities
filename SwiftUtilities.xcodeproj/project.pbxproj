@@ -20,6 +20,9 @@
 		05F00001000000000000000B /* UpdateCheckResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00001000000000000000A /* UpdateCheckResult.swift */; };
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00003000000000000000A /* GitHubUpdater+AppKit.swift */; };
+		05F00004000000000000000B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F00004000000000000000A /* Localizable.strings */; };
+		05F00006000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00006000000000000000A /* Localization.swift */; };
+		05F00007000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00007000000000000000A /* Localization.swift */; };
 		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +50,9 @@
 		05F00001000000000000000A /* UpdateCheckResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCheckResult.swift; sourceTree = "<group>"; };
 		05F00002000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
 		05F00003000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
+		05F00005000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		05F00006000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		05F00007000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		05C527822DD8E36300843626 /* SwiftUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftUtilitiesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		05D589112DD8E47A000BA644 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
@@ -152,6 +158,7 @@
 				05398CC72DEECBF1005904EC /* Benchmark.swift */,
 				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
 				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
+				05F00007000000000000000A /* Localization.swift */,
 				05398CB72DEEC939005904EC /* RuntimeError.swift */,
 				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
 				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
@@ -169,6 +176,8 @@
 				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05398CB02DEEC91B005904EC /* UnsafeMutableSendable.swift */,
 				05398CB12DEEC91B005904EC /* UnsafeSendable.swift */,
+				05F00006000000000000000A /* Localization.swift */,
+				05F00004000000000000000A /* Localizable.strings */,
 			);
 			path = SwiftUtilities;
 			sourceTree = "<group>";
@@ -413,6 +422,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				05F00004000000000000000B /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,6 +435,17 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		05F00004000000000000000A /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				05F00005000000000000000A /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin PBXSourcesBuildPhase section */
 		05C5277E2DD8E36300843626 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -433,6 +454,7 @@
 				05398CB22DEEC91B005904EC /* GitHubUpdater.swift in Sources */,
 				05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
+				05F00006000000000000000B /* Localization.swift in Sources */,
 				05398CB32DEEC91B005904EC /* Benchmark.swift in Sources */,
 				05398CB42DEEC91B005904EC /* RuntimeError.swift in Sources */,
 				05398CB52DEEC91B005904EC /* UnsafeMutableSendable.swift in Sources */,
@@ -449,6 +471,7 @@
 				05398CC22DEEC9E3005904EC /* RuntimeError.swift in Sources */,
 				05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */,
 				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
+				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

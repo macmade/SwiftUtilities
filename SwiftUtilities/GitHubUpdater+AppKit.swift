@@ -172,7 +172,7 @@ public extension GitHubUpdater
     private func showErrorAlert( message: String )
     {
         let alert             = NSAlert()
-        alert.messageText     = "Error"
+        alert.messageText     = Localization.string( "GitHubUpdater.alert.error.title" )
         alert.informativeText = message
 
         alert.runModal()
@@ -187,8 +187,8 @@ public extension GitHubUpdater
     private func showUpToDateAlert( application: String, version: String )
     {
         let alert             = NSAlert()
-        alert.messageText     = "You're up-to-date!"
-        alert.informativeText = "\( application ) \( version ) is currently the newest available version."
+        alert.messageText     = Localization.string( "GitHubUpdater.alert.upToDate.title" )
+        alert.informativeText = String( format: Localization.string( "GitHubUpdater.alert.upToDate.message" ), application, version )
 
         alert.runModal()
     }
@@ -206,11 +206,11 @@ public extension GitHubUpdater
     private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL )
     {
         let alert             = NSAlert()
-        alert.messageText     = "Update Available"
-        alert.informativeText = "\( application ) \( update ) is available.\nYou are currently on version \( version ).\n\nWould you like to download the new version?"
+        alert.messageText     = Localization.string( "GitHubUpdater.alert.updateAvailable.title" )
+        alert.informativeText = String( format: Localization.string( "GitHubUpdater.alert.updateAvailable.message" ), application, update, version )
 
-        alert.addButton( withTitle: "View and Download" )
-        alert.addButton( withTitle: "Later" )
+        alert.addButton( withTitle: Localization.string( "GitHubUpdater.alert.updateAvailable.button.view" ) )
+        alert.addButton( withTitle: Localization.string( "GitHubUpdater.alert.updateAvailable.button.later" ) )
 
         if alert.runModal() == .alertFirstButtonReturn
         {
