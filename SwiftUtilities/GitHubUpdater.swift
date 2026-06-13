@@ -109,6 +109,18 @@ public final class GitHubUpdater: Sendable
         }
     }
 
+    private static func normalizedVersion( _ version: String ) -> String
+    {
+        let trimmed = version.trimmingCharacters( in: .whitespacesAndNewlines )
+
+        if trimmed.first == "v" || trimmed.first == "V"
+        {
+            return String( trimmed.dropFirst() )
+        }
+
+        return trimmed
+    }
+
     private func checkForUpdates( showMessages: Bool ) async
     {
         guard let current = Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
@@ -158,7 +170,7 @@ public final class GitHubUpdater: Sendable
         }
         .sorted
         {
-            $0.version.compare( $1.version, options: .numeric ) == .orderedDescending
+            GitHubUpdater.normalizedVersion( $0.version ).compare( GitHubUpdater.normalizedVersion( $1.version ), options: .numeric ) == .orderedDescending
         }
 
         guard let latest = versions.first
@@ -172,7 +184,7 @@ public final class GitHubUpdater: Sendable
             return
         }
 
-        guard current.compare( latest.version, options: .numeric ) == .orderedAscending
+        guard GitHubUpdater.normalizedVersion( current ).compare( GitHubUpdater.normalizedVersion( latest.version ), options: .numeric ) == .orderedAscending
         else
         {
             if showMessages
