@@ -39,6 +39,9 @@ import Foundation
 /// `NSAlert`.
 public final class GitHubUpdater: Sendable
 {
+    /// The type of the closure used to fetch the data for a URL.
+    public typealias Fetcher = @Sendable ( URL ) async throws -> ( Data, URLResponse )
+    
     /// The owner (user or organization) of the GitHub repository.
     public let owner:      String
 
@@ -48,14 +51,52 @@ public final class GitHubUpdater: Sendable
     /// The GitHub API URL of the repository's releases endpoint.
     public let url:        URL
 
+    /// The running application's version, captured from its `Info.plist`.
+    let currentVersion:    String?
+
+    /// The running application's display name, captured from its `Info.plist`.
+    let programName:       String?
+
+    /// The closure used to fetch the releases data.
+    let fetch:             Fetcher
+
     /// Creates an updater for the given GitHub repository.
+    ///
+    /// The running application's name and version are read from its `Info.plist`,
+    /// and releases are fetched through the shared `URLSession`.
     ///
     /// - Parameters:
     ///   - owner:      The owner (user or organization) of the repository.
     ///   - repository: The name of the repository.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    public init?( owner: String, repository: String )
+    public convenience init?( owner: String, repository: String )
+    {
+        self.init(
+            owner:          owner,
+            repository:     repository,
+            currentVersion: Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
+            programName:    Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String,
+            fetch:          { try await URLSession.shared.data( from: $0 ) }
+        )
+    }
+
+    /// Creates an updater with explicit dependencies.
+    ///
+    /// This initializer is the test seam for the update-check orchestration: it
+    /// allows the current version, application name, and the fetching of release
+    /// data to be supplied directly, so the decision logic can be exercised
+    /// without `Bundle.main` or the network.
+    ///
+    /// - Parameters:
+    ///   - owner:          The owner (user or organization) of the repository.
+    ///   - repository:     The name of the repository.
+    ///   - currentVersion: The running application's version, or `nil` if unknown.
+    ///   - programName:    The running application's display name, or `nil` if unknown.
+    ///   - fetch:          The closure used to fetch the releases data.
+    ///
+    /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
+    init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
     {
         guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases" )
         else
@@ -63,16 +104,19 @@ public final class GitHubUpdater: Sendable
             return nil
         }
 
-        self.owner      = owner
-        self.repository = repository
-        self.url        = url
+        self.owner          = owner
+        self.repository     = repository
+        self.url            = url
+        self.currentVersion = currentVersion
+        self.programName    = programName
+        self.fetch          = fetch
     }
 
     /// Fetches the repository's releases and determines whether an update is available.
     ///
-    /// Reads the running application's name and version from its `Info.plist`,
-    /// fetches and parses the releases, and compares the newest published release
-    /// against the current version.
+    /// Uses the application name and version captured at initialization, fetches
+    /// and parses the releases, and compares the newest published release against
+    /// the current version.
     ///
     /// This method performs no UI work; it returns the outcome as an
     /// ``UpdateCheckResult`` for the caller to handle.
@@ -80,8 +124,8 @@ public final class GitHubUpdater: Sendable
     /// - Returns: The outcome of the update check.
     public func performUpdateCheck() async -> UpdateCheckResult
     {
-        guard let current = Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
-              let program = Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String
+        guard let current = self.currentVersion,
+              let program = self.programName
         else
         {
             return .failed( reason: "Unable to determine current version." )
@@ -92,7 +136,7 @@ public final class GitHubUpdater: Sendable
 
         do
         {
-            ( data, response ) = try await URLSession.shared.data( from: self.url )
+            ( data, response ) = try await self.fetch( self.url )
         }
         catch
         {

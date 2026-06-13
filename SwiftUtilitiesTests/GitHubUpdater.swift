@@ -178,4 +178,105 @@ struct Test_GitHubUpdater
 
         #expect( result == .failed( reason: "Unable to parse release URL." ) )
     }
+
+    private struct StubError: Error
+    {}
+
+    private func makeUpdater( currentVersion: String?, programName: String?, fetch: @escaping GitHubUpdater.Fetcher ) throws -> GitHubUpdater
+    {
+        try #require( GitHubUpdater( owner: "apple", repository: "swift", currentVersion: currentVersion, programName: programName, fetch: fetch ) )
+    }
+
+    private func makeFetch( status: Int, json: String ) -> GitHubUpdater.Fetcher
+    {
+        {
+            url in
+
+            let response = try #require( HTTPURLResponse( url: url, statusCode: status, httpVersion: nil, headerFields: nil ) )
+
+            return ( Data( json.utf8 ), response )
+        }
+    }
+
+    @Test
+    func performUpdateCheckReportsUpToDate() async throws
+    {
+        let json = """
+        [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" } ]
+        """
+
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .upToDate( application: "App", version: "1.0.0" ) )
+    }
+
+    @Test
+    func performUpdateCheckReportsUpdateAvailable() async throws
+    {
+        let json = """
+        [ { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0" } ]
+        """
+
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
+        let result  = await updater.performUpdateCheck()
+        let url      = try #require( URL( string: "https://example.com/2.0.0" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url ) )
+    }
+
+    @Test
+    func performUpdateCheckFailsWhenVersionUnknown() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: nil, programName: "App", fetch: self.makeFetch( status: 200, json: "[]" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "Unable to determine current version." ) )
+    }
+
+    @Test
+    func performUpdateCheckFailsOnFetchError() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App" )
+        {
+            _ in throw StubError()
+        }
+
+        let result = await updater.performUpdateCheck()
+
+        guard case .failed = result
+        else
+        {
+            Issue.record( "Expected a failure result" )
+
+            return
+        }
+    }
+
+    @Test
+    func performUpdateCheckReportsRateLimit() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 403, json: "[]" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "GitHub rate limit reached. Please try again later." ) )
+    }
+
+    @Test
+    func performUpdateCheckReportsHTTPError() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 500, json: "[]" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "Unable to fetch release information from GitHub (HTTP 500)." ) )
+    }
+
+    @Test
+    func performUpdateCheckReportsParseFailure() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: "not json" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "Unable to parse release information from GitHub." ) )
+    }
 }
