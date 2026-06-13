@@ -100,6 +100,23 @@ struct Test_GitHubUpdater
     }
 
     @Test
+    func parseReleasesSkipsDraftsAndPreReleases() async throws
+    {
+        let json = """
+        [
+            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0", "draft": false, "prerelease": false },
+            { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0", "draft": true,  "prerelease": false },
+            { "tag_name": "v3.0.0", "html_url": "https://example.com/3.0.0", "draft": false, "prerelease": true }
+        ]
+        """
+
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
+
+        #expect( releases.count          == 1 )
+        #expect( releases.first?.version == "v1.0.0" )
+    }
+
+    @Test
     func parseReleasesReturnsNilForInvalidJSON() async throws
     {
         #expect( GitHubUpdater.parseReleases( from: Data( "not json".utf8 ) ) == nil )

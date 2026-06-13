@@ -143,6 +143,11 @@ public final class GitHubUpdater: Sendable
                 return nil
             }
 
+            if $0[ "draft" ] as? Bool == true || $0[ "prerelease" ] as? Bool == true
+            {
+                return nil
+            }
+
             return ( version: version, url: url )
         }
         .sorted
