@@ -26,67 +26,71 @@ import Foundation
 
 /// A namespace of helpers for measuring how long a piece of work takes to run.
 ///
-/// Use `run(label:action:)` to time a closure; the measured duration is printed
-/// to the standard output and the closure's result is returned unchanged.
+/// Use `run(label:output:action:)` to time a closure; the measured duration is
+/// passed to `output` (printing to the standard output by default) and the
+/// closure's result is returned unchanged.
 public enum Benchmark
 {
-    /// Measures and prints how long a synchronous closure takes to run.
+    /// Measures how long a synchronous closure takes to run and reports the result.
     ///
-    /// The elapsed time is printed to the standard output, prefixed with `label`,
-    /// and the value returned by `action` is forwarded to the caller. Any error
-    /// thrown by `action` is rethrown.
+    /// The elapsed time, prefixed with `label`, is passed to `output`, and the
+    /// value returned by `action` is forwarded to the caller. Any error thrown by
+    /// `action` is rethrown.
     ///
     /// - Parameters:
     ///   - label:  A human-readable name used to identify the measurement in the output.
+    ///   - output: A closure receiving the formatted measurement. Defaults to printing to the standard output.
     ///   - action: The closure whose execution time is measured.
     ///
     /// - Returns: The value returned by `action`.
     ///
     /// - Throws: Any error thrown by `action`.
-    public static func run< T >( label: String, action: () throws -> T ) rethrows -> T
+    public static func run< T >( label: String, output: ( String ) -> Void = { print( $0 ) }, action: () throws -> T ) rethrows -> T
     {
         let start  = DispatchTime.now()
         let result = try action()
 
-        Benchmark.report( label: label, start: start )
+        Benchmark.report( label: label, start: start, output: output )
 
         return result
     }
 
-    /// Measures and prints how long an asynchronous closure takes to run.
+    /// Measures how long an asynchronous closure takes to run and reports the result.
     ///
-    /// The elapsed time is printed to the standard output, prefixed with `label`,
-    /// and the value returned by `action` is forwarded to the caller. Any error
-    /// thrown by `action` is rethrown.
+    /// The elapsed time, prefixed with `label`, is passed to `output`, and the
+    /// value returned by `action` is forwarded to the caller. Any error thrown by
+    /// `action` is rethrown.
     ///
     /// - Parameters:
     ///   - label:  A human-readable name used to identify the measurement in the output.
+    ///   - output: A closure receiving the formatted measurement. Defaults to printing to the standard output.
     ///   - action: The asynchronous closure whose execution time is measured.
     ///
     /// - Returns: The value returned by `action`.
     ///
     /// - Throws: Any error thrown by `action`.
-    public static func run< T >( label: String, action: () async throws -> T ) async rethrows -> T
+    public static func run< T >( label: String, output: ( String ) -> Void = { print( $0 ) }, action: () async throws -> T ) async rethrows -> T
     {
         let start  = DispatchTime.now()
         let result = try await action()
 
-        Benchmark.report( label: label, start: start )
+        Benchmark.report( label: label, start: start, output: output )
 
         return result
     }
 
-    /// Computes the elapsed time since `start` and prints it to the standard output.
+    /// Computes the elapsed time since `start` and passes the formatted result to `output`.
     ///
     /// - Parameters:
-    ///   - label: A human-readable name used to identify the measurement in the output.
-    ///   - start: The instant, captured with `DispatchTime.now()`, at which the measured work began.
-    private static func report( label: String, start: DispatchTime )
+    ///   - label:  A human-readable name used to identify the measurement in the output.
+    ///   - start:  The instant, captured with `DispatchTime.now()`, at which the measured work began.
+    ///   - output: A closure receiving the formatted measurement.
+    private static func report( label: String, start: DispatchTime, output: ( String ) -> Void )
     {
         let end         = DispatchTime.now()
         let nanoSeconds = end.uptimeNanoseconds - start.uptimeNanoseconds
         let duration    = Double( nanoSeconds ) / 1_000_000_000
 
-        print( "Benchmarking - \( label ): \( duration ) seconds" )
+        output( "Benchmarking - \( label ): \( duration ) seconds" )
     }
 }

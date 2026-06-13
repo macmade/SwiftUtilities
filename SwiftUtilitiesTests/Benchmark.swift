@@ -80,6 +80,38 @@ struct Test_Benchmark
     }
 
     @Test
+    func reportsThroughOutputHandler() async throws
+    {
+        var captured: String?
+
+        let value = Benchmark.run( label: "Foo", output: { captured = $0 } )
+        {
+            123
+        }
+
+        #expect( value == 123 )
+        #expect( captured?.hasPrefix( "Benchmarking - Foo: " ) == true )
+        #expect( captured?.hasSuffix( " seconds" )             == true )
+    }
+
+    @Test
+    func reportsThroughOutputHandlerAsync() async throws
+    {
+        var captured: String?
+
+        let value = await Benchmark.run( label: "Foo", output: { captured = $0 } )
+        {
+            try? await Task.sleep( nanoseconds: 1_000_000 )
+
+            return 123
+        }
+
+        #expect( value == 123 )
+        #expect( captured?.hasPrefix( "Benchmarking - Foo: " ) == true )
+        #expect( captured?.hasSuffix( " seconds" )             == true )
+    }
+
+    @Test
     func returnsValueAsync() async throws
     {
         let value = await Benchmark.run( label: "Foo" )
