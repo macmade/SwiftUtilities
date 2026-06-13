@@ -148,7 +148,13 @@ public final class GitHubUpdater: Sendable
             return .failed( reason: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
         }
 
-        if let http = response as? HTTPURLResponse, ( 200 ..< 300 ).contains( http.statusCode ) == false
+        guard let http = response as? HTTPURLResponse
+        else
+        {
+            return .failed( reason: "Received an unexpected response from GitHub." )
+        }
+
+        if ( 200 ..< 300 ).contains( http.statusCode ) == false
         {
             if GitHubUpdater.isRateLimited( http )
             {

@@ -299,6 +299,25 @@ struct Test_GitHubUpdater
     }
 
     @Test
+    func performUpdateCheckFailsForNonHTTPResponse() async throws
+    {
+        let fetch: GitHubUpdater.Fetcher =
+        {
+            request in
+
+            let url      = try #require( request.url )
+            let response = URLResponse( url: url, mimeType: nil, expectedContentLength: 0, textEncodingName: nil )
+
+            return ( Data( "[]".utf8 ), response )
+        }
+
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: fetch )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "Received an unexpected response from GitHub." ) )
+    }
+
+    @Test
     func performUpdateCheckReportsParseFailure() async throws
     {
         let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: "not json" ) )
