@@ -45,16 +45,66 @@ public extension GitHubUpdater
         }
 
         /// Show an alert when the application is already up-to-date.
-        public static let upToDate        = MessageOptions( rawValue: 1 << 0 )
+        public static let upToDate = MessageOptions( rawValue: 1 << 0 )
 
         /// Show an alert when a newer version is available.
         public static let updateAvailable = MessageOptions( rawValue: 1 << 1 )
 
         /// Show an alert when the update check fails.
-        public static let error           = MessageOptions( rawValue: 1 << 2 )
+        public static let error = MessageOptions( rawValue: 1 << 2 )
 
         /// Show an alert for every outcome.
         public static let all: MessageOptions = [ .upToDate, .updateAvailable, .error ]
+    }
+
+    /// The alert to present for an update-check outcome.
+    ///
+    /// This is the value-level decision made by ``present(_:messages:)``: given a
+    /// result and the enabled ``MessageOptions``, it describes which alert (if any)
+    /// to show, without performing any UI work. It is the test seam for the
+    /// option-to-alert routing.
+    internal enum Alert: Equatable, Sendable
+    {
+        /// No alert should be shown, because the outcome's option is disabled.
+        case none
+
+        /// Present the "up-to-date" alert.
+        case upToDate( application: String, version: String )
+
+        /// Present the "update available" alert.
+        case updateAvailable( application: String, version: String, update: String, url: URL )
+
+        /// Present the error alert.
+        case error( message: String )
+    }
+
+    /// Determines which alert to present for an update-check outcome.
+    ///
+    /// Pure: maps a result and the set of enabled message options to the alert
+    /// that should be shown, returning ``Alert/none`` for outcomes the options
+    /// suppress. Performs no UI work.
+    ///
+    /// - Parameters:
+    ///   - result:   The outcome to present.
+    ///   - messages: The set of outcomes for which an alert should be shown.
+    ///
+    /// - Returns: The alert to present, or ``Alert/none`` if the outcome is suppressed.
+    internal static func alert( for result: UpdateCheckResult, messages: MessageOptions ) -> Alert
+    {
+        switch result
+        {
+            case .upToDate( let application, let version ):
+
+                return messages.contains( .upToDate ) ? .upToDate( application: application, version: version ) : .none
+
+            case .updateAvailable( let application, let version, let update, let url ):
+
+                return messages.contains( .updateAvailable ) ? .updateAvailable( application: application, version: version, update: update, url: url ) : .none
+
+            case .failed( let reason ):
+
+                return messages.contains( .error ) ? .error( message: reason ) : .none
+        }
     }
 
     /// Checks for updates, reporting the outcome to the user.
@@ -95,28 +145,23 @@ public extension GitHubUpdater
     @MainActor
     private func present( _ result: UpdateCheckResult, messages: MessageOptions )
     {
-        switch result
+        switch GitHubUpdater.alert( for: result, messages: messages )
         {
+            case .none:
+
+                break
+
             case .upToDate( let application, let version ):
 
-                if messages.contains( .upToDate )
-                {
-                    self.showUpToDateAlert( application: application, version: version )
-                }
+                self.showUpToDateAlert( application: application, version: version )
 
             case .updateAvailable( let application, let version, let update, let url ):
 
-                if messages.contains( .updateAvailable )
-                {
-                    self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url )
-                }
+                self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url )
 
-            case .failed( let reason ):
+            case .error( let message ):
 
-                if messages.contains( .error )
-                {
-                    self.showErrorAlert( message: reason )
-                }
+                self.showErrorAlert( message: message )
         }
     }
 

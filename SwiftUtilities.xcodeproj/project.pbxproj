@@ -19,6 +19,7 @@
 		05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC92DEECD14005904EC /* GitHubUpdater.swift */; };
 		05F00001000000000000000B /* UpdateCheckResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00001000000000000000A /* UpdateCheckResult.swift */; };
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
+		05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00003000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 		05398CC92DEECD14005904EC /* GitHubUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdater.swift; sourceTree = "<group>"; };
 		05F00001000000000000000A /* UpdateCheckResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCheckResult.swift; sourceTree = "<group>"; };
 		05F00002000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
+		05F00003000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
 		05C527822DD8E36300843626 /* SwiftUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftUtilitiesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		05D589112DD8E47A000BA644 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 			children = (
 				05398CC72DEECBF1005904EC /* Benchmark.swift */,
 				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
+				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05398CB72DEEC939005904EC /* RuntimeError.swift */,
 				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
 				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
@@ -445,6 +448,7 @@
 				05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */,
 				05398CC22DEEC9E3005904EC /* RuntimeError.swift in Sources */,
 				05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */,
+				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
