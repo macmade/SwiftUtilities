@@ -256,6 +256,11 @@ public final class GitHubUpdater: Sendable
     /// numerically, so segments are ordered by value (for example `1.10` is newer
     /// than `1.9`).
     ///
+    /// - Note: This is a numeric comparison, not a full SemVer one: it does not
+    ///   implement pre-release or build-metadata precedence. That is sufficient
+    ///   here because ``parseReleases(from:)`` discards drafts and pre-releases,
+    ///   so only plain release versions are ever compared.
+    ///
     /// - Parameters:
     ///   - version: The version to test.
     ///   - other:   The version to compare against.
