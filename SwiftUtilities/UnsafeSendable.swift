@@ -24,7 +24,14 @@
 
 import Foundation
 
-public class UnsafeSendable< T >: @unchecked Sendable
+/// A box that makes any value `Sendable` without compiler verification.
+///
+/// - Warning: This type is `@unchecked Sendable`: the compiler does not verify
+///   that sharing it across concurrency domains is safe. The wrapped `value` is
+///   immutable, so concurrent reads are fine, but the caller is responsible for
+///   ensuring the underlying value is itself safe to share. Use only as a
+///   deliberate escape hatch. See ``UnsafeMutableSendable`` for a mutable box.
+public final class UnsafeSendable< T >: @unchecked Sendable
 {
     public let value: T
 
