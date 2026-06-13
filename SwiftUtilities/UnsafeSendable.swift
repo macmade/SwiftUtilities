@@ -33,8 +33,12 @@ import Foundation
 ///   deliberate escape hatch. See ``UnsafeMutableSendable`` for a mutable box.
 public final class UnsafeSendable< T >: @unchecked Sendable
 {
+    /// The wrapped value.
     public let value: T
 
+    /// Creates a box wrapping the given value.
+    ///
+    /// - Parameter value: The value to wrap.
     public init( _ value: T )
     {
         self.value = value

@@ -34,8 +34,15 @@ import Foundation
 ///   for an immutable box.
 public final class UnsafeMutableSendable< T >: @unchecked Sendable
 {
+    /// The wrapped, mutable value.
+    ///
+    /// - Warning: Access is not synchronized; the caller is responsible for
+    ///   serializing concurrent reads and writes.
     public var value: T
 
+    /// Creates a box wrapping the given value.
+    ///
+    /// - Parameter value: The value to wrap.
     public init( _ value: T )
     {
         self.value = value
