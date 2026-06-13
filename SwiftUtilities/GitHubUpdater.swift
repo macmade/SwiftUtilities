@@ -43,22 +43,22 @@ public final class GitHubUpdater: Sendable
     public typealias Fetcher = @Sendable ( URLRequest ) async throws -> ( Data, URLResponse )
     
     /// The owner (user or organization) of the GitHub repository.
-    public let owner:      String
+    public  let owner:          String
 
     /// The name of the GitHub repository.
-    public let repository: String
+    public  let repository:     String
 
     /// The GitHub API URL of the repository's releases endpoint.
-    public let url:        URL
+    public  let url:            URL
 
     /// The running application's version, captured from its `Info.plist`.
-    let currentVersion:    String?
+    private let currentVersion: String?
 
     /// The running application's display name, captured from its `Info.plist`.
-    let programName:       String?
+    private let programName:    String?
 
     /// The closure used to fetch the releases data.
-    let fetch:             Fetcher
+    private let fetch:          Fetcher
 
     /// Creates an updater for the given GitHub repository.
     ///
@@ -96,7 +96,7 @@ public final class GitHubUpdater: Sendable
     ///   - fetch:          The closure used to fetch the releases data.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
+    internal init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
     {
         guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases" )
         else
@@ -170,7 +170,7 @@ public final class GitHubUpdater: Sendable
     /// so the response format does not shift unexpectedly.
     ///
     /// - Returns: The configured request for ``url``.
-    func makeRequest() -> URLRequest
+    internal func makeRequest() -> URLRequest
     {
         var request = URLRequest( url: self.url )
 
@@ -197,7 +197,7 @@ public final class GitHubUpdater: Sendable
     ///            newer release exists, ``UpdateCheckResult/updateAvailable(application:version:update:url:)``
     ///            when one does, or ``UpdateCheckResult/failed(reason:)`` if the
     ///            release URL cannot be parsed.
-    static func updateCheckResult( current: String, program: String, releases: [ ( version: String, url: String ) ] ) -> UpdateCheckResult
+    internal static func updateCheckResult( current: String, program: String, releases: [ ( version: String, url: String ) ] ) -> UpdateCheckResult
     {
         guard let latest = releases.first
         else
@@ -251,7 +251,7 @@ public final class GitHubUpdater: Sendable
     ///   - other:   The version to compare against.
     ///
     /// - Returns: `true` if `version` is strictly newer than `other`, otherwise `false`.
-    static func isVersion( _ version: String, newerThan other: String ) -> Bool
+    internal static func isVersion( _ version: String, newerThan other: String ) -> Bool
     {
         GitHubUpdater.normalizedVersion( version ).compare( GitHubUpdater.normalizedVersion( other ), options: .numeric ) == .orderedDescending
     }
@@ -266,7 +266,7 @@ public final class GitHubUpdater: Sendable
     ///
     /// - Returns: The parsed releases sorted from newest to oldest, or `nil` if the
     ///            data is not a JSON array of release objects.
-    static func parseReleases( from data: Data ) -> [ ( version: String, url: String ) ]?
+    internal static func parseReleases( from data: Data ) -> [ ( version: String, url: String ) ]?
     {
         guard let releases = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
         else
