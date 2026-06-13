@@ -36,7 +36,7 @@ struct Test_GitHubUpdater
         #expect( updater                     != nil )
         #expect( updater?.owner              == "apple" )
         #expect( updater?.repository         == "swift" )
-        #expect( updater?.url.absoluteString == "https://api.github.com/repos/apple/swift/releases" )
+        #expect( updater?.url.absoluteString == "https://api.github.com/repos/apple/swift/releases?per_page=100" )
     }
 
     @Test

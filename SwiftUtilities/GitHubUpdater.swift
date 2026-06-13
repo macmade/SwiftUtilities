@@ -49,6 +49,11 @@ public final class GitHubUpdater: Sendable
     public  let repository:     String
 
     /// The GitHub API URL of the repository's releases endpoint.
+    ///
+    /// The request asks for `per_page=100`, the maximum the API allows. Only this
+    /// first page is fetched: pagination is not followed, so the newest release
+    /// must lie within the 100 most recent. This holds in practice, as GitHub
+    /// returns releases newest-first by creation date.
     public  let url:            URL
 
     /// The running application's version, captured from its `Info.plist`.
@@ -98,7 +103,7 @@ public final class GitHubUpdater: Sendable
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
     internal init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
     {
-        guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases" )
+        guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases?per_page=100" )
         else
         {
             return nil
