@@ -38,4 +38,78 @@ struct Test_GitHubUpdater
         #expect( updater?.repository         == "swift" )
         #expect( updater?.url.absoluteString == "https://api.github.com/repos/apple/swift/releases" )
     }
+
+    @Test
+    func isVersionNewer() async throws
+    {
+        #expect( GitHubUpdater.isVersion( "1.2.3", newerThan: "1.2.2" ) == true )
+        #expect( GitHubUpdater.isVersion( "1.2.2", newerThan: "1.2.3" ) == false )
+        #expect( GitHubUpdater.isVersion( "1.2.3", newerThan: "1.2.3" ) == false )
+    }
+
+    @Test
+    func isVersionNewerNumericOrdering() async throws
+    {
+        #expect( GitHubUpdater.isVersion( "1.10.0", newerThan: "1.9.0"  ) == true )
+        #expect( GitHubUpdater.isVersion( "1.9.0",  newerThan: "1.10.0" ) == false )
+    }
+
+    @Test
+    func isVersionNewerIgnoresPrefixAndWhitespace() async throws
+    {
+        #expect( GitHubUpdater.isVersion( "v1.2.3",  newerThan: "1.2.3"  ) == false )
+        #expect( GitHubUpdater.isVersion( "1.2.3",   newerThan: "v1.2.3" ) == false )
+        #expect( GitHubUpdater.isVersion( "v1.2.4",  newerThan: "v1.2.3" ) == true )
+        #expect( GitHubUpdater.isVersion( " 1.2.4 ", newerThan: "1.2.3"  ) == true )
+    }
+
+    @Test
+    func parseReleasesSortsNewestFirst() async throws
+    {
+        let json = """
+        [
+            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
+            { "tag_name": "v1.2.0", "html_url": "https://example.com/1.2.0" },
+            { "tag_name": "v1.1.0", "html_url": "https://example.com/1.1.0" }
+        ]
+        """
+
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
+
+        #expect( releases.count          == 3 )
+        #expect( releases.first?.version == "v1.2.0" )
+        #expect( releases.first?.url     == "https://example.com/1.2.0" )
+        #expect( releases.last?.version  == "v1.0.0" )
+    }
+
+    @Test
+    func parseReleasesSkipsEntriesMissingFields() async throws
+    {
+        let json = """
+        [
+            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
+            { "tag_name": "v1.1.0" },
+            { "html_url": "https://example.com/orphan" }
+        ]
+        """
+
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
+
+        #expect( releases.count          == 1 )
+        #expect( releases.first?.version == "v1.0.0" )
+    }
+
+    @Test
+    func parseReleasesReturnsNilForInvalidJSON() async throws
+    {
+        #expect( GitHubUpdater.parseReleases( from: Data( "not json".utf8 ) ) == nil )
+    }
+
+    @Test
+    func parseReleasesReturnsEmptyForEmptyArray() async throws
+    {
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( "[]".utf8 ) ) )
+
+        #expect( releases.isEmpty )
+    }
 }

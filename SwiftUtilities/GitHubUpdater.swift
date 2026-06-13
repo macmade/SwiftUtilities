@@ -121,6 +121,36 @@ public final class GitHubUpdater: Sendable
         return trimmed
     }
 
+    static func isVersion( _ version: String, newerThan other: String ) -> Bool
+    {
+        GitHubUpdater.normalizedVersion( version ).compare( GitHubUpdater.normalizedVersion( other ), options: .numeric ) == .orderedDescending
+    }
+
+    static func parseReleases( from data: Data ) -> [ ( version: String, url: String ) ]?
+    {
+        guard let releases = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
+        else
+        {
+            return nil
+        }
+
+        return releases.compactMap
+        {
+            guard let version = $0[ "tag_name" ] as? String,
+                  let url     = $0[ "html_url" ] as? String
+            else
+            {
+                return nil
+            }
+
+            return ( version: version, url: url )
+        }
+        .sorted
+        {
+            GitHubUpdater.isVersion( $0.version, newerThan: $1.version )
+        }
+    }
+
     private func checkForUpdates( showMessages: Bool ) async
     {
         guard let current = Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
@@ -146,7 +176,7 @@ public final class GitHubUpdater: Sendable
             return
         }
 
-        guard let releases = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
+        guard let versions = GitHubUpdater.parseReleases( from: data )
         else
         {
             if showMessages
@@ -155,22 +185,6 @@ public final class GitHubUpdater: Sendable
             }
 
             return
-        }
-
-        let versions: [ ( version: String, url: String ) ] = releases.compactMap
-        {
-            guard let version = $0[ "tag_name" ] as? String,
-                  let url     = $0[ "html_url" ] as? String
-            else
-            {
-                return nil
-            }
-
-            return ( version: version, url: url )
-        }
-        .sorted
-        {
-            GitHubUpdater.normalizedVersion( $0.version ).compare( GitHubUpdater.normalizedVersion( $1.version ), options: .numeric ) == .orderedDescending
         }
 
         guard let latest = versions.first
@@ -184,7 +198,7 @@ public final class GitHubUpdater: Sendable
             return
         }
 
-        guard GitHubUpdater.normalizedVersion( current ).compare( GitHubUpdater.normalizedVersion( latest.version ), options: .numeric ) == .orderedAscending
+        guard GitHubUpdater.isVersion( latest.version, newerThan: current )
         else
         {
             if showMessages
