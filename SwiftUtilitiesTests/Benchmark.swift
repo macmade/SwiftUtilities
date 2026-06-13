@@ -78,4 +78,46 @@ struct Test_Benchmark
 
         #expect( didRun == true )
     }
+
+    @Test
+    func returnsValueAsync() async throws
+    {
+        let value = await Benchmark.run( label: "Foo" )
+        {
+            try? await Task.sleep( nanoseconds: 1_000_000 )
+
+            return 123
+        }
+
+        #expect( value == 123 )
+    }
+
+    @Test
+    func throwErrorAsync() async throws
+    {
+        enum TestError: Error
+        {
+            case failure
+        }
+
+        do
+        {
+            try await Benchmark.run( label: "Foo" )
+            {
+                try await Task.sleep( nanoseconds: 1_000_000 )
+
+                throw TestError.failure
+            }
+
+            #expect( Bool( false ) )
+        }
+        catch is TestError
+        {
+            #expect( Bool( true ) )
+        }
+        catch
+        {
+            #expect( Bool( false ) )
+        }
+    }
 }

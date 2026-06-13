@@ -28,16 +28,30 @@ public enum Benchmark
 {
     public static func run< T >( label: String, action: () throws -> T ) rethrows -> T
     {
-        let start = DispatchTime.now()
-
+        let start  = DispatchTime.now()
         let result = try action()
 
+        Benchmark.report( label: label, start: start )
+
+        return result
+    }
+
+    public static func run< T >( label: String, action: () async throws -> T ) async rethrows -> T
+    {
+        let start  = DispatchTime.now()
+        let result = try await action()
+
+        Benchmark.report( label: label, start: start )
+
+        return result
+    }
+
+    private static func report( label: String, start: DispatchTime )
+    {
         let end         = DispatchTime.now()
         let nanoSeconds = end.uptimeNanoseconds - start.uptimeNanoseconds
         let duration    = Double( nanoSeconds ) / 1_000_000_000
 
         print( "Benchmarking - \( label ): \( duration ) seconds" )
-
-        return result
     }
 }
