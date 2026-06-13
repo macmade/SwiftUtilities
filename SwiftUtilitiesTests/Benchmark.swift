@@ -95,6 +95,24 @@ struct Test_Benchmark
     }
 
     @Test
+    func reportsSecondsWithFixedPrecision() async throws
+    {
+        var captured: String?
+
+        Benchmark.run( label: "Foo", output: { captured = $0 } )
+        {}
+
+        let message = try #require( captured )
+        let number  = try #require( message.split( separator: " " ).dropLast().last )
+
+        // Fixed nine-decimal formatting: no scientific notation, exactly nine
+        // fractional digits regardless of the measured magnitude.
+        #expect( number.contains( "e" )                    == false )
+        #expect( number.contains( "E" )                    == false )
+        #expect( number.split( separator: "." ).last?.count == 9 )
+    }
+
+    @Test
     func reportsThroughOutputHandlerAsync() async throws
     {
         var captured: String?

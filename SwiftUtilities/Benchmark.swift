@@ -83,14 +83,19 @@ public enum Benchmark
 
     /// Formats the measured `duration` and passes the result to `output`.
     ///
+    /// The elapsed time is rendered with nine decimal places (nanosecond
+    /// resolution), so the output is stable and never falls back to scientific
+    /// notation regardless of how short or long the measurement is.
+    ///
     /// - Parameters:
     ///   - label:    A human-readable name used to identify the measurement in the output.
     ///   - duration: The measured elapsed time.
     ///   - output:   A closure receiving the formatted measurement.
     private static func report( label: String, duration: Duration, output: ( String ) -> Void )
     {
-        let seconds = Double( duration.components.seconds ) + Double( duration.components.attoseconds ) * 1e-18
+        let seconds   = Double( duration.components.seconds ) + Double( duration.components.attoseconds ) * 1e-18
+        let formatted = String( format: "%.9f", seconds )
 
-        output( "Benchmarking - \( label ): \( seconds ) seconds" )
+        output( "Benchmarking - \( label ): \( formatted ) seconds" )
     }
 }
