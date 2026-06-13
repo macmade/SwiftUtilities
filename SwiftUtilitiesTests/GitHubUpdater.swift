@@ -129,4 +129,53 @@ struct Test_GitHubUpdater
 
         #expect( releases.isEmpty )
     }
+
+    @Test
+    func updateCheckResultReportsUpToDateWhenNoReleases() async throws
+    {
+        let result = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: [] )
+
+        #expect( result == .upToDate( application: "App", version: "1.0.0" ) )
+    }
+
+    @Test
+    func updateCheckResultReportsUpToDateWhenLatestIsNotNewer() async throws
+    {
+        let releases = [ ( version: "v1.0.0", url: "https://example.com/1.0.0" ) ]
+        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+
+        #expect( result == .upToDate( application: "App", version: "1.0.0" ) )
+    }
+
+    @Test
+    func updateCheckResultReportsUpdateWhenNewerAvailable() async throws
+    {
+        let releases = [ ( version: "v2.0.0", url: "https://example.com/2.0.0" ) ]
+        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let url      = try #require( URL( string: "https://example.com/2.0.0" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url ) )
+    }
+
+    @Test
+    func updateCheckResultUsesNewestReleaseFirst() async throws
+    {
+        let releases = [
+            ( version: "v3.0.0", url: "https://example.com/3.0.0" ),
+            ( version: "v2.0.0", url: "https://example.com/2.0.0" ),
+        ]
+        let result = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let url    = try #require( URL( string: "https://example.com/3.0.0" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v3.0.0", url: url ) )
+    }
+
+    @Test
+    func updateCheckResultFailsForInvalidReleaseURL() async throws
+    {
+        let releases = [ ( version: "v2.0.0", url: "" ) ]
+        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+
+        #expect( result == .failed( reason: "Unable to parse release URL." ) )
+    }
 }

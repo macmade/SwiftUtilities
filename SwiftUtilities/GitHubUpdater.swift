@@ -22,16 +22,21 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-import Cocoa
+import Foundation
 
-/// Checks a GitHub repository's releases and notifies the user when a newer
+/// Checks a GitHub repository's releases and determines whether a newer
 /// version of the running application is available.
 ///
 /// The updater queries the repository's `releases` endpoint, compares the
 /// newest published release against the running application's version (read
-/// from its `Info.plist`), and presents an `NSAlert` describing the result.
+/// from its `Info.plist`), and reports the outcome as an ``UpdateCheckResult``.
 /// `v`-prefixed tags are normalized before comparison, and drafts and
 /// pre-releases are ignored.
+///
+/// ``performUpdateCheck()`` is platform-agnostic and returns a value. On
+/// platforms where AppKit is available, ``checkForUpdates()`` and
+/// ``checkForUpdatesInBackground()`` present the result to the user as an
+/// `NSAlert`.
 public final class GitHubUpdater: Sendable
 {
     /// The owner (user or organization) of the GitHub repository.
@@ -63,82 +68,93 @@ public final class GitHubUpdater: Sendable
         self.url        = url
     }
 
-    /// Checks for updates, reporting the outcome to the user.
+    /// Fetches the repository's releases and determines whether an update is available.
     ///
-    /// The check runs in a detached task. Alerts are shown for every outcome,
-    /// including when the application is already up-to-date and when an error
-    /// occurs.
-    public func checkForUpdates()
+    /// Reads the running application's name and version from its `Info.plist`,
+    /// fetches and parses the releases, and compares the newest published release
+    /// against the current version.
+    ///
+    /// This method performs no UI work; it returns the outcome as an
+    /// ``UpdateCheckResult`` for the caller to handle.
+    ///
+    /// - Returns: The outcome of the update check.
+    public func performUpdateCheck() async -> UpdateCheckResult
     {
-        Task.detached( priority: .userInitiated )
+        guard let current = Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
+              let program = Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String
+        else
         {
-            await self.checkForUpdates( showMessages: true )
+            return .failed( reason: "Unable to determine current version." )
         }
-    }
 
-    /// Checks for updates silently, only alerting the user when a newer version is available.
-    ///
-    /// The check runs in a low-priority detached task. No alert is shown when the
-    /// application is already up-to-date or when an error occurs.
-    public func checkForUpdatesInBackground()
-    {
-        Task.detached( priority: .background )
+        let data:     Data
+        let response: URLResponse
+
+        do
         {
-            await self.checkForUpdates( showMessages: false )
+            ( data, response ) = try await URLSession.shared.data( from: self.url )
         }
+        catch
+        {
+            return .failed( reason: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
+        }
+
+        if let status = ( response as? HTTPURLResponse )?.statusCode, ( 200 ..< 300 ).contains( status ) == false
+        {
+            if status == 403 || status == 429
+            {
+                return .failed( reason: "GitHub rate limit reached. Please try again later." )
+            }
+
+            return .failed( reason: "Unable to fetch release information from GitHub (HTTP \( status ))." )
+        }
+
+        guard let releases = GitHubUpdater.parseReleases( from: data )
+        else
+        {
+            return .failed( reason: "Unable to parse release information from GitHub." )
+        }
+
+        return GitHubUpdater.updateCheckResult( current: current, program: program, releases: releases )
     }
 
-    /// Presents a modal error alert.
+    /// Determines the update-check outcome for a set of parsed releases.
     ///
-    /// - Parameter message: The informative text describing the error.
-    @MainActor
-    private func showErrorAlert( message: String )
-    {
-        let alert             = NSAlert()
-        alert.messageText     = "Error"
-        alert.informativeText = message
-
-        alert.runModal()
-    }
-
-    /// Presents a modal alert informing the user that the application is up-to-date.
+    /// Compares the newest release (the first element, as ``parseReleases(from:)``
+    /// returns them newest-first) against the current version and produces the
+    /// corresponding ``UpdateCheckResult``. This is pure: it performs no network
+    /// or UI work.
     ///
     /// - Parameters:
-    ///   - application: The display name of the application.
-    ///   - version:     The current version of the application.
-    @MainActor
-    private func showUpToDateAlert( application: String, version: String )
-    {
-        let alert             = NSAlert()
-        alert.messageText     = "You're up-to-date!"
-        alert.informativeText = "\( application ) \( version ) is currently the newest available version."
-
-        alert.runModal()
-    }
-
-    /// Presents a modal alert offering to download an available update.
+    ///   - current:  The running application's version.
+    ///   - program:  The display name of the application.
+    ///   - releases: The parsed releases, sorted newest-first.
     ///
-    /// If the user chooses to download, the release page is opened in the default browser.
-    ///
-    /// - Parameters:
-    ///   - application: The display name of the application.
-    ///   - version:     The current version of the application.
-    ///   - update:      The version of the available update.
-    ///   - url:         The URL of the release page to open if the user accepts.
-    @MainActor
-    private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL )
+    /// - Returns: ``UpdateCheckResult/upToDate(application:version:)`` when no
+    ///            newer release exists, ``UpdateCheckResult/updateAvailable(application:version:update:url:)``
+    ///            when one does, or ``UpdateCheckResult/failed(reason:)`` if the
+    ///            release URL cannot be parsed.
+    static func updateCheckResult( current: String, program: String, releases: [ ( version: String, url: String ) ] ) -> UpdateCheckResult
     {
-        let alert             = NSAlert()
-        alert.messageText     = "Update Available"
-        alert.informativeText = "\( application ) \( update ) is available.\nYou are currently on version \( version ).\n\nWould you like to download the new version?"
-
-        alert.addButton( withTitle: "View and Download" )
-        alert.addButton( withTitle: "Later" )
-
-        if alert.runModal() == .alertFirstButtonReturn
+        guard let latest = releases.first
+        else
         {
-            NSWorkspace.shared.open( url )
+            return .upToDate( application: program, version: current )
         }
+
+        guard GitHubUpdater.isVersion( latest.version, newerThan: current )
+        else
+        {
+            return .upToDate( application: program, version: current )
+        }
+
+        guard let url = URL( string: latest.url )
+        else
+        {
+            return .failed( reason: "Unable to parse release URL." )
+        }
+
+        return .updateAvailable( application: program, version: current, update: latest.version, url: url )
     }
 
     /// Normalizes a version string for comparison.
@@ -214,114 +230,6 @@ public final class GitHubUpdater: Sendable
         .sorted
         {
             GitHubUpdater.isVersion( $0.version, newerThan: $1.version )
-        }
-    }
-
-    /// Fetches the repository's releases and determines whether an update is available.
-    ///
-    /// Reads the running application's name and version from its `Info.plist`,
-    /// fetches and parses the releases, and compares the newest published release
-    /// against the current version. Depending on the outcome, an up-to-date or
-    /// update-available alert is presented.
-    ///
-    /// - Parameter showMessages: When `true`, alerts are shown for every outcome,
-    ///   including up-to-date and error states. When `false`, only an
-    ///   update-available alert is shown and all other outcomes are silent.
-    private func checkForUpdates( showMessages: Bool ) async
-    {
-        guard let current = Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
-              let program = Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String
-        else
-        {
-            if showMessages
-            {
-                await self.showErrorAlert( message: "Unable to determine current version." )
-            }
-
-            return
-        }
-
-        let data:     Data
-        let response: URLResponse
-
-        do
-        {
-            ( data, response ) = try await URLSession.shared.data( from: self.url )
-        }
-        catch
-        {
-            if showMessages
-            {
-                await self.showErrorAlert( message: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
-            }
-
-            return
-        }
-
-        if let status = ( response as? HTTPURLResponse )?.statusCode, ( 200 ..< 300 ).contains( status ) == false
-        {
-            if showMessages
-            {
-                if status == 403 || status == 429
-                {
-                    await self.showErrorAlert( message: "GitHub rate limit reached. Please try again later." )
-                }
-                else
-                {
-                    await self.showErrorAlert( message: "Unable to fetch release information from GitHub (HTTP \( status ))." )
-                }
-            }
-
-            return
-        }
-
-        guard let versions = GitHubUpdater.parseReleases( from: data )
-        else
-        {
-            if showMessages
-            {
-                await self.showErrorAlert( message: "Unable to parse release information from GitHub." )
-            }
-
-            return
-        }
-
-        guard let latest = versions.first
-        else
-        {
-            if showMessages
-            {
-                await self.showUpToDateAlert( application: program, version: current )
-            }
-
-            return
-        }
-
-        guard GitHubUpdater.isVersion( latest.version, newerThan: current )
-        else
-        {
-            if showMessages
-            {
-                await self.showUpToDateAlert( application: program, version: current )
-            }
-
-            return
-        }
-
-        guard let url = URL( string: latest.url )
-        else
-        {
-            if showMessages
-            {
-                await self.showErrorAlert( message: "Unable to parse release URL." )
-            }
-
-            return
-        }
-
-        if showMessages
-        {
-            await self.showUpdateAvailableAlert( application: program, version: current, update: latest.version, url: url )
         }
     }
 }
