@@ -28,6 +28,35 @@ import AppKit
 
 public extension GitHubUpdater
 {
+    /// Options controlling which update-check outcomes are reported to the user.
+    ///
+    /// Each option enables the modal alert for a single outcome of an update
+    /// check, allowing callers to choose exactly which results are surfaced.
+    struct MessageOptions: OptionSet, Sendable
+    {
+        public let rawValue: Int
+
+        /// Creates a set of message options from a raw bitmask value.
+        ///
+        /// - Parameter rawValue: The raw bitmask value.
+        public init( rawValue: Int )
+        {
+            self.rawValue = rawValue
+        }
+
+        /// Show an alert when the application is already up-to-date.
+        public static let upToDate        = MessageOptions( rawValue: 1 << 0 )
+
+        /// Show an alert when a newer version is available.
+        public static let updateAvailable = MessageOptions( rawValue: 1 << 1 )
+
+        /// Show an alert when the update check fails.
+        public static let error           = MessageOptions( rawValue: 1 << 2 )
+
+        /// Show an alert for every outcome.
+        public static let all: MessageOptions = [ .upToDate, .updateAvailable, .error ]
+    }
+
     /// Checks for updates, reporting the outcome to the user.
     ///
     /// The check runs in a detached task. Alerts are shown for every outcome,
@@ -39,7 +68,7 @@ public extension GitHubUpdater
         {
             let result = await self.performUpdateCheck()
 
-            await self.present( result, showMessages: true )
+            await self.present( result, messages: .all )
         }
     }
 
@@ -53,38 +82,38 @@ public extension GitHubUpdater
         {
             let result = await self.performUpdateCheck()
 
-            await self.present( result, showMessages: false )
+            await self.present( result, messages: .updateAvailable )
         }
     }
 
     /// Presents an update-check result to the user as a modal alert.
     ///
     /// - Parameters:
-    ///   - result:       The outcome to present.
-    ///   - showMessages: When `true`, an alert is shown for every outcome. When
-    ///     `false`, all outcomes are silent.
+    ///   - result:   The outcome to present.
+    ///   - messages: The set of outcomes for which an alert should be shown.
+    ///     Outcomes not present in the set are handled silently.
     @MainActor
-    private func present( _ result: UpdateCheckResult, showMessages: Bool )
+    private func present( _ result: UpdateCheckResult, messages: MessageOptions )
     {
         switch result
         {
             case .upToDate( let application, let version ):
 
-                if showMessages
+                if messages.contains( .upToDate )
                 {
                     self.showUpToDateAlert( application: application, version: version )
                 }
 
             case .updateAvailable( let application, let version, let update, let url ):
 
-                if showMessages
+                if messages.contains( .updateAvailable )
                 {
                     self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url )
                 }
 
             case .failed( let reason ):
 
-                if showMessages
+                if messages.contains( .error )
                 {
                     self.showErrorAlert( message: reason )
                 }
