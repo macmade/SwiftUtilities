@@ -174,10 +174,15 @@ public final class GitHubUpdater: Sendable
     /// of `application/vnd.github+json`, and a pinned `X-GitHub-Api-Version`
     /// so the response format does not shift unexpectedly.
     ///
+    /// The cache policy is set to `.reloadIgnoringLocalCacheData` so an update
+    /// check always reflects the releases currently published, rather than a
+    /// possibly stale response served from a shared cache.
+    ///
     /// - Returns: The configured request for ``url``.
     internal func makeRequest() -> URLRequest
     {
-        var request = URLRequest( url: self.url )
+        var request         = URLRequest( url: self.url )
+        request.cachePolicy = .reloadIgnoringLocalCacheData
 
         request.setValue( self.programName ?? "\( self.owner )/\( self.repository )", forHTTPHeaderField: "User-Agent" )
         request.setValue( "application/vnd.github+json",                              forHTTPHeaderField: "Accept" )

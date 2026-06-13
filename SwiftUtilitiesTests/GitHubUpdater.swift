@@ -288,6 +288,7 @@ struct Test_GitHubUpdater
         let request = updater.makeRequest()
 
         #expect( request.url                                                 == updater.url )
+        #expect( request.cachePolicy                                         == .reloadIgnoringLocalCacheData )
         #expect( request.value( forHTTPHeaderField: "User-Agent" )           == "App" )
         #expect( request.value( forHTTPHeaderField: "Accept" )               == "application/vnd.github+json" )
         #expect( request.value( forHTTPHeaderField: "X-GitHub-Api-Version" ) == "2022-11-28" )
