@@ -39,8 +39,8 @@ import Foundation
 /// `NSAlert`.
 public final class GitHubUpdater: Sendable
 {
-    /// The type of the closure used to fetch the data for a URL.
-    public typealias Fetcher = @Sendable ( URL ) async throws -> ( Data, URLResponse )
+    /// The type of the closure used to fetch the data for a request.
+    public typealias Fetcher = @Sendable ( URLRequest ) async throws -> ( Data, URLResponse )
     
     /// The owner (user or organization) of the GitHub repository.
     public let owner:      String
@@ -77,7 +77,7 @@ public final class GitHubUpdater: Sendable
             repository:     repository,
             currentVersion: Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
             programName:    Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String,
-            fetch:          { try await URLSession.shared.data( from: $0 ) }
+            fetch:          { try await URLSession.shared.data( for: $0 ) }
         )
     }
 
@@ -136,7 +136,7 @@ public final class GitHubUpdater: Sendable
 
         do
         {
-            ( data, response ) = try await self.fetch( self.url )
+            ( data, response ) = try await self.fetch( self.makeRequest() )
         }
         catch
         {
@@ -160,6 +160,25 @@ public final class GitHubUpdater: Sendable
         }
 
         return GitHubUpdater.updateCheckResult( current: current, program: program, releases: releases )
+    }
+
+    /// Builds the request used to fetch the repository's releases.
+    ///
+    /// Sets the headers recommended by GitHub's REST API: a `User-Agent`
+    /// (required — requests without one are rejected), an explicit `Accept`
+    /// of `application/vnd.github+json`, and a pinned `X-GitHub-Api-Version`
+    /// so the response format does not shift unexpectedly.
+    ///
+    /// - Returns: The configured request for ``url``.
+    func makeRequest() -> URLRequest
+    {
+        var request = URLRequest( url: self.url )
+
+        request.setValue( self.programName ?? "\( self.owner )/\( self.repository )", forHTTPHeaderField: "User-Agent" )
+        request.setValue( "application/vnd.github+json",                              forHTTPHeaderField: "Accept" )
+        request.setValue( "2022-11-28",                                               forHTTPHeaderField: "X-GitHub-Api-Version" )
+
+        return request
     }
 
     /// Determines the update-check outcome for a set of parsed releases.

@@ -190,8 +190,9 @@ struct Test_GitHubUpdater
     private func makeFetch( status: Int, json: String ) -> GitHubUpdater.Fetcher
     {
         {
-            url in
+            request in
 
+            let url      = try #require( request.url )
             let response = try #require( HTTPURLResponse( url: url, statusCode: status, httpVersion: nil, headerFields: nil ) )
 
             return ( Data( json.utf8 ), response )
@@ -220,7 +221,7 @@ struct Test_GitHubUpdater
 
         let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
         let result  = await updater.performUpdateCheck()
-        let url      = try #require( URL( string: "https://example.com/2.0.0" ) )
+        let url     = try #require( URL( string: "https://example.com/2.0.0" ) )
 
         #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url ) )
     }
@@ -278,5 +279,26 @@ struct Test_GitHubUpdater
         let result  = await updater.performUpdateCheck()
 
         #expect( result == .failed( reason: "Unable to parse release information from GitHub." ) )
+    }
+
+    @Test
+    func makeRequestSetsGitHubHeaders() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: "[]" ) )
+        let request = updater.makeRequest()
+
+        #expect( request.url                                                 == updater.url )
+        #expect( request.value( forHTTPHeaderField: "User-Agent" )           == "App" )
+        #expect( request.value( forHTTPHeaderField: "Accept" )               == "application/vnd.github+json" )
+        #expect( request.value( forHTTPHeaderField: "X-GitHub-Api-Version" ) == "2022-11-28" )
+    }
+
+    @Test
+    func makeRequestFallsBackToRepositoryForUserAgent() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: nil, fetch: self.makeFetch( status: 200, json: "[]" ) )
+        let request = updater.makeRequest()
+
+        #expect( request.value( forHTTPHeaderField: "User-Agent" ) == "apple/swift" )
     }
 }
