@@ -47,10 +47,11 @@ public enum Benchmark
     /// - Throws: Any error thrown by `action`.
     public static func run< T >( label: String, output: ( String ) -> Void = { print( $0 ) }, action: () throws -> T ) rethrows -> T
     {
-        let start  = DispatchTime.now()
+        let clock  = ContinuousClock()
+        let start  = clock.now
         let result = try action()
 
-        Benchmark.report( label: label, start: start, output: output )
+        Benchmark.report( label: label, duration: clock.now - start, output: output )
 
         return result
     }
@@ -71,26 +72,25 @@ public enum Benchmark
     /// - Throws: Any error thrown by `action`.
     public static func run< T >( label: String, output: ( String ) -> Void = { print( $0 ) }, action: () async throws -> T ) async rethrows -> T
     {
-        let start  = DispatchTime.now()
+        let clock  = ContinuousClock()
+        let start  = clock.now
         let result = try await action()
 
-        Benchmark.report( label: label, start: start, output: output )
+        Benchmark.report( label: label, duration: clock.now - start, output: output )
 
         return result
     }
 
-    /// Computes the elapsed time since `start` and passes the formatted result to `output`.
+    /// Formats the measured `duration` and passes the result to `output`.
     ///
     /// - Parameters:
-    ///   - label:  A human-readable name used to identify the measurement in the output.
-    ///   - start:  The instant, captured with `DispatchTime.now()`, at which the measured work began.
-    ///   - output: A closure receiving the formatted measurement.
-    private static func report( label: String, start: DispatchTime, output: ( String ) -> Void )
+    ///   - label:    A human-readable name used to identify the measurement in the output.
+    ///   - duration: The measured elapsed time.
+    ///   - output:   A closure receiving the formatted measurement.
+    private static func report( label: String, duration: Duration, output: ( String ) -> Void )
     {
-        let end         = DispatchTime.now()
-        let nanoSeconds = end.uptimeNanoseconds - start.uptimeNanoseconds
-        let duration    = Double( nanoSeconds ) / 1_000_000_000
+        let seconds = Double( duration.components.seconds ) + Double( duration.components.attoseconds ) * 1e-18
 
-        output( "Benchmarking - \( label ): \( duration ) seconds" )
+        output( "Benchmarking - \( label ): \( seconds ) seconds" )
     }
 }
