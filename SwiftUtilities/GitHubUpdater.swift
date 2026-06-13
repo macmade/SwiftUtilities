@@ -43,7 +43,6 @@ public final class GitHubUpdater: Sendable
         self.url        = url
     }
 
-    @MainActor
     public func checkForUpdates()
     {
         Task.detached( priority: .userInitiated )
@@ -52,7 +51,6 @@ public final class GitHubUpdater: Sendable
         }
     }
 
-    @MainActor
     public func checkForUpdatesInBackground()
     {
         Task.detached( priority: .background )
@@ -61,51 +59,39 @@ public final class GitHubUpdater: Sendable
         }
     }
 
+    @MainActor
     private func showErrorAlert( message: String )
     {
-        Task
-        {
-            @MainActor in
+        let alert             = NSAlert()
+        alert.messageText     = "Error"
+        alert.informativeText = message
 
-            let alert             = NSAlert()
-            alert.messageText     = "Error"
-            alert.informativeText = message
-
-            alert.runModal()
-        }
+        alert.runModal()
     }
 
+    @MainActor
     private func showUpToDateAlert( application: String, version: String )
     {
-        Task
-        {
-            @MainActor in
+        let alert             = NSAlert()
+        alert.messageText     = "You're up-to-date!"
+        alert.informativeText = "\( application ) \( version ) is currently the newest available version."
 
-            let alert             = NSAlert()
-            alert.messageText     = "You're up-to-date!"
-            alert.informativeText = "\( application ) \( version ) is currently the newest available version."
-
-            alert.runModal()
-        }
+        alert.runModal()
     }
 
+    @MainActor
     private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL )
     {
-        Task
+        let alert             = NSAlert()
+        alert.messageText     = "Update Available"
+        alert.informativeText = "\( application ) \( update ) is available.\nYou are currently on version \( version ).\n\nWould you like to download the new version?"
+
+        alert.addButton( withTitle: "View and Download" )
+        alert.addButton( withTitle: "Later" )
+
+        if alert.runModal() == .alertFirstButtonReturn
         {
-            @MainActor in
-
-            let alert             = NSAlert()
-            alert.messageText     = "Update Available"
-            alert.informativeText = "\( application ) \( update ) is available.\nYou are currently on version \( version ).\n\nWould you like to download the new version?"
-
-            alert.addButton( withTitle: "View and Download" )
-            alert.addButton( withTitle: "Later" )
-
-            if alert.runModal() == .alertFirstButtonReturn
-            {
-                NSWorkspace.shared.open( url )
-            }
+            NSWorkspace.shared.open( url )
         }
     }
 
@@ -164,7 +150,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showErrorAlert( message: "Unable to determine current version." )
+                await self.showErrorAlert( message: "Unable to determine current version." )
             }
 
             return
@@ -181,7 +167,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showErrorAlert( message: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
+                await self.showErrorAlert( message: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
             }
 
             return
@@ -193,11 +179,11 @@ public final class GitHubUpdater: Sendable
             {
                 if status == 403 || status == 429
                 {
-                    self.showErrorAlert( message: "GitHub rate limit reached. Please try again later." )
+                    await self.showErrorAlert( message: "GitHub rate limit reached. Please try again later." )
                 }
                 else
                 {
-                    self.showErrorAlert( message: "Unable to fetch release information from GitHub (HTTP \( status ))." )
+                    await self.showErrorAlert( message: "Unable to fetch release information from GitHub (HTTP \( status ))." )
                 }
             }
 
@@ -209,7 +195,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showErrorAlert( message: "Unable to parse release information from GitHub." )
+                await self.showErrorAlert( message: "Unable to parse release information from GitHub." )
             }
 
             return
@@ -220,7 +206,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showUpToDateAlert( application: program, version: current )
+                await self.showUpToDateAlert( application: program, version: current )
             }
 
             return
@@ -231,7 +217,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showUpToDateAlert( application: program, version: current )
+                await self.showUpToDateAlert( application: program, version: current )
             }
 
             return
@@ -242,7 +228,7 @@ public final class GitHubUpdater: Sendable
         {
             if showMessages
             {
-                self.showErrorAlert( message: "Unable to parse release URL." )
+                await self.showErrorAlert( message: "Unable to parse release URL." )
             }
 
             return
@@ -250,7 +236,7 @@ public final class GitHubUpdater: Sendable
 
         if showMessages
         {
-            self.showUpdateAvailableAlert( application: program, version: current, update: latest.version, url: url )
+            await self.showUpdateAvailableAlert( application: program, version: current, update: latest.version, url: url )
         }
     }
 }
