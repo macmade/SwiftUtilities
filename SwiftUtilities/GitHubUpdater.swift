@@ -148,14 +148,14 @@ public final class GitHubUpdater: Sendable
             return .failed( reason: "Unable to fetch release information from GitHub: \( error.localizedDescription )" )
         }
 
-        if let status = ( response as? HTTPURLResponse )?.statusCode, ( 200 ..< 300 ).contains( status ) == false
+        if let http = response as? HTTPURLResponse, ( 200 ..< 300 ).contains( http.statusCode ) == false
         {
-            if status == 403 || status == 429
+            if GitHubUpdater.isRateLimited( http )
             {
                 return .failed( reason: "GitHub rate limit reached. Please try again later." )
             }
 
-            return .failed( reason: "Unable to fetch release information from GitHub (HTTP \( status ))." )
+            return .failed( reason: "Unable to fetch release information from GitHub (HTTP \( http.statusCode ))." )
         }
 
         guard let releases = GitHubUpdater.parseReleases( from: data )
@@ -189,6 +189,39 @@ public final class GitHubUpdater: Sendable
         request.setValue( "2022-11-28",                                               forHTTPHeaderField: "X-GitHub-Api-Version" )
 
         return request
+    }
+
+    /// Returns whether an HTTP response indicates that a GitHub rate limit was hit.
+    ///
+    /// GitHub signals both its primary and secondary rate limits with a `403` or
+    /// `429` status. A `429` is always rate limiting. A `403`, however, is also
+    /// returned for other forbidden conditions, so it counts as rate limiting only
+    /// when the response also carries the signals GitHub sets when a limit is
+    /// reached: `X-RateLimit-Remaining: 0` (primary limit) or a `Retry-After`
+    /// header (secondary limit).
+    ///
+    /// - Parameter response: The HTTP response to inspect.
+    ///
+    /// - Returns: `true` if the response indicates a rate limit, otherwise `false`.
+    internal static func isRateLimited( _ response: HTTPURLResponse ) -> Bool
+    {
+        if response.statusCode == 429
+        {
+            return true
+        }
+
+        guard response.statusCode == 403
+        else
+        {
+            return false
+        }
+
+        if response.value( forHTTPHeaderField: "Retry-After" ) != nil
+        {
+            return true
+        }
+
+        return response.value( forHTTPHeaderField: "X-RateLimit-Remaining" ) == "0"
     }
 
     /// Determines the update-check outcome for a set of parsed releases.

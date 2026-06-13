@@ -187,16 +187,23 @@ struct Test_GitHubUpdater
         try #require( GitHubUpdater( owner: "apple", repository: "swift", currentVersion: currentVersion, programName: programName, fetch: fetch ) )
     }
 
-    private func makeFetch( status: Int, json: String ) -> GitHubUpdater.Fetcher
+    private func makeFetch( status: Int, json: String, headers: [ String: String ]? = nil ) -> GitHubUpdater.Fetcher
     {
         {
             request in
 
             let url      = try #require( request.url )
-            let response = try #require( HTTPURLResponse( url: url, statusCode: status, httpVersion: nil, headerFields: nil ) )
+            let response = try #require( HTTPURLResponse( url: url, statusCode: status, httpVersion: nil, headerFields: headers ) )
 
             return ( Data( json.utf8 ), response )
         }
+    }
+
+    private func makeResponse( status: Int, headers: [ String: String ]? = nil ) throws -> HTTPURLResponse
+    {
+        let url = try #require( URL( string: "https://example.com" ) )
+
+        return try #require( HTTPURLResponse( url: url, statusCode: status, httpVersion: nil, headerFields: headers ) )
     }
 
     @Test
@@ -257,10 +264,29 @@ struct Test_GitHubUpdater
     @Test
     func performUpdateCheckReportsRateLimit() async throws
     {
-        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 403, json: "[]" ) )
+        let fetch   = self.makeFetch( status: 403, json: "[]", headers: [ "X-RateLimit-Remaining": "0" ] )
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: fetch )
         let result  = await updater.performUpdateCheck()
 
         #expect( result == .failed( reason: "GitHub rate limit reached. Please try again later." ) )
+    }
+
+    @Test
+    func performUpdateCheckReportsRateLimitOn429() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 429, json: "[]" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "GitHub rate limit reached. Please try again later." ) )
+    }
+
+    @Test
+    func performUpdateCheckReportsForbiddenNotRateLimited() async throws
+    {
+        let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 403, json: "[]" ) )
+        let result  = await updater.performUpdateCheck()
+
+        #expect( result == .failed( reason: "Unable to fetch release information from GitHub (HTTP 403)." ) )
     }
 
     @Test
@@ -301,5 +327,47 @@ struct Test_GitHubUpdater
         let request = updater.makeRequest()
 
         #expect( request.value( forHTTPHeaderField: "User-Agent" ) == "apple/swift" )
+    }
+
+    @Test
+    func isRateLimitedAlwaysTrueFor429() async throws
+    {
+        #expect( GitHubUpdater.isRateLimited( try self.makeResponse( status: 429 ) ) == true )
+    }
+
+    @Test
+    func isRateLimitedFor403WithExhaustedRemaining() async throws
+    {
+        let response = try self.makeResponse( status: 403, headers: [ "X-RateLimit-Remaining": "0" ] )
+
+        #expect( GitHubUpdater.isRateLimited( response ) == true )
+    }
+
+    @Test
+    func isRateLimitedFor403WithRetryAfter() async throws
+    {
+        let response = try self.makeResponse( status: 403, headers: [ "Retry-After": "60" ] )
+
+        #expect( GitHubUpdater.isRateLimited( response ) == true )
+    }
+
+    @Test
+    func isNotRateLimitedFor403WithRemainingRequests() async throws
+    {
+        let response = try self.makeResponse( status: 403, headers: [ "X-RateLimit-Remaining": "57" ] )
+
+        #expect( GitHubUpdater.isRateLimited( response ) == false )
+    }
+
+    @Test
+    func isNotRateLimitedForPlain403() async throws
+    {
+        #expect( GitHubUpdater.isRateLimited( try self.makeResponse( status: 403 ) ) == false )
+    }
+
+    @Test
+    func isNotRateLimitedForOtherStatus() async throws
+    {
+        #expect( GitHubUpdater.isRateLimited( try self.makeResponse( status: 500 ) ) == false )
     }
 }
