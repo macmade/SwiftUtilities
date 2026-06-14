@@ -9,9 +9,26 @@ jobs:
                     - { scheme: 'SwiftUtilities', configuration: 'Debug',   project: 'SwiftUtilities.xcodeproj', build: 1, analyze: 1, test: 1, info: 1, destination: 'platform=macOS' }
                     - { scheme: 'SwiftUtilities', configuration: 'Release', project: 'SwiftUtilities.xcodeproj', build: 1, analyze: 1, test: 0, info: 1, destination: 'platform=macOS' }
         steps:
-            
+
             - uses: actions/checkout@v6
               with:
                 submodules: 'recursive'
-                
+
             - uses: macmade/action-xcodebuild@v1.0.0
+
+    spm:
+        runs-on: macos-15
+        strategy:
+            matrix:
+                configuration: [ 'debug', 'release' ]
+        steps:
+
+            - uses: actions/checkout@v6
+              with:
+                submodules: 'recursive'
+
+            - name: Build
+              run: swift build --configuration ${{ matrix.configuration }}
+
+            - name: Test
+              run: swift test --configuration ${{ matrix.configuration }}
