@@ -40,7 +40,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "05C5278A2DD8E36300843626"
+               BlueprintIdentifier = "05F175C32DD8E36300843626"
                BuildableName = "SwiftUtilitiesTests.xctest"
                BlueprintName = "SwiftUtilitiesTests"
                ReferencedContainer = "container:SwiftUtilities.xcodeproj">
@@ -50,7 +50,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "05C5278A2DD8E36300843626"
+               BlueprintIdentifier = "05F175C32DD8E36300843626"
                BuildableName = "SwiftUtilitiesTests.xctest"
                BlueprintName = "SwiftUtilitiesTests"
                ReferencedContainer = "container:SwiftUtilities.xcodeproj">

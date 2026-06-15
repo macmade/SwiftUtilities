@@ -358,7 +358,7 @@
 			productReference = 05C527822DD8E36300843626 /* SwiftUtilities.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		05C5278A2DD8E36300843626 /* SwiftUtilitiesTests */ = {
+		05F175C32DD8E36300843626 /* SwiftUtilitiesTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 05C527972DD8E36300843626 /* Build configuration list for PBXNativeTarget "SwiftUtilitiesTests" */;
 			buildPhases = (
@@ -392,7 +392,7 @@
 						CreatedOnToolsVersion = 16.3;
 						LastSwiftMigration = 1630;
 					};
-					05C5278A2DD8E36300843626 = {
+					05F175C32DD8E36300843626 = {
 						CreatedOnToolsVersion = 16.3;
 					};
 				};
@@ -412,7 +412,7 @@
 			projectRoot = "";
 			targets = (
 				05C527812DD8E36300843626 /* SwiftUtilities */,
-				05C5278A2DD8E36300843626 /* SwiftUtilitiesTests */,
+				05F175C32DD8E36300843626 /* SwiftUtilitiesTests */,
 			);
 		};
 /* End PBXProject section */
