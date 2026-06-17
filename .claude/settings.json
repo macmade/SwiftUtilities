@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "macmade": {
+      "source": {
+        "source": "github",
+        "repo": "macmade/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "xs@macmade": true
+  }
+}
