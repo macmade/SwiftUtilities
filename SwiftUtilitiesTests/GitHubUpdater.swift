@@ -67,12 +67,12 @@ struct Test_GitHubUpdater
     func parseReleasesSortsNewestFirst() async throws
     {
         let json = """
-        [
-            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
-            { "tag_name": "v1.2.0", "html_url": "https://example.com/1.2.0" },
-            { "tag_name": "v1.1.0", "html_url": "https://example.com/1.1.0" }
-        ]
-        """
+            [
+                { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
+                { "tag_name": "v1.2.0", "html_url": "https://example.com/1.2.0" },
+                { "tag_name": "v1.1.0", "html_url": "https://example.com/1.1.0" }
+            ]
+            """
 
         let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
 
@@ -86,12 +86,12 @@ struct Test_GitHubUpdater
     func parseReleasesSkipsEntriesMissingFields() async throws
     {
         let json = """
-        [
-            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
-            { "tag_name": "v1.1.0" },
-            { "html_url": "https://example.com/orphan" }
-        ]
-        """
+            [
+                { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" },
+                { "tag_name": "v1.1.0" },
+                { "html_url": "https://example.com/orphan" }
+            ]
+            """
 
         let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
 
@@ -103,12 +103,12 @@ struct Test_GitHubUpdater
     func parseReleasesSkipsDraftsAndPreReleases() async throws
     {
         let json = """
-        [
-            { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0", "draft": false, "prerelease": false },
-            { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0", "draft": true,  "prerelease": false },
-            { "tag_name": "v3.0.0", "html_url": "https://example.com/3.0.0", "draft": false, "prerelease": true }
-        ]
-        """
+            [
+                { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0", "draft": false, "prerelease": false },
+                { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0", "draft": true,  "prerelease": false },
+                { "tag_name": "v3.0.0", "html_url": "https://example.com/3.0.0", "draft": false, "prerelease": true }
+            ]
+            """
 
         let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
 
@@ -210,8 +210,8 @@ struct Test_GitHubUpdater
     func performUpdateCheckReportsUpToDate() async throws
     {
         let json = """
-        [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" } ]
-        """
+            [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" } ]
+            """
 
         let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
         let result  = await updater.performUpdateCheck()
@@ -223,8 +223,8 @@ struct Test_GitHubUpdater
     func performUpdateCheckReportsUpdateAvailable() async throws
     {
         let json = """
-        [ { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0" } ]
-        """
+            [ { "tag_name": "v2.0.0", "html_url": "https://example.com/2.0.0" } ]
+            """
 
         let updater = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
         let result  = await updater.performUpdateCheck()

@@ -38,9 +38,9 @@ internal enum Localization
     private static var bundle: Bundle
     {
         #if SWIFT_PACKAGE
-        return Bundle.module
+            return Bundle.module
         #else
-        return Bundle( for: BundleToken.self )
+            return Bundle( for: BundleToken.self )
         #endif
     }
 
@@ -58,9 +58,9 @@ internal enum Localization
 
 #if !SWIFT_PACKAGE
 
-/// Anchors ``Bundle(for:)`` to the framework bundle when the library is built
-/// outside Swift Package Manager, where `Bundle.module` is unavailable.
-private final class BundleToken
-{}
+    /// Anchors ``Bundle(for:)`` to the framework bundle when the library is built
+    /// outside Swift Package Manager, where `Bundle.module` is unavailable.
+    private final class BundleToken
+    {}
 
 #endif

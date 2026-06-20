@@ -41,7 +41,7 @@ public final class GitHubUpdater: Sendable
 {
     /// The type of the closure used to fetch the data for a request.
     public typealias Fetcher = @Sendable ( URLRequest ) async throws -> ( Data, URLResponse )
-    
+
     /// The owner (user or organization) of the GitHub repository.
     public  let owner:          String
 

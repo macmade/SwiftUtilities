@@ -24,85 +24,85 @@
 
 #if canImport( AppKit )
 
-import Foundation
-@testable import SwiftUtilities
-import Testing
+    import Foundation
+    @testable import SwiftUtilities
+    import Testing
 
-struct Test_GitHubUpdaterAlert
-{
-    @Test
-    func upToDateShownWhenOptionEnabled() async throws
+    struct Test_GitHubUpdaterAlert
     {
-        let result = UpdateCheckResult.upToDate( application: "App", version: "1.0.0" )
-        let alert  = GitHubUpdater.alert( for: result, messages: .upToDate )
+        @Test
+        func upToDateShownWhenOptionEnabled() async throws
+        {
+            let result = UpdateCheckResult.upToDate( application: "App", version: "1.0.0" )
+            let alert  = GitHubUpdater.alert( for: result, messages: .upToDate )
 
-        #expect( alert == .upToDate( application: "App", version: "1.0.0" ) )
+            #expect( alert == .upToDate( application: "App", version: "1.0.0" ) )
+        }
+
+        @Test
+        func upToDateSuppressedWhenOptionDisabled() async throws
+        {
+            let result = UpdateCheckResult.upToDate( application: "App", version: "1.0.0" )
+
+            #expect( GitHubUpdater.alert( for: result, messages: [] )                == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .updateAvailable )  == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .error )            == .none )
+        }
+
+        @Test
+        func updateAvailableShownWhenOptionEnabled() async throws
+        {
+            let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
+            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
+            let alert  = GitHubUpdater.alert( for: result, messages: .updateAvailable )
+
+            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
+        }
+
+        @Test
+        func updateAvailableSuppressedWhenOptionDisabled() async throws
+        {
+            let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
+            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
+
+            #expect( GitHubUpdater.alert( for: result, messages: [] )         == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .upToDate )  == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .error )     == .none )
+        }
+
+        @Test
+        func errorShownWhenOptionEnabled() async throws
+        {
+            let result = UpdateCheckResult.failed( reason: "Boom" )
+            let alert  = GitHubUpdater.alert( for: result, messages: .error )
+
+            #expect( alert == .error( message: "Boom" ) )
+        }
+
+        @Test
+        func errorSuppressedWhenOptionDisabled() async throws
+        {
+            let result = UpdateCheckResult.failed( reason: "Boom" )
+
+            #expect( GitHubUpdater.alert( for: result, messages: [] )                == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .upToDate )         == .none )
+            #expect( GitHubUpdater.alert( for: result, messages: .updateAvailable )  == .none )
+        }
+
+        @Test
+        func allOptionShowsEveryOutcome() async throws
+        {
+            let url = try #require( URL( string: "https://example.com/2.0.0" ) )
+
+            #expect( GitHubUpdater.alert( for: .upToDate( application: "App", version: "1.0.0" ), messages: .all )
+                == .upToDate( application: "App", version: "1.0.0" ) )
+
+            #expect( GitHubUpdater.alert( for: .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ), messages: .all )
+                == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
+
+            #expect( GitHubUpdater.alert( for: .failed( reason: "Boom" ), messages: .all )
+                == .error( message: "Boom" ) )
+        }
     }
-
-    @Test
-    func upToDateSuppressedWhenOptionDisabled() async throws
-    {
-        let result = UpdateCheckResult.upToDate( application: "App", version: "1.0.0" )
-
-        #expect( GitHubUpdater.alert( for: result, messages: [] )                == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .updateAvailable )  == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .error )            == .none )
-    }
-
-    @Test
-    func updateAvailableShownWhenOptionEnabled() async throws
-    {
-        let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
-        let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
-        let alert  = GitHubUpdater.alert( for: result, messages: .updateAvailable )
-
-        #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
-    }
-
-    @Test
-    func updateAvailableSuppressedWhenOptionDisabled() async throws
-    {
-        let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
-        let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
-
-        #expect( GitHubUpdater.alert( for: result, messages: [] )         == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .upToDate )  == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .error )     == .none )
-    }
-
-    @Test
-    func errorShownWhenOptionEnabled() async throws
-    {
-        let result = UpdateCheckResult.failed( reason: "Boom" )
-        let alert  = GitHubUpdater.alert( for: result, messages: .error )
-
-        #expect( alert == .error( message: "Boom" ) )
-    }
-
-    @Test
-    func errorSuppressedWhenOptionDisabled() async throws
-    {
-        let result = UpdateCheckResult.failed( reason: "Boom" )
-
-        #expect( GitHubUpdater.alert( for: result, messages: [] )                == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .upToDate )         == .none )
-        #expect( GitHubUpdater.alert( for: result, messages: .updateAvailable )  == .none )
-    }
-
-    @Test
-    func allOptionShowsEveryOutcome() async throws
-    {
-        let url = try #require( URL( string: "https://example.com/2.0.0" ) )
-
-        #expect( GitHubUpdater.alert( for: .upToDate( application: "App", version: "1.0.0" ), messages: .all )
-                 == .upToDate( application: "App", version: "1.0.0" ) )
-
-        #expect( GitHubUpdater.alert( for: .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ), messages: .all )
-                 == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
-
-        #expect( GitHubUpdater.alert( for: .failed( reason: "Boom" ), messages: .all )
-                 == .error( message: "Boom" ) )
-    }
-}
 
 #endif
