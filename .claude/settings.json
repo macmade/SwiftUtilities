@@ -8,6 +8,6 @@
     }
   },
   "enabledPlugins": {
-    "xs@macmade": true
+    "xs-autoformat@macmade": true
   }
 }
