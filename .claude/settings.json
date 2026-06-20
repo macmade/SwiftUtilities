@@ -9,5 +9,20 @@
   },
   "enabledPlugins": {
     "xs-autoformat@macmade": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude plugin marketplace update macmade >/dev/null 2>&1; claude plugin update xs-autoformat@macmade --scope project >/dev/null 2>&1; true",
+            "statusMessage": "Refreshing xs-autoformat plugin",
+            "async": true
+          }
+        ]
+      }
+    ]
   }
 }
