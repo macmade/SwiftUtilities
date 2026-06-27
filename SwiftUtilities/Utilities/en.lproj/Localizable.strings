@@ -7,18 +7,6 @@
 /* Body of the up-to-date alert. %1$@ is the application name, %2$@ the current version. */
 "GitHubUpdater.alert.upToDate.message" = "%1$@ %2$@ is currently the newest available version.";
 
-/* Title of the alert shown when a newer version is available. */
-"GitHubUpdater.alert.updateAvailable.title" = "Update Available";
-
-/* Body of the update-available alert. %1$@ is the application name, %2$@ the available version, %3$@ the current version. */
-"GitHubUpdater.alert.updateAvailable.message" = "%1$@ %2$@ is available.\nYou are currently on version %3$@.\n\nWould you like to download the new version?";
-
-/* Button opening the release page from the update-available alert. */
-"GitHubUpdater.alert.updateAvailable.button.view" = "View and Download";
-
-/* Button dismissing the update-available alert without downloading. */
-"GitHubUpdater.alert.updateAvailable.button.later" = "Later";
-
 /* Title of the update-available window. */
 "GitHubUpdater.window.title" = "Update Available";
 

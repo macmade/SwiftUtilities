@@ -34,11 +34,12 @@ struct Test_Localization
         // A missing resource bundle would make NSLocalizedString echo the key
         // back, so these assertions also verify the table ships and resolves
         // under both Swift Package Manager and the Xcode framework.
-        #expect( Localization.string( "GitHubUpdater.alert.error.title" )                  == "Error" )
-        #expect( Localization.string( "GitHubUpdater.alert.upToDate.title" )               == "You're up-to-date!" )
-        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.title" )        == "Update Available" )
-        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.button.view" )  == "View and Download" )
-        #expect( Localization.string( "GitHubUpdater.alert.updateAvailable.button.later" ) == "Later" )
+        #expect( Localization.string( "GitHubUpdater.alert.error.title" )            == "Error" )
+        #expect( Localization.string( "GitHubUpdater.alert.upToDate.title" )         == "You're up-to-date!" )
+        #expect( Localization.string( "GitHubUpdater.window.title" )                 == "Update Available" )
+        #expect( Localization.string( "GitHubUpdater.window.button.download" )       == "Download" )
+        #expect( Localization.string( "GitHubUpdater.window.button.view" )           == "View on GitHub" )
+        #expect( Localization.string( "GitHubUpdater.window.button.later" )          == "Later" )
     }
 
     @Test

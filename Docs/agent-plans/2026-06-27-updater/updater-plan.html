@@ -759,29 +759,70 @@
             <div class="field">
                 <span class="label">Tasks</span>
                 <ul class="tasks">
-                    <li><input type="checkbox" disabled> Add an <code>@MainActor</code> window controller (e.g. <code>UpdateWindowController</code>) that builds an <code>NSWindow</code> hosting <code>UpdateAvailableView</code> via <code>NSHostingController</code>/<code>NSHostingView</code>, sets the localized title, centers the window, and self-retains until the window closes (through <code>NSWindowDelegate</code>) so the <code>Sendable</code> updater needs no stored state.</li>
-                    <li><input type="checkbox" disabled> Wire the callbacks: <strong>Download</strong> &rarr; <code>NSWorkspace.shared.open(downloadURL)</code>; <strong>View on GitHub</strong> &rarr; open the release URL (<code>html_url</code>); <strong>Later</strong> &rarr; close the window. Bring the app/window to the front when shown.</li>
-                    <li><input type="checkbox" disabled> Update <code>present(_:messages:)</code> so the <code>.updateAvailable</code> case opens the window instead of calling <code>showUpdateAvailableAlert</code>; ensure <code>Alert.updateAvailable</code> carries notes, downloadURL, and the release URL through to it.</li>
-                    <li><input type="checkbox" disabled> Remove <code>showUpdateAvailableAlert</code>. Decide with the reviewer whether to delete the now-unused <code>GitHubUpdater.alert.updateAvailable.*</code> strings; record the decision.</li>
-                    <li><input type="checkbox" disabled> Leave <code>showUpToDateAlert</code> and <code>showErrorAlert</code> (and their routing) unchanged.</li>
-                    <li><input type="checkbox" disabled> Update the AppKit routing tests for the enriched <code>.updateAvailable</code> alert; run <code>swift build</code> and <code>swift test</code>.</li>
+                    <li><input type="checkbox" checked disabled> Add an <code>@MainActor</code> window controller (e.g. <code>UpdateWindowController</code>) that builds an <code>NSWindow</code> hosting <code>UpdateAvailableView</code> via <code>NSHostingController</code>/<code>NSHostingView</code>, sets the localized title, centers the window, and self-retains until the window closes (through <code>NSWindowDelegate</code>) so the <code>Sendable</code> updater needs no stored state.</li>
+                    <li><input type="checkbox" checked disabled> Wire the callbacks: <strong>Download</strong> &rarr; <code>NSWorkspace.shared.open(downloadURL)</code>; <strong>View on GitHub</strong> &rarr; open the release URL (<code>html_url</code>); <strong>Later</strong> &rarr; close the window. Bring the app/window to the front when shown.</li>
+                    <li><input type="checkbox" checked disabled> Update <code>present(_:messages:)</code> so the <code>.updateAvailable</code> case opens the window instead of calling <code>showUpdateAvailableAlert</code>; ensure <code>Alert.updateAvailable</code> carries notes, downloadURL, and the release URL through to it.</li>
+                    <li><input type="checkbox" checked disabled> Remove <code>showUpdateAvailableAlert</code>. Decide with the reviewer whether to delete the now-unused <code>GitHubUpdater.alert.updateAvailable.*</code> strings; record the decision.</li>
+                    <li><input type="checkbox" checked disabled> Leave <code>showUpToDateAlert</code> and <code>showErrorAlert</code> (and their routing) unchanged.</li>
+                    <li><input type="checkbox" checked disabled> Update the AppKit routing tests for the enriched <code>.updateAvailable</code> alert; run <code>swift build</code> and <code>swift test</code>.</li>
                     <li><input type="checkbox" disabled> Manually smoke-test the window with sample data (notes that exercise headings/lists/links; with and without a download asset).</li>
                 </ul>
             </div>
 
             <div class="field">
                 <span class="label">Status</span>
-                <span class="capsule not-started">Not started</span>
+                <span class="capsule completed">Completed</span>
             </div>
 
             <div class="field">
                 <span class="label">Completed</span>
-                <div class="placeholder">&nbsp;</div>
+                <div>2026-06-27</div>
             </div>
 
             <div class="field">
                 <span class="label">Implementation notes</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Window controller.</strong> Added
+                            <code>SwiftUtilities/GitHub/UpdateWindowController.swift</code> &mdash; an
+                            <code>@MainActor final class</code> (guarded by <code>#if canImport( AppKit )</code>) that
+                            hosts <code>UpdateAvailableView</code> in an <code>NSWindow</code> via
+                            <code>NSHostingController</code>, sets the localized title, centers the window, and
+                            self-retains (a strong <code>self</code> reference cleared in
+                            <code>windowWillClose(_:)</code>) so the <code>Sendable</code> updater keeps no state. The
+                            window is non-modal and <code>isReleasedWhenClosed = false</code>.
+                        </li>
+                        <li>
+                            <strong>Actions.</strong> Download &rarr; <code>NSWorkspace.shared.open( downloadURL )</code>;
+                            View on GitHub &rarr; <code>NSWorkspace.shared.open( releaseURL )</code>; Later &rarr; closes
+                            the window. The app is activated and the window brought to front on show. Per the plan, only
+                            Later closes the window &mdash; Download and View leave it open so the user can do both.
+                        </li>
+                        <li>
+                            <strong>Routing.</strong> <code>present(_:messages:)</code>&rsquo;s
+                            <code>.updateAvailable</code> case now calls a new
+                            <code>showUpdateAvailableWindow(...)</code> (which creates the controller and shows the
+                            window) instead of the old alert; <code>Alert.updateAvailable</code> already carried notes,
+                            downloadURL, and the release URL. <code>showUpdateAvailableAlert</code> was removed.
+                            <code>showUpToDateAlert</code> and <code>showErrorAlert</code> are unchanged.
+                        </li>
+                        <li>
+                            <strong>Unused strings (reviewer decision).</strong> The reviewer chose to
+                            <strong>delete</strong> the four now-unused
+                            <code>GitHubUpdater.alert.updateAvailable.*</code> strings (title, message, button.view,
+                            button.later). They were removed from <code>Localizable.strings</code>, and the
+                            <code>Localization</code> test was updated to assert the new
+                            <code>GitHubUpdater.window.*</code> strings instead.
+                        </li>
+                        <li>
+                            <strong>Verification.</strong> <code>swift test</code>: 77 tests pass (the controller is
+                            registered in the Xcode project; <code>plutil -lint</code> passes). The window itself is
+                            still pending a manual GUI smoke-test &mdash; that task is left unchecked for the reviewer
+                            and covered again in Milestone&nbsp;5.
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="field">
@@ -804,17 +845,17 @@
             <div class="field">
                 <span class="label">Tasks</span>
                 <ul class="tasks">
-                    <li><input type="checkbox" disabled> Run <code>swift build</code> and <code>swift test</code> and capture the output; confirm all tests pass.</li>
-                    <li><input type="checkbox" disabled> Verify the <code>#if canImport( AppKit )</code> / <code>canImport( SwiftUI )</code> guards on the new files are consistent with <code>GitHubUpdater+AppKit.swift</code>.</li>
-                    <li><input type="checkbox" disabled> Confirm every new public and private type and member has a SwiftDoc comment.</li>
-                    <li><input type="checkbox" disabled> Run the repository&rsquo;s Xcode-Format pass over the changed source files.</li>
+                    <li><input type="checkbox" checked disabled> Run <code>swift build</code> and <code>swift test</code> and capture the output; confirm all tests pass.</li>
+                    <li><input type="checkbox" checked disabled> Verify the <code>#if canImport( AppKit )</code> / <code>canImport( SwiftUI )</code> guards on the new files are consistent with <code>GitHubUpdater+AppKit.swift</code>.</li>
+                    <li><input type="checkbox" checked disabled> Confirm every new public and private type and member has a SwiftDoc comment.</li>
+                    <li><input type="checkbox" checked disabled> Run the repository&rsquo;s Xcode-Format pass over the changed source files.</li>
                     <li><input type="checkbox" disabled> Final manual verification of the window: notes render correctly (headings/lists/links), the Download button is hidden when no asset exists, and all three buttons behave as specified.</li>
                 </ul>
             </div>
 
             <div class="field">
                 <span class="label">Status</span>
-                <span class="capsule not-started">Not started</span>
+                <span class="capsule in-progress">In progress</span>
             </div>
 
             <div class="field">
@@ -824,7 +865,38 @@
 
             <div class="field">
                 <span class="label">Implementation notes</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Build &amp; tests.</strong> <code>swift build</code> and <code>swift test</code>
+                            both pass cleanly &mdash; 77 tests in 8 suites, 0 warnings, 0 errors. (The earlier
+                            <code>xcodebuild</code> run in Milestone&nbsp;2 also succeeded for the framework target.)
+                        </li>
+                        <li>
+                            <strong>Platform guards.</strong> Verified consistent: the SwiftUI views
+                            (<code>MarkdownView</code> and the per-block views, <code>UpdateAvailableView</code>) are
+                            under <code>#if canImport( SwiftUI )</code>; <code>UpdateWindowController</code> and
+                            <code>GitHubUpdater+AppKit.swift</code> are under <code>#if canImport( AppKit )</code>; the
+                            pure model, parser, and inline renderer are unguarded (cross-platform). <code>Markdown</code>
+                            is imported once, as <code>internal import</code>, from the unguarded parser.
+                        </li>
+                        <li>
+                            <strong>Documentation.</strong> Confirmed every new type and member (public and private)
+                            carries a SwiftDoc comment, via a scan of the new files (the only unflagged-as-missing
+                            items were <code>switch</code> cases and local bindings, which take no doc comment).
+                        </li>
+                        <li>
+                            <strong>Formatting.</strong> Ran the repository&rsquo;s Xcode-Format pass
+                            (<code>XS-Labs (MIT)</code> configuration) over all 32 changed Swift files; every file was
+                            reported <em>Unchanged</em>, confirming the code already conforms to the house style.
+                        </li>
+                        <li>
+                            <strong>Manual verification.</strong> Left to the maintainer &mdash; the GUI window cannot
+                            be driven in this environment. The checklist: notes render (headings/lists/links), the
+                            Download button is hidden when no asset exists, and the three buttons behave as specified.
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="field">

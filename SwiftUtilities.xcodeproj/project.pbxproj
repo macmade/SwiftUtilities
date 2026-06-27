@@ -40,6 +40,7 @@
 		05F0001D000000000000000B /* MarkdownThematicBreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001D000000000000000A /* MarkdownThematicBreakView.swift */; };
 		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
+		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +139,7 @@
 		05F0001D000000000000000A /* MarkdownThematicBreakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownThematicBreakView.swift; sourceTree = "<group>"; };
 		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 		05F0001F000000000000000A /* UpdateAvailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableView.swift; sourceTree = "<group>"; };
+		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -354,6 +356,7 @@
 				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05F0001F000000000000000A /* UpdateAvailableView.swift */,
+				05F00020000000000000000A /* UpdateWindowController.swift */,
 			);
 			path = GitHub;
 			sourceTree = "<group>";
@@ -543,6 +546,7 @@
 				05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
+				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
 				05F00008000000000000000B /* MarkdownBlock.swift in Sources */,
 				05F00009000000000000000B /* MarkdownInline.swift in Sources */,
 				05F0000A000000000000000B /* MarkdownListItem.swift in Sources */,

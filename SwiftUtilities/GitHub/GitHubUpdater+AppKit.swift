@@ -136,11 +136,14 @@
             }
         }
 
-        /// Presents an update-check result to the user as a modal alert.
+        /// Presents an update-check result to the user.
+        ///
+        /// The up-to-date and error outcomes are shown as modal alerts; the
+        /// update-available outcome opens the non-modal update window.
         ///
         /// - Parameters:
         ///   - result:   The outcome to present.
-        ///   - messages: The set of outcomes for which an alert should be shown.
+        ///   - messages: The set of outcomes for which feedback should be shown.
         ///     Outcomes not present in the set are handled silently.
         @MainActor
         private func present( _ result: UpdateCheckResult, messages: MessageOptions )
@@ -157,7 +160,7 @@
 
                 case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
-                    self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+                    self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
 
                 case .error( let message ):
 
@@ -193,34 +196,32 @@
             alert.runModal()
         }
 
-        /// Presents a modal alert offering to download an available update.
+        /// Opens the non-modal window offering to download an available update.
         ///
-        /// If the user chooses to download, the release page is opened in the default browser.
+        /// The window renders the release notes and offers Download (when an asset
+        /// exists), View on GitHub, and Later. It is owned by a self-retaining
+        /// ``UpdateWindowController`` so the `Sendable` updater needs no stored
+        /// state.
         ///
         /// - Parameters:
         ///   - application: The display name of the application.
         ///   - version:     The current version of the application.
         ///   - update:      The version of the available update.
-        ///   - url:         The URL of the release page to open if the user accepts.
-        ///   - notes:       The release's Markdown notes. Currently unused by the
-        ///                  alert; carried for the forthcoming update window.
+        ///   - url:         The URL of the release page on GitHub.
+        ///   - notes:       The release's Markdown notes.
         ///   - downloadURL: The direct download URL of the release's first asset, or
-        ///                  `nil`. Currently unused by the alert; carried for the
-        ///                  forthcoming update window.
+        ///                  `nil` when the release has no downloadable asset.
         @MainActor
-        private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
+        private func showUpdateAvailableWindow( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
         {
-            let alert             = NSAlert()
-            alert.messageText     = Localization.string( "GitHubUpdater.alert.updateAvailable.title" )
-            alert.informativeText = String( format: Localization.string( "GitHubUpdater.alert.updateAvailable.message" ), application, update, version )
-
-            alert.addButton( withTitle: Localization.string( "GitHubUpdater.alert.updateAvailable.button.view" ) )
-            alert.addButton( withTitle: Localization.string( "GitHubUpdater.alert.updateAvailable.button.later" ) )
-
-            if alert.runModal() == .alertFirstButtonReturn
-            {
-                NSWorkspace.shared.open( url )
-            }
+            UpdateWindowController().show(
+                applicationName: application,
+                currentVersion:  version,
+                updateVersion:   update,
+                notes:           notes,
+                downloadURL:     downloadURL,
+                releaseURL:      url
+            )
         }
     }
 
