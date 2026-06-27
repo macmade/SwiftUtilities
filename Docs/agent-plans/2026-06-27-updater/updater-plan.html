@@ -672,27 +672,67 @@
             <div class="field">
                 <span class="label">Tasks</span>
                 <ul class="tasks">
-                    <li><input type="checkbox" disabled> Create a guarded SwiftUI view (e.g. <code>SwiftUtilities/GitHubUpdater+UpdateAvailableView.swift</code>) taking the application name, current version, update version, notes, optional <code>downloadURL</code>, the release URL, and three action callbacks (<code>onDownload</code>, <code>onViewOnGitHub</code>, <code>onLater</code>).</li>
-                    <li><input type="checkbox" disabled> Lay out a header, a <code>ScrollView</code> wrapping the Markdown view from Milestone&nbsp;2, and a trailing button row, with sensible padding and a minimum content size.</li>
-                    <li><input type="checkbox" disabled> Conditionally render the Download button only when <code>downloadURL != nil</code>; keep View on GitHub and Later unconditional.</li>
-                    <li><input type="checkbox" disabled> Add localized strings to <code>en.lproj/Localizable.strings</code> (with descriptive comments) for the window title, the header/subtitle format, and the three button titles (Download / View on GitHub / Later); read them via <code>Localization.string(_:)</code>.</li>
-                    <li><input type="checkbox" disabled> Document every new type and member with SwiftDoc; run <code>swift build</code>.</li>
+                    <li><input type="checkbox" checked disabled> Create a guarded SwiftUI view (e.g. <code>SwiftUtilities/GitHubUpdater+UpdateAvailableView.swift</code>) taking the application name, current version, update version, notes, optional <code>downloadURL</code>, the release URL, and three action callbacks (<code>onDownload</code>, <code>onViewOnGitHub</code>, <code>onLater</code>).</li>
+                    <li><input type="checkbox" checked disabled> Lay out a header, a <code>ScrollView</code> wrapping the Markdown view from Milestone&nbsp;2, and a trailing button row, with sensible padding and a minimum content size.</li>
+                    <li><input type="checkbox" checked disabled> Conditionally render the Download button only when <code>downloadURL != nil</code>; keep View on GitHub and Later unconditional.</li>
+                    <li><input type="checkbox" checked disabled> Add localized strings to <code>en.lproj/Localizable.strings</code> (with descriptive comments) for the window title, the header/subtitle format, and the three button titles (Download / View on GitHub / Later); read them via <code>Localization.string(_:)</code>.</li>
+                    <li><input type="checkbox" checked disabled> Document every new type and member with SwiftDoc; run <code>swift build</code>.</li>
                 </ul>
             </div>
 
             <div class="field">
                 <span class="label">Status</span>
-                <span class="capsule not-started">Not started</span>
+                <span class="capsule completed">Completed</span>
             </div>
 
             <div class="field">
                 <span class="label">Completed</span>
-                <div class="placeholder">&nbsp;</div>
+                <div>2026-06-27</div>
             </div>
 
             <div class="field">
                 <span class="label">Implementation notes</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>View.</strong> Added <code>SwiftUtilities/GitHub/UpdateAvailableView.swift</code>
+                            (a standalone <code>internal struct UpdateAvailableView: View</code>, guarded by
+                            <code>#if canImport( SwiftUI )</code>). It takes the application name, current version,
+                            update version, notes, an optional <code>downloadURL</code>, and three callbacks
+                            (<code>onDownload</code>, <code>onViewOnGitHub</code>, <code>onLater</code>).
+                        </li>
+                        <li>
+                            <strong>Layout.</strong> A leading-aligned <code>VStack</code>: a header (a bold
+                            &ldquo;<em>App X.Y is available</em>&rdquo; line plus a secondary &ldquo;you're currently
+                            on version&hellip;&rdquo; subtitle), a divider, a <code>ScrollView</code> wrapping
+                            <code>MarkdownView( notes )</code>, a divider, and a trailing button row. Padded, with a
+                            minimum content size of 480&times;360.
+                        </li>
+                        <li>
+                            <strong>Buttons.</strong> Later and View on GitHub are always shown; Download is rendered
+                            only when <code>downloadURL != nil</code> and is the keyboard default action. The buttons
+                            call the injected callbacks &mdash; the hosting controller (Milestone&nbsp;4) owns the
+                            actual behavior.
+                        </li>
+                        <li>
+                            <strong>Localization.</strong> Added <code>GitHubUpdater.window.*</code> keys (title,
+                            heading, subtitle, and the three button titles) with descriptive comments to
+                            <code>Utilities/en.lproj/Localizable.strings</code>, read via
+                            <code>Localization.string(_:)</code>.
+                        </li>
+                        <li>
+                            <strong>Deviation from the plan.</strong> The view does not take the release
+                            <code>url</code> as a parameter: opening the release page is the responsibility of the
+                            <code>onViewOnGitHub</code> callback, so passing the URL too would be a dead parameter.
+                            <code>downloadURL</code> is kept solely to decide the Download button's visibility.
+                        </li>
+                        <li>
+                            <strong>Verification.</strong> <code>swift build</code> completes cleanly (no warnings or
+                            errors); the pbxproj registration was validated with <code>plutil -lint</code>. The view
+                            itself is verified manually (per the plan's testing approach).
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="field">

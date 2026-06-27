@@ -18,3 +18,21 @@
 
 /* Button dismissing the update-available alert without downloading. */
 "GitHubUpdater.alert.updateAvailable.button.later" = "Later";
+
+/* Title of the update-available window. */
+"GitHubUpdater.window.title" = "Update Available";
+
+/* Heading of the update-available window. %1$@ is the application name, %2$@ the available version. */
+"GitHubUpdater.window.heading" = "%1$@ %2$@ is available";
+
+/* Subtitle of the update-available window. %1$@ is the current version. */
+"GitHubUpdater.window.subtitle" = "You're currently on version %1$@.";
+
+/* Button downloading the update from the update-available window. */
+"GitHubUpdater.window.button.download" = "Download";
+
+/* Button opening the release page on GitHub from the update-available window. */
+"GitHubUpdater.window.button.view" = "View on GitHub";
+
+/* Button dismissing the update-available window without downloading. */
+"GitHubUpdater.window.button.later" = "Later";
