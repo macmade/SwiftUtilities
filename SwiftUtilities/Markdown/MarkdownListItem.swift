@@ -1,8 +1,7 @@
-// swift-tools-version:6.0
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2025, Jean-David Gadina - www.xs-labs.com
+ * Copyright (c) 2026, Jean-David Gadina - www.xs-labs.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the Software), to deal
@@ -23,35 +22,26 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-import PackageDescription
+/// A single item of an ordered or unordered list.
+///
+/// An item holds its own blocks, so nested lists and multi-paragraph items are
+/// represented naturally. `checkbox` is non-`nil` for GitHub task-list items.
+internal struct MarkdownListItem: Equatable
+{
+    /// The task-list checkbox state, or `nil` when the item is not a task-list item.
+    let checkbox: MarkdownCheckbox?
 
-let package = Package(
-    name: "SwiftUtilities",
-    defaultLocalization: "en",
-    platforms: [
-        .macOS( .v15 ),
-    ],
-    products: [
-        .library( name: "SwiftUtilities", targets: [ "SwiftUtilities" ] ),
-    ],
-    dependencies: [
-        .package( url: "https://github.com/apple/swift-markdown.git", .upToNextMinor( from: "0.8.0" ) ),
-    ],
-    targets: [
-        .target(
-            name: "SwiftUtilities",
-            dependencies: [
-                .product( name: "Markdown", package: "swift-markdown" ),
-            ],
-            path: "SwiftUtilities",
-            resources: [
-                .process( "Utilities/en.lproj" ),
-            ]
-        ),
-        .testTarget(
-            name: "SwiftUtilitiesTests",
-            dependencies: [ "SwiftUtilities" ],
-            path: "SwiftUtilitiesTests"
-        ),
-    ]
-)
+    /// The item's block content.
+    let blocks: [ MarkdownBlock ]
+
+    /// Creates a list item.
+    ///
+    /// - Parameters:
+    ///   - checkbox: The task-list checkbox state, or `nil`.
+    ///   - blocks:   The item's block content.
+    init( checkbox: MarkdownCheckbox?, blocks: [ MarkdownBlock ] )
+    {
+        self.checkbox = checkbox
+        self.blocks   = blocks
+    }
+}

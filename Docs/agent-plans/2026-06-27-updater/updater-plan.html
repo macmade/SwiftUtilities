@@ -540,33 +540,119 @@
             <div class="field">
                 <span class="label">Tasks</span>
                 <ul class="tasks">
-                    <li><input type="checkbox" disabled> Add <code>.package(url: "https://github.com/apple/swift-markdown.git", ...)</code> to <code>Package.swift</code> with a pinned version, and add the <code>Markdown</code> product to the <code>SwiftUtilities</code> target&rsquo;s dependencies. Commit the resulting <code>Package.resolved</code>.</li>
-                    <li><input type="checkbox" disabled> Create a new guarded source file (e.g. <code>SwiftUtilities/GitHubUpdater+MarkdownView.swift</code>) under <code>#if canImport( SwiftUI )</code>, importing <code>Markdown</code> and <code>SwiftUI</code>.</li>
-                    <li><input type="checkbox" disabled> Implement a <code>MarkupVisitor</code> (or walker) that maps AST nodes to a small view model / SwiftUI views: inline runs (text, emphasis, strong, inline code, links) composed into <code>Text</code>/<code>AttributedString</code>; block nodes laid out in a <code>VStack</code>.</li>
-                    <li><input type="checkbox" disabled> Make links tappable, opening the target in the default browser via <code>NSWorkspace.shared.open</code>.</li>
-                    <li><input type="checkbox" disabled> Factor the AST&rarr;view-model mapping so the pure part is unit-testable; add tests for representative inputs (heading, nested list, link, code block). Note that the rendered views themselves are verified manually.</li>
-                    <li><input type="checkbox" disabled> Document every new type and member (public and private) with SwiftDoc. Run <code>swift build</code>.</li>
+                    <li><input type="checkbox" checked disabled> Add <code>.package(url: "https://github.com/apple/swift-markdown.git", ...)</code> to <code>Package.swift</code> with a pinned version, and add the <code>Markdown</code> product to the <code>SwiftUtilities</code> target&rsquo;s dependencies. Commit the resulting <code>Package.resolved</code>.</li>
+                    <li><input type="checkbox" checked disabled> Create a new guarded source file (e.g. <code>SwiftUtilities/GitHubUpdater+MarkdownView.swift</code>) under <code>#if canImport( SwiftUI )</code>, importing <code>Markdown</code> and <code>SwiftUI</code>.</li>
+                    <li><input type="checkbox" checked disabled> Implement a <code>MarkupVisitor</code> (or walker) that maps AST nodes to a small view model / SwiftUI views: inline runs (text, emphasis, strong, inline code, links) composed into <code>Text</code>/<code>AttributedString</code>; block nodes laid out in a <code>VStack</code>.</li>
+                    <li><input type="checkbox" checked disabled> Make links tappable, opening the target in the default browser via <code>NSWorkspace.shared.open</code>.</li>
+                    <li><input type="checkbox" checked disabled> Factor the AST&rarr;view-model mapping so the pure part is unit-testable; add tests for representative inputs (heading, nested list, link, code block). Note that the rendered views themselves are verified manually.</li>
+                    <li><input type="checkbox" checked disabled> Document every new type and member (public and private) with SwiftDoc. Run <code>swift build</code>.</li>
                 </ul>
             </div>
 
             <div class="field">
                 <span class="label">Status</span>
-                <span class="capsule not-started">Not started</span>
+                <span class="capsule completed">Completed</span>
             </div>
 
             <div class="field">
                 <span class="label">Completed</span>
-                <div class="placeholder">&nbsp;</div>
+                <div>2026-06-27</div>
             </div>
 
             <div class="field">
                 <span class="label">Implementation notes</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Dependency.</strong> Added <code>apple/swift-markdown</code> pinned with
+                            <code>.upToNextMinor(from: "0.8.0")</code> (resolved 0.8.0, pulling in
+                            <code>swift-cmark</code>) to <code>Package.swift</code> and to the Xcode project
+                            (<code>XCRemoteSwiftPackageReference</code> + <code>Markdown</code> product on the framework
+                            target). Imported as <code>internal import Markdown</code> so it stays out of the
+                            framework&rsquo;s public interface (required by library evolution + warnings-as-errors).
+                        </li>
+                        <li>
+                            <strong>Pure model + parser (TDD).</strong> The AST&rarr;view-model mapping is factored as
+                            a pure, testable unit: <code>MarkdownContent.parse(_:)</code> walks the
+                            <code>swift-markdown</code> tree and returns an <code>Equatable</code>
+                            <code>[MarkdownBlock]</code> model (<code>MarkdownBlock</code>, <code>MarkdownInline</code>,
+                            <code>MarkdownListItem</code>, <code>MarkdownCheckbox</code>). It covers headings,
+                            paragraphs, emphasis/strong/strikethrough/inline-code, links, breaks, code blocks, ordered
+                            &amp; unordered lists (with nesting and task-list checkboxes), block quotes, and thematic
+                            breaks; unsupported nodes (tables, images, raw HTML) are dropped. Tests were written first,
+                            watched fail, then implemented &mdash; 11 parser tests covering each representative input.
+                        </li>
+                        <li>
+                            <strong>Dedicated views.</strong> Rendering is split into one view per block kind under
+                            <code>Markdown/</code>: <code>MarkdownView</code> (parses/iterates and dispatches),
+                            <code>MarkdownHeadingView</code>, <code>MarkdownParagraphView</code>,
+                            <code>MarkdownListView</code>, <code>MarkdownBlockQuoteView</code>,
+                            <code>MarkdownCodeBlockView</code>, <code>MarkdownThematicBreakView</code>, plus
+                            <code>MarkdownInlineRenderer</code> (builds an <code>AttributedString</code> from inlines
+                            using <code>inlinePresentationIntent</code> for nesting and the <code>link</code> attribute).
+                            Nested content (list items, block quotes) recurses through <code>MarkdownView</code>. Links
+                            open via SwiftUI&rsquo;s default <code>openURL</code> (the default browser on macOS). Views
+                            are guarded by <code>#if canImport( SwiftUI )</code>; the inline renderer is Foundation-only.
+                        </li>
+                        <li>
+                            <strong>Why the monolithic first draft was wrong.</strong> The original single
+                            <code>MarkdownView</code> with one big <code>@ViewBuilder</code> switch caused a catastrophic
+                            SwiftUI type-checker blowup (compiles hung for over an hour). Splitting into small dedicated
+                            views &mdash; each with a simple body &mdash; fixed it; both build systems now compile
+                            quickly.
+                        </li>
+                        <li>
+                            <strong>Organization.</strong> All sources regrouped into <code>GitHub/</code>,
+                            <code>Markdown/</code>, <code>Utilities/</code> folders (with <code>Localization</code> +
+                            <code>en.lproj</code> under <code>Utilities/</code>), mirrored in the tests. One top-level
+                            type per file throughout. <code>Package.swift</code> resource path and the Xcode project
+                            groups were updated to match.
+                        </li>
+                        <li>
+                            <strong>Verification.</strong> <code>swift test</code>: 77 tests pass, 0 warnings/errors.
+                            <code>xcodebuild</code> (framework scheme): <strong>BUILD SUCCEEDED</strong>. (A batch of
+                            orphaned compiler processes from earlier interrupted runs had to be killed first &mdash;
+                            they were stuck on the deleted monolithic view and held the build lock.)
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="field">
                 <span class="label">Review comments</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Avoid defining multiple types in the same file.</strong> The first draft put
+                            <code>MarkdownBlock</code>, <code>MarkdownListItem</code>, <code>MarkdownCheckbox</code>,
+                            <code>MarkdownInline</code>, and <code>MarkdownContent</code> all in
+                            <code>MarkdownContent.swift</code>. Split each top-level type into its own file, matching
+                            the repository&rsquo;s one-type-per-file convention.
+                        </li>
+                        <li>
+                            <strong>Register the new files (and the package) in the Xcode project.</strong> The repo
+                            ships an <code>.xcodeproj</code> alongside the SPM manifest, and it lists every source file
+                            individually (no file-system-synchronized groups). The new Markdown files were added to
+                            <code>Package.swift</code> only; they must also be added to the Xcode project&rsquo;s
+                            targets, and the <code>swift-markdown</code> package dependency must be referenced there too.
+                        </li>
+                        <li>
+                            <strong>Use <code>internal import</code> for the dependency.</strong> The framework target
+                            is built for distribution (library evolution) with warnings-as-errors, which rejects
+                            importing the non-resilient <code>swift-markdown</code> module. Rather than change the
+                            framework&rsquo;s distribution settings, import it as <code>internal import Markdown</code>
+                            (Swift 6 access-level imports) so the dependency stays an implementation detail and never
+                            enters the framework&rsquo;s public interface.
+                        </li>
+                        <li>
+                            <strong>Extract dedicated views and organize into folders.</strong> Break the monolithic
+                            <code>MarkdownView</code> into dedicated SwiftUI view types (one per file). Create a
+                            <code>Markdown</code> source folder for the Markdown model/parser/views, and group the other
+                            sources into folders such as <code>GitHub</code> and <code>Utilities</code>. Mirror the same
+                            folder structure in the unit tests.
+                        </li>
+                    </ul>
+                </div>
             </div>
         </li>
 

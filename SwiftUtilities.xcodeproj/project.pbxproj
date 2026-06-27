@@ -17,13 +17,28 @@
 		05398CC62DEECB38005904EC /* UnsafeMutableSendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */; };
 		05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC72DEECBF1005904EC /* Benchmark.swift */; };
 		05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC92DEECD14005904EC /* GitHubUpdater.swift */; };
+		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
 		05F00001000000000000000B /* UpdateCheckResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00001000000000000000A /* UpdateCheckResult.swift */; };
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00003000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F00004000000000000000B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F00004000000000000000A /* Localizable.strings */; };
 		05F00006000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00006000000000000000A /* Localization.swift */; };
 		05F00007000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00007000000000000000A /* Localization.swift */; };
-		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
+		05F00008000000000000000B /* MarkdownBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00008000000000000000A /* MarkdownBlock.swift */; };
+		05F00009000000000000000B /* MarkdownInline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00009000000000000000A /* MarkdownInline.swift */; };
+		05F0000A000000000000000B /* MarkdownListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0000A000000000000000A /* MarkdownListItem.swift */; };
+		05F0000B000000000000000B /* MarkdownCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0000B000000000000000A /* MarkdownCheckbox.swift */; };
+		05F0000C000000000000000B /* MarkdownContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0000C000000000000000A /* MarkdownContent.swift */; };
+		05F0000E000000000000000B /* MarkdownContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0000E000000000000000A /* MarkdownContent.swift */; };
+		05F00010000000000000000B /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 05F00010000000000000000A /* Markdown */; };
+		05F00017000000000000000B /* MarkdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00017000000000000000A /* MarkdownView.swift */; };
+		05F00018000000000000000B /* MarkdownHeadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00018000000000000000A /* MarkdownHeadingView.swift */; };
+		05F00019000000000000000B /* MarkdownParagraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00019000000000000000A /* MarkdownParagraphView.swift */; };
+		05F0001A000000000000000B /* MarkdownListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001A000000000000000A /* MarkdownListView.swift */; };
+		05F0001B000000000000000B /* MarkdownBlockQuoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001B000000000000000A /* MarkdownBlockQuoteView.swift */; };
+		05F0001C000000000000000B /* MarkdownCodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001C000000000000000A /* MarkdownCodeBlockView.swift */; };
+		05F0001D000000000000000B /* MarkdownThematicBreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001D000000000000000A /* MarkdownThematicBreakView.swift */; };
+		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,12 +62,6 @@
 		05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsafeMutableSendable.swift; sourceTree = "<group>"; };
 		05398CC72DEECBF1005904EC /* Benchmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Benchmark.swift; sourceTree = "<group>"; };
 		05398CC92DEECD14005904EC /* GitHubUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdater.swift; sourceTree = "<group>"; };
-		05F00001000000000000000A /* UpdateCheckResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCheckResult.swift; sourceTree = "<group>"; };
-		05F00002000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
-		05F00003000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
-		05F00005000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		05F00006000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
-		05F00007000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		05C527822DD8E36300843626 /* SwiftUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftUtilitiesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		05D589112DD8E47A000BA644 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
@@ -107,6 +116,26 @@
 		05D589512DD8E67E000BA644 /* Release - ccache.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Release - ccache.xcconfig"; sourceTree = "<group>"; };
 		05D589522DD8E67E000BA644 /* Release - Library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Release - Library.xcconfig"; sourceTree = "<group>"; };
 		05EFC6812DE64B250096C4B4 /* SwiftUtilities.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SwiftUtilities.xctestplan; sourceTree = "<group>"; };
+		05F00001000000000000000A /* UpdateCheckResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCheckResult.swift; sourceTree = "<group>"; };
+		05F00002000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
+		05F00003000000000000000A /* GitHubUpdater+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+AppKit.swift"; sourceTree = "<group>"; };
+		05F00005000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		05F00006000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		05F00007000000000000000A /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		05F00008000000000000000A /* MarkdownBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownBlock.swift; sourceTree = "<group>"; };
+		05F00009000000000000000A /* MarkdownInline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInline.swift; sourceTree = "<group>"; };
+		05F0000A000000000000000A /* MarkdownListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownListItem.swift; sourceTree = "<group>"; };
+		05F0000B000000000000000A /* MarkdownCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownCheckbox.swift; sourceTree = "<group>"; };
+		05F0000C000000000000000A /* MarkdownContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownContent.swift; sourceTree = "<group>"; };
+		05F0000E000000000000000A /* MarkdownContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownContent.swift; sourceTree = "<group>"; };
+		05F00017000000000000000A /* MarkdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownView.swift; sourceTree = "<group>"; };
+		05F00018000000000000000A /* MarkdownHeadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownHeadingView.swift; sourceTree = "<group>"; };
+		05F00019000000000000000A /* MarkdownParagraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownParagraphView.swift; sourceTree = "<group>"; };
+		05F0001A000000000000000A /* MarkdownListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownListView.swift; sourceTree = "<group>"; };
+		05F0001B000000000000000A /* MarkdownBlockQuoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownBlockQuoteView.swift; sourceTree = "<group>"; };
+		05F0001C000000000000000A /* MarkdownCodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownCodeBlockView.swift; sourceTree = "<group>"; };
+		05F0001D000000000000000A /* MarkdownThematicBreakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownThematicBreakView.swift; sourceTree = "<group>"; };
+		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +143,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				05F00010000000000000000B /* Markdown in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,13 +185,9 @@
 		05D5890C2DD8E46E000BA644 /* SwiftUtilitiesTests */ = {
 			isa = PBXGroup;
 			children = (
-				05398CC72DEECBF1005904EC /* Benchmark.swift */,
-				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
-				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
-				05F00007000000000000000A /* Localization.swift */,
-				05398CB72DEEC939005904EC /* RuntimeError.swift */,
-				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
-				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
+				05F00014000000000000000A /* GitHub */,
+				05F00015000000000000000A /* Markdown */,
+				05F00016000000000000000A /* Utilities */,
 			);
 			path = SwiftUtilitiesTests;
 			sourceTree = "<group>";
@@ -169,15 +195,9 @@
 		05D5890F2DD8E470000BA644 /* SwiftUtilities */ = {
 			isa = PBXGroup;
 			children = (
-				05398CAD2DEEC91B005904EC /* Benchmark.swift */,
-				05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */,
-				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
-				05398CAF2DEEC91B005904EC /* RuntimeError.swift */,
-				05F00001000000000000000A /* UpdateCheckResult.swift */,
-				05398CB02DEEC91B005904EC /* UnsafeMutableSendable.swift */,
-				05398CB12DEEC91B005904EC /* UnsafeSendable.swift */,
-				05F00006000000000000000A /* Localization.swift */,
-				05F00004000000000000000A /* Localizable.strings */,
+				05F00011000000000000000A /* GitHub */,
+				05F00012000000000000000A /* Markdown */,
+				05F00013000000000000000A /* Utilities */,
 			);
 			path = SwiftUtilities;
 			sourceTree = "<group>";
@@ -325,6 +345,78 @@
 			path = Submodules/xcconfig;
 			sourceTree = "<group>";
 		};
+		05F00011000000000000000A /* GitHub */ = {
+			isa = PBXGroup;
+			children = (
+				05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */,
+				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
+				05F00001000000000000000A /* UpdateCheckResult.swift */,
+			);
+			path = GitHub;
+			sourceTree = "<group>";
+		};
+		05F00012000000000000000A /* Markdown */ = {
+			isa = PBXGroup;
+			children = (
+				05F00008000000000000000A /* MarkdownBlock.swift */,
+				05F00009000000000000000A /* MarkdownInline.swift */,
+				05F0000A000000000000000A /* MarkdownListItem.swift */,
+				05F0000B000000000000000A /* MarkdownCheckbox.swift */,
+				05F0000C000000000000000A /* MarkdownContent.swift */,
+				05F00017000000000000000A /* MarkdownView.swift */,
+				05F00018000000000000000A /* MarkdownHeadingView.swift */,
+				05F00019000000000000000A /* MarkdownParagraphView.swift */,
+				05F0001A000000000000000A /* MarkdownListView.swift */,
+				05F0001B000000000000000A /* MarkdownBlockQuoteView.swift */,
+				05F0001C000000000000000A /* MarkdownCodeBlockView.swift */,
+				05F0001D000000000000000A /* MarkdownThematicBreakView.swift */,
+				05F0001E000000000000000A /* MarkdownInlineRenderer.swift */,
+			);
+			path = Markdown;
+			sourceTree = "<group>";
+		};
+		05F00013000000000000000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				05398CAD2DEEC91B005904EC /* Benchmark.swift */,
+				05398CAF2DEEC91B005904EC /* RuntimeError.swift */,
+				05398CB02DEEC91B005904EC /* UnsafeMutableSendable.swift */,
+				05398CB12DEEC91B005904EC /* UnsafeSendable.swift */,
+				05F00006000000000000000A /* Localization.swift */,
+				05F00004000000000000000A /* Localizable.strings */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		05F00014000000000000000A /* GitHub */ = {
+			isa = PBXGroup;
+			children = (
+				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
+				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
+			);
+			path = GitHub;
+			sourceTree = "<group>";
+		};
+		05F00015000000000000000A /* Markdown */ = {
+			isa = PBXGroup;
+			children = (
+				05F0000E000000000000000A /* MarkdownContent.swift */,
+			);
+			path = Markdown;
+			sourceTree = "<group>";
+		};
+		05F00016000000000000000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				05398CC72DEECBF1005904EC /* Benchmark.swift */,
+				05398CB72DEEC939005904EC /* RuntimeError.swift */,
+				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
+				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
+				05F00007000000000000000A /* Localization.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -353,6 +445,7 @@
 			);
 			name = SwiftUtilities;
 			packageProductDependencies = (
+				05F00010000000000000000A /* Markdown */,
 			);
 			productName = SwiftFITS;
 			productReference = 05C527822DD8E36300843626 /* SwiftUtilities.framework */;
@@ -386,7 +479,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					05C527812DD8E36300843626 = {
 						CreatedOnToolsVersion = 16.3;
@@ -406,6 +499,9 @@
 			);
 			mainGroup = 05C527782DD8E36300843626;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				05F0000F000000000000000A /* XCRemoteSwiftPackageReference "swift-markdown" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 05C527832DD8E36300843626 /* Products */;
 			projectDirPath = "";
@@ -435,17 +531,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		05F00004000000000000000A /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				05F00005000000000000000A /* en */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin PBXSourcesBuildPhase section */
 		05C5277E2DD8E36300843626 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -454,6 +539,19 @@
 				05398CB22DEEC91B005904EC /* GitHubUpdater.swift in Sources */,
 				05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
+				05F00008000000000000000B /* MarkdownBlock.swift in Sources */,
+				05F00009000000000000000B /* MarkdownInline.swift in Sources */,
+				05F0000A000000000000000B /* MarkdownListItem.swift in Sources */,
+				05F0000B000000000000000B /* MarkdownCheckbox.swift in Sources */,
+				05F0000C000000000000000B /* MarkdownContent.swift in Sources */,
+				05F00017000000000000000B /* MarkdownView.swift in Sources */,
+				05F00018000000000000000B /* MarkdownHeadingView.swift in Sources */,
+				05F00019000000000000000B /* MarkdownParagraphView.swift in Sources */,
+				05F0001A000000000000000B /* MarkdownListView.swift in Sources */,
+				05F0001B000000000000000B /* MarkdownBlockQuoteView.swift in Sources */,
+				05F0001C000000000000000B /* MarkdownCodeBlockView.swift in Sources */,
+				05F0001D000000000000000B /* MarkdownThematicBreakView.swift in Sources */,
+				05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */,
 				05F00006000000000000000B /* Localization.swift in Sources */,
 				05398CB32DEEC91B005904EC /* Benchmark.swift in Sources */,
 				05398CB42DEEC91B005904EC /* RuntimeError.swift in Sources */,
@@ -470,6 +568,7 @@
 				05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */,
 				05398CC22DEEC9E3005904EC /* RuntimeError.swift in Sources */,
 				05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */,
+				05F0000E000000000000000B /* MarkdownContent.swift in Sources */,
 				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
@@ -485,6 +584,17 @@
 			targetProxy = 05C5278D2DD8E36300843626 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		05F00004000000000000000A /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				05F00005000000000000000A /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		05C527922DD8E36300843626 /* Debug */ = {
@@ -615,6 +725,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		05F0000F000000000000000A /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		05F00010000000000000000A /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05F0000F000000000000000A /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 05C527792DD8E36300843626 /* Project object */;
 }

@@ -1,8 +1,7 @@
-// swift-tools-version:6.0
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2025, Jean-David Gadina - www.xs-labs.com
+ * Copyright (c) 2026, Jean-David Gadina - www.xs-labs.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the Software), to deal
@@ -23,35 +22,33 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-import PackageDescription
+/// An inline element within a block.
+///
+/// Containers (emphasis, strong, strikethrough, links) hold their own inline
+/// children so nested styling is preserved.
+internal indirect enum MarkdownInline: Equatable
+{
+    /// A run of plain text.
+    case text( String )
 
-let package = Package(
-    name: "SwiftUtilities",
-    defaultLocalization: "en",
-    platforms: [
-        .macOS( .v15 ),
-    ],
-    products: [
-        .library( name: "SwiftUtilities", targets: [ "SwiftUtilities" ] ),
-    ],
-    dependencies: [
-        .package( url: "https://github.com/apple/swift-markdown.git", .upToNextMinor( from: "0.8.0" ) ),
-    ],
-    targets: [
-        .target(
-            name: "SwiftUtilities",
-            dependencies: [
-                .product( name: "Markdown", package: "swift-markdown" ),
-            ],
-            path: "SwiftUtilities",
-            resources: [
-                .process( "Utilities/en.lproj" ),
-            ]
-        ),
-        .testTarget(
-            name: "SwiftUtilitiesTests",
-            dependencies: [ "SwiftUtilities" ],
-            path: "SwiftUtilitiesTests"
-        ),
-    ]
-)
+    /// Emphasized (typically italic) inline content.
+    case emphasis( [ MarkdownInline ] )
+
+    /// Strongly emphasized (typically bold) inline content.
+    case strong( [ MarkdownInline ] )
+
+    /// Struck-through inline content.
+    case strikethrough( [ MarkdownInline ] )
+
+    /// Inline code, rendered verbatim in a monospaced font.
+    case code( String )
+
+    /// A hyperlink, with its destination (or `nil` when absent) and inline content.
+    case link( destination: String?, children: [ MarkdownInline ] )
+
+    /// An explicit line break (a hard break within a paragraph).
+    case lineBreak
+
+    /// A soft break (a single newline in the source), rendered as a space.
+    case softBreak
+}

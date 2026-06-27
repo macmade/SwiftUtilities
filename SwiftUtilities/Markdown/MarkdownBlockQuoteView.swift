@@ -1,8 +1,7 @@
-// swift-tools-version:6.0
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2025, Jean-David Gadina - www.xs-labs.com
+ * Copyright (c) 2026, Jean-David Gadina - www.xs-labs.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the Software), to deal
@@ -23,35 +22,40 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-import PackageDescription
+#if canImport( SwiftUI )
 
-let package = Package(
-    name: "SwiftUtilities",
-    defaultLocalization: "en",
-    platforms: [
-        .macOS( .v15 ),
-    ],
-    products: [
-        .library( name: "SwiftUtilities", targets: [ "SwiftUtilities" ] ),
-    ],
-    dependencies: [
-        .package( url: "https://github.com/apple/swift-markdown.git", .upToNextMinor( from: "0.8.0" ) ),
-    ],
-    targets: [
-        .target(
-            name: "SwiftUtilities",
-            dependencies: [
-                .product( name: "Markdown", package: "swift-markdown" ),
-            ],
-            path: "SwiftUtilities",
-            resources: [
-                .process( "Utilities/en.lproj" ),
-            ]
-        ),
-        .testTarget(
-            name: "SwiftUtilitiesTests",
-            dependencies: [ "SwiftUtilities" ],
-            path: "SwiftUtilitiesTests"
-        ),
-    ]
-)
+    import SwiftUI
+
+    /// Renders a Markdown block quote.
+    ///
+    /// The quote's nested blocks are rendered by recursing through
+    /// ``MarkdownView``, indented behind a vertical accent bar.
+    internal struct MarkdownBlockQuoteView: View
+    {
+        /// The quote's nested blocks.
+        private let blocks: [ MarkdownBlock ]
+
+        /// Creates a block-quote view.
+        ///
+        /// - Parameter blocks: The quote's nested blocks.
+        init( blocks: [ MarkdownBlock ] )
+        {
+            self.blocks = blocks
+        }
+
+        /// The view's body.
+        var body: some View
+        {
+            HStack( alignment: .top, spacing: 8 )
+            {
+                RoundedRectangle( cornerRadius: 1.5 )
+                    .fill( Color.secondary.opacity( 0.5 ) )
+                    .frame( width: 3 )
+
+                MarkdownView( blocks: self.blocks )
+            }
+            .fixedSize( horizontal: false, vertical: true )
+        }
+    }
+
+#endif
