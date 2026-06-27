@@ -214,7 +214,7 @@
         @MainActor
         private func showUpdateAvailableWindow( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
         {
-            UpdateWindowController().show(
+            UpdateWindowController.show(
                 applicationName: application,
                 currentVersion:  version,
                 updateVersion:   update,

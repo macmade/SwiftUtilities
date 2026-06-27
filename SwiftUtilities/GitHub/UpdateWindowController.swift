@@ -30,26 +30,31 @@
     /// Hosts the update-available window and owns its lifetime.
     ///
     /// ``GitHubUpdater`` is a `Sendable` value type with no mutable state, so it
-    /// cannot itself retain a window. Instead it creates a controller and calls
-    /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``;
-    /// the controller self-retains while its non-modal window is on screen and
-    /// releases itself when the window closes (via `NSWindowDelegate`).
+    /// cannot itself retain a window. Instead it calls the type method
+    /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
+    /// which guarantees a single update window: the live controller is held in a
+    /// shared reference, so a repeated check brings the existing window to the
+    /// front instead of opening another. The controller releases itself when the
+    /// window closes (via `NSWindowDelegate`).
     @MainActor
     internal final class UpdateWindowController: NSObject, NSWindowDelegate
     {
+        /// The default content size of the window.
+        private static let contentSize = NSSize( width: 540, height: 460 )
+
+        /// The single live controller, or `nil` when no update window is open.
+        ///
+        /// Holding the controller here both enforces the single-window rule and
+        /// keeps the controller alive while its window is on screen.
+        private static var shared: UpdateWindowController?
+
         /// The hosted window, while it is on screen.
         private var window: NSWindow?
 
-        /// A strong reference to `self`, keeping the controller alive while the
-        /// window is on screen. Cleared when the window closes.
-        private var retained: UpdateWindowController?
-
-        /// Builds and shows the update-available window.
+        /// Shows the update-available window, reusing the existing one if open.
         ///
-        /// The window hosts an ``UpdateAvailableView`` whose actions are wired to
-        /// open the download or release URL in the default browser and to dismiss
-        /// the window. The application is brought to the front so the non-modal
-        /// window is visible.
+        /// If a window is already on screen, it is simply brought to the front;
+        /// otherwise a new one is created, centered, and shown.
         ///
         /// - Parameters:
         ///   - applicationName: The display name of the application.
@@ -59,7 +64,46 @@
         ///   - downloadURL:     The direct download URL, or `nil` when the release
         ///                      has no downloadable asset.
         ///   - releaseURL:      The URL of the release page on GitHub.
-        func show(
+        static func show(
+            applicationName: String,
+            currentVersion:  String,
+            updateVersion:   String,
+            notes:           String,
+            downloadURL:     URL?,
+            releaseURL:      URL
+        )
+        {
+            if let shared = UpdateWindowController.shared
+            {
+                shared.bringToFront()
+
+                return
+            }
+
+            let controller = UpdateWindowController()
+
+            UpdateWindowController.shared = controller
+
+            controller.present(
+                applicationName: applicationName,
+                currentVersion:  currentVersion,
+                updateVersion:   updateVersion,
+                notes:           notes,
+                downloadURL:     downloadURL,
+                releaseURL:      releaseURL
+            )
+        }
+
+        /// Builds, centers, and shows the window for the given release.
+        ///
+        /// - Parameters:
+        ///   - applicationName: The display name of the application.
+        ///   - currentVersion:  The current version of the application.
+        ///   - updateVersion:   The version of the available update.
+        ///   - notes:           The release's Markdown notes.
+        ///   - downloadURL:     The direct download URL, or `nil`.
+        ///   - releaseURL:      The URL of the release page on GitHub.
+        private func present(
             applicationName: String,
             currentVersion:  String,
             updateVersion:   String,
@@ -96,13 +140,21 @@
             window.delegate    = self
             window.isReleasedWhenClosed = false
 
+            // Size the window before centering, so the SwiftUI content does not
+            // resize it away from the centered position afterwards.
+            window.setContentSize( UpdateWindowController.contentSize )
             window.center()
 
-            self.window   = window
-            self.retained = self
+            self.window = window
 
+            self.bringToFront()
+        }
+
+        /// Activates the application and brings the window to the front.
+        private func bringToFront()
+        {
             NSApp.activate( ignoringOtherApps: true )
-            window.makeKeyAndOrderFront( nil )
+            self.window?.makeKeyAndOrderFront( nil )
         }
 
         /// Closes the hosted window, which in turn releases the controller.
@@ -111,13 +163,13 @@
             self.window?.close()
         }
 
-        /// Releases the window and the controller's self-reference when the window closes.
+        /// Releases the window and the shared controller reference when the window closes.
         ///
         /// - Parameter notification: The `NSWindow.willCloseNotification` notification.
         func windowWillClose( _ notification: Notification )
         {
-            self.window   = nil
-            self.retained = nil
+            self.window                   = nil
+            UpdateWindowController.shared = nil
         }
     }
 

@@ -30,10 +30,11 @@
     ///
     /// Shows a header (the application name and a "current → new version"
     /// summary), the release notes rendered with ``MarkdownView`` inside a
-    /// scroll view, and a trailing row of actions. The actions are delivered as
-    /// callbacks so the hosting controller owns the actual behavior; the
-    /// **Download** action is shown only when a download URL exists, while
-    /// **View on GitHub** and **Later** are always shown.
+    /// scroll view with its own distinct background, and a trailing row of
+    /// actions. The actions are delivered as callbacks so the hosting controller
+    /// owns the actual behavior; the **Download** action is shown only when a
+    /// download URL exists, while **View on GitHub** and **Later** are always
+    /// shown.
     internal struct UpdateAvailableView: View
     {
         /// The display name of the application.
@@ -49,7 +50,8 @@
         private let notes: String
 
         /// The direct download URL, or `nil` when the release has no asset. Used
-        /// only to decide whether the Download action is shown.
+        /// to decide whether the Download action is shown and which action is the
+        /// keyboard default.
         private let downloadURL: URL?
 
         /// Invoked when the user chooses to download the update.
@@ -101,15 +103,7 @@
             {
                 self.header
 
-                Divider()
-
-                ScrollView
-                {
-                    MarkdownView( self.notes )
-                        .frame( maxWidth: .infinity, alignment: .leading )
-                }
-
-                Divider()
+                self.releaseNotes
 
                 self.buttons
             }
@@ -131,18 +125,34 @@
             }
         }
 
+        /// The scrollable release notes, on a distinct text-area background.
+        private var releaseNotes: some View
+        {
+            ScrollView
+            {
+                MarkdownView( self.notes )
+                    .frame( maxWidth: .infinity, alignment: .leading )
+                    .padding( 12 )
+            }
+            .background( Color.primary.opacity( 0.05 ), in: RoundedRectangle( cornerRadius: 8 ) )
+            .overlay( RoundedRectangle( cornerRadius: 8 ).stroke( Color.primary.opacity( 0.12 ) ) )
+        }
+
         /// The trailing row of action buttons.
         ///
-        /// The Download button is shown only when ``downloadURL`` is non-`nil`.
+        /// Later sits on the leading edge; View on GitHub and Download (when a
+        /// download URL exists) sit on the trailing edge. The default button is
+        /// Download when an asset exists, otherwise View on GitHub.
         private var buttons: some View
         {
             HStack
             {
-                Spacer()
-
                 Button( Localization.string( "GitHubUpdater.window.button.later" ), action: self.onLater )
 
+                Spacer()
+
                 Button( Localization.string( "GitHubUpdater.window.button.view" ), action: self.onViewOnGitHub )
+                    .keyboardShortcut( self.downloadURL == nil ? KeyboardShortcut.defaultAction : nil )
 
                 if self.downloadURL != nil
                 {

@@ -849,18 +849,18 @@
                     <li><input type="checkbox" checked disabled> Verify the <code>#if canImport( AppKit )</code> / <code>canImport( SwiftUI )</code> guards on the new files are consistent with <code>GitHubUpdater+AppKit.swift</code>.</li>
                     <li><input type="checkbox" checked disabled> Confirm every new public and private type and member has a SwiftDoc comment.</li>
                     <li><input type="checkbox" checked disabled> Run the repository&rsquo;s Xcode-Format pass over the changed source files.</li>
-                    <li><input type="checkbox" disabled> Final manual verification of the window: notes render correctly (headings/lists/links), the Download button is hidden when no asset exists, and all three buttons behave as specified.</li>
+                    <li><input type="checkbox" checked disabled> Final manual verification of the window: notes render correctly (headings/lists/links), the Download button is hidden when no asset exists, and all three buttons behave as specified.</li>
                 </ul>
             </div>
 
             <div class="field">
                 <span class="label">Status</span>
-                <span class="capsule in-progress">In progress</span>
+                <span class="capsule completed">Completed</span>
             </div>
 
             <div class="field">
                 <span class="label">Completed</span>
-                <div class="placeholder">&nbsp;</div>
+                <div>2026-06-27</div>
             </div>
 
             <div class="field">
@@ -891,9 +891,27 @@
                             reported <em>Unchanged</em>, confirming the code already conforms to the house style.
                         </li>
                         <li>
-                            <strong>Manual verification.</strong> Left to the maintainer &mdash; the GUI window cannot
-                            be driven in this environment. The checklist: notes render (headings/lists/links), the
-                            Download button is hidden when no asset exists, and the three buttons behave as specified.
+                            <strong>Manual verification.</strong> The maintainer ran the GUI smoke-test and reported
+                            five issues (see Review comments), all addressed below.
+                        </li>
+                        <li>
+                            <strong>Review fixes.</strong>
+                            (1) <em>Centering</em> &mdash; the window now sets an explicit content size
+                            <em>before</em> <code>center()</code>, so the SwiftUI content no longer resizes it off-center.
+                            (2) <em>Later placement</em> &mdash; the button row is now
+                            <code>Later · Spacer · View · Download</code>, putting Later on the leading edge.
+                            (3) <em>Default button</em> &mdash; Download is the default action when an asset exists;
+                            otherwise View on GitHub becomes the default.
+                            (4) <em>Single window</em> &mdash; <code>UpdateWindowController</code> now exposes a
+                            <code>static show(...)</code> that holds the live controller in a shared reference; a repeat
+                            check brings the existing window to the front instead of opening another.
+                            (5) <em>Notes background</em> &mdash; the release notes now sit in a scroll view with a
+                            distinct panel: a faint adaptive fill and border (<code>Color.primary.opacity( 0.05 )</code>
+                            / <code>0.12</code>) inside a rounded well. (An earlier <code>underPageBackgroundColor</code>
+                            fill was too dark in light mode; the faint tint reads cleanly in both light and dark.) The
+                            panel uses only SwiftUI colors, so <code>UpdateAvailableView</code> stays a pure SwiftUI view
+                            guarded by <code>#if canImport( SwiftUI )</code> with no AppKit dependency.
+                            <code>swift build</code> stays clean and the formatter reports the changed files unchanged.
                         </li>
                     </ul>
                 </div>
@@ -901,7 +919,41 @@
 
             <div class="field">
                 <span class="label">Review comments</span>
-                <div class="placeholder">&mdash;</div>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Window is not centered.</strong> Despite <code>window.center()</code>, the window
+                            opens off-center (the SwiftUI content resizes the window after centering). Make it open
+                            centered.
+                        </li>
+                        <li>
+                            <strong>Later button placement.</strong> The <em>Later</em> button should be on the left
+                            side of the button row, not grouped on the right.
+                        </li>
+                        <li>
+                            <strong>Default button when no download.</strong> When there is no download asset (Download
+                            hidden), <em>View on GitHub</em> should become the default button.
+                        </li>
+                        <li>
+                            <strong>Only one window.</strong> Triggering the check repeatedly can open multiple update
+                            windows. There must be only one &mdash; reuse/front the existing window instead of opening
+                            another.
+                        </li>
+                        <li>
+                            <strong>Release-notes background.</strong> Give the release-notes text area a different
+                            background so it is visually distinct from the rest of the window.
+                        </li>
+                        <li>
+                            <strong>Release-notes background (follow-up).</strong> The border is good; the panel also
+                            needs a visibly different background fill, not just the border.
+                        </li>
+                        <li>
+                            <strong>No AppKit dependency.</strong> Avoid <code>NSColor</code> in the view so it does not
+                            depend on AppKit. Resolved by using SwiftUI colors for both the panel fill and border,
+                            reverting <code>UpdateAvailableView</code> to a pure SwiftUI view.
+                        </li>
+                    </ul>
+                </div>
             </div>
         </li>
     </ol>
