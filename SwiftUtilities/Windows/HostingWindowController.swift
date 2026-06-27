@@ -97,8 +97,13 @@
         ///                mask, …) before the window is sized and centered.
         func present( rootView: some View, sizing: Sizing, configure: ( NSWindow ) -> Void )
         {
-            let hosting           = NSHostingController( rootView: rootView )
-            hosting.sizingOptions = .preferredContentSize
+            // Note: the hosting controller's `sizingOptions` are deliberately left
+            // at their default. Opting into `.preferredContentSize` makes AppKit
+            // query the controller's preferred size during the window's
+            // update-constraints pass, which re-dirties the hosting view's
+            // constraints and loops until AppKit aborts the window. The window is
+            // instead sized once, explicitly, below.
+            let hosting = NSHostingController( rootView: rootView )
 
             let window                  = NSWindow( contentViewController: hosting )
             window.delegate             = self
