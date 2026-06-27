@@ -43,10 +43,10 @@ public final class GitHubUpdater: Sendable
     public typealias Fetcher = @Sendable ( URLRequest ) async throws -> ( Data, URLResponse )
 
     /// The owner (user or organization) of the GitHub repository.
-    public  let owner:          String
+    public let owner: String
 
     /// The name of the GitHub repository.
-    public  let repository:     String
+    public let repository: String
 
     /// The GitHub API URL of the repository's releases endpoint.
     ///
@@ -54,16 +54,16 @@ public final class GitHubUpdater: Sendable
     /// first page is fetched: pagination is not followed, so the newest release
     /// must lie within the 100 most recent. This holds in practice, as GitHub
     /// returns releases newest-first by creation date.
-    public  let url:            URL
+    public let url: URL
 
     /// The running application's version, captured from its `Info.plist`.
     private let currentVersion: String?
 
     /// The running application's display name, captured from its `Info.plist`.
-    private let programName:    String?
+    private let programName: String?
 
     /// The closure used to fetch the releases data.
-    private let fetch:          Fetcher
+    private let fetch: Fetcher
 
     /// Creates an updater for the given GitHub repository.
     ///
