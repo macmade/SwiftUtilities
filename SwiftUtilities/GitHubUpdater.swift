@@ -243,10 +243,10 @@ public final class GitHubUpdater: Sendable
     ///   - releases: The parsed releases, sorted newest-first.
     ///
     /// - Returns: ``UpdateCheckResult/upToDate(application:version:)`` when no
-    ///            newer release exists, ``UpdateCheckResult/updateAvailable(application:version:update:url:)``
+    ///            newer release exists, ``UpdateCheckResult/updateAvailable(application:version:update:url:notes:downloadURL:)``
     ///            when one does, or ``UpdateCheckResult/failed(reason:)`` if the
     ///            release URL cannot be parsed.
-    internal static func updateCheckResult( current: String, program: String, releases: [ ( version: String, url: String ) ] ) -> UpdateCheckResult
+    internal static func updateCheckResult( current: String, program: String, releases: [ ( version: String, notes: String, url: String, downloadURL: String? ) ] ) -> UpdateCheckResult
     {
         guard let latest = releases.first
         else
@@ -266,7 +266,9 @@ public final class GitHubUpdater: Sendable
             return .failed( reason: "Unable to parse release URL." )
         }
 
-        return .updateAvailable( application: program, version: current, update: latest.version, url: url )
+        let downloadURL = latest.downloadURL.flatMap { URL( string: $0 ) }
+
+        return .updateAvailable( application: program, version: current, update: latest.version, url: url, notes: latest.notes, downloadURL: downloadURL )
     }
 
     /// Normalizes a version string for comparison.
@@ -314,13 +316,16 @@ public final class GitHubUpdater: Sendable
     ///
     /// Decodes the array of releases, discards drafts, pre-releases, and entries
     /// missing a `tag_name` or `html_url`, and returns the remaining releases
-    /// sorted newest-first.
+    /// sorted newest-first. For each release it also captures the Markdown
+    /// `body` (defaulting to an empty string when absent) and the
+    /// `browser_download_url` of the first element of the `assets` array (or
+    /// `nil` when there is no downloadable asset).
     ///
     /// - Parameter data: The raw JSON data returned by the releases endpoint.
     ///
     /// - Returns: The parsed releases sorted from newest to oldest, or `nil` if the
     ///            data is not a JSON array of release objects.
-    internal static func parseReleases( from data: Data ) -> [ ( version: String, url: String ) ]?
+    internal static func parseReleases( from data: Data ) -> [ ( version: String, notes: String, url: String, downloadURL: String? ) ]?
     {
         guard let releases = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
         else
@@ -342,7 +347,11 @@ public final class GitHubUpdater: Sendable
                 return nil
             }
 
-            return ( version: version, url: url )
+            let notes       = $0[ "body" ] as? String ?? ""
+            let assets      = $0[ "assets" ] as? [ [ String: Any ] ]
+            let downloadURL = assets?.first?[ "browser_download_url" ] as? String
+
+            return ( version: version, notes: notes, url: url, downloadURL: downloadURL )
         }
         .sorted
         {

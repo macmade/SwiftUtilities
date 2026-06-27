@@ -53,17 +53,17 @@
         func updateAvailableShownWhenOptionEnabled() async throws
         {
             let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
-            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
+            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url, notes: "Notes", downloadURL: nil )
             let alert  = GitHubUpdater.alert( for: result, messages: .updateAvailable )
 
-            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
+            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url, notes: "Notes", downloadURL: nil ) )
         }
 
         @Test
         func updateAvailableSuppressedWhenOptionDisabled() async throws
         {
             let url    = try #require( URL( string: "https://example.com/2.0.0" ) )
-            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url )
+            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url, notes: "Notes", downloadURL: nil )
 
             #expect( GitHubUpdater.alert( for: result, messages: [] )         == .none )
             #expect( GitHubUpdater.alert( for: result, messages: .upToDate )  == .none )
@@ -97,8 +97,8 @@
             #expect( GitHubUpdater.alert( for: .upToDate( application: "App", version: "1.0.0" ), messages: .all )
                 == .upToDate( application: "App", version: "1.0.0" ) )
 
-            #expect( GitHubUpdater.alert( for: .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ), messages: .all )
-                == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url ) )
+            #expect( GitHubUpdater.alert( for: .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url, notes: "Notes", downloadURL: nil ), messages: .all )
+                == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: url, notes: "Notes", downloadURL: nil ) )
 
             #expect( GitHubUpdater.alert( for: .failed( reason: "Boom" ), messages: .all )
                 == .error( message: "Boom" ) )

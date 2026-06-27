@@ -46,7 +46,11 @@ public enum UpdateCheckResult: Sendable, Equatable
     ///   - version:     The current version of the application.
     ///   - update:      The version of the available update.
     ///   - url:         The URL of the release page for the update.
-    case updateAvailable( application: String, version: String, update: String, url: URL )
+    ///   - notes:       The release's Markdown notes, or an empty string when the
+    ///                  release has no body.
+    ///   - downloadURL: The direct download URL of the release's first asset, or
+    ///                  `nil` when the release has no downloadable asset.
+    case updateAvailable( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
 
     /// The update check could not be completed.
     ///

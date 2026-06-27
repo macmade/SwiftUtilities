@@ -28,6 +28,11 @@ import Testing
 
 struct Test_GitHubUpdater
 {
+    /// The shape of a single parsed release, mirroring the tuple returned by
+    /// ``GitHubUpdater/parseReleases(from:)`` and consumed by
+    /// ``GitHubUpdater/updateCheckResult(current:program:releases:)``.
+    private typealias ParsedRelease = ( version: String, notes: String, url: String, downloadURL: String? )
+
     @Test
     func initialize() async throws
     {
@@ -131,6 +136,59 @@ struct Test_GitHubUpdater
     }
 
     @Test
+    func parseReleasesCapturesNotesAndFirstAssetDownloadURL() async throws
+    {
+        let json = """
+            [
+                {
+                    "tag_name":  "v1.0.0",
+                    "html_url":  "https://example.com/1.0.0",
+                    "body":      "## What's New\\n- Faster startup",
+                    "assets":    [
+                        { "browser_download_url": "https://example.com/download/app.zip" },
+                        { "browser_download_url": "https://example.com/download/other.zip" }
+                    ]
+                }
+            ]
+            """
+
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
+
+        #expect( releases.first?.notes       == "## What's New\n- Faster startup" )
+        #expect( releases.first?.downloadURL == "https://example.com/download/app.zip" )
+    }
+
+    @Test
+    func parseReleasesDefaultsNotesToEmptyWhenBodyMissing() async throws
+    {
+        let json = """
+            [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" } ]
+            """
+
+        let releases = try #require( GitHubUpdater.parseReleases( from: Data( json.utf8 ) ) )
+
+        #expect( releases.first?.notes == "" )
+    }
+
+    @Test
+    func parseReleasesDownloadURLIsNilWhenNoAssets() async throws
+    {
+        let withoutKey = """
+            [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0" } ]
+            """
+        let emptyArray = """
+            [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0", "assets": [] } ]
+            """
+        let missingURL = """
+            [ { "tag_name": "v1.0.0", "html_url": "https://example.com/1.0.0", "assets": [ { "name": "app.zip" } ] } ]
+            """
+
+        #expect( try #require( GitHubUpdater.parseReleases( from: Data( withoutKey.utf8 ) ) ).first?.downloadURL == nil )
+        #expect( try #require( GitHubUpdater.parseReleases( from: Data( emptyArray.utf8 ) ) ).first?.downloadURL == nil )
+        #expect( try #require( GitHubUpdater.parseReleases( from: Data( missingURL.utf8 ) ) ).first?.downloadURL == nil )
+    }
+
+    @Test
     func updateCheckResultReportsUpToDateWhenNoReleases() async throws
     {
         let result = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: [] )
@@ -141,8 +199,8 @@ struct Test_GitHubUpdater
     @Test
     func updateCheckResultReportsUpToDateWhenLatestIsNotNewer() async throws
     {
-        let releases = [ ( version: "v1.0.0", url: "https://example.com/1.0.0" ) ]
-        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let releases: [ ParsedRelease ] = [ ( version: "v1.0.0", notes: "", url: "https://example.com/1.0.0", downloadURL: nil ) ]
+        let result                      = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
 
         #expect( result == .upToDate( application: "App", version: "1.0.0" ) )
     }
@@ -150,33 +208,54 @@ struct Test_GitHubUpdater
     @Test
     func updateCheckResultReportsUpdateWhenNewerAvailable() async throws
     {
-        let releases = [ ( version: "v2.0.0", url: "https://example.com/2.0.0" ) ]
-        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
-        let url      = try #require( URL( string: "https://example.com/2.0.0" ) )
+        let releases: [ ParsedRelease ] = [ ( version: "v2.0.0", notes: "", url: "https://example.com/2.0.0", downloadURL: nil ) ]
+        let result                      = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let url                         = try #require( URL( string: "https://example.com/2.0.0" ) )
 
-        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url ) )
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url, notes: "", downloadURL: nil ) )
     }
 
     @Test
     func updateCheckResultUsesNewestReleaseFirst() async throws
     {
-        let releases = [
-            ( version: "v3.0.0", url: "https://example.com/3.0.0" ),
-            ( version: "v2.0.0", url: "https://example.com/2.0.0" ),
+        let releases: [ ParsedRelease ] = [
+            ( version: "v3.0.0", notes: "", url: "https://example.com/3.0.0", downloadURL: nil ),
+            ( version: "v2.0.0", notes: "", url: "https://example.com/2.0.0", downloadURL: nil ),
         ]
         let result = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
         let url    = try #require( URL( string: "https://example.com/3.0.0" ) )
 
-        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v3.0.0", url: url ) )
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v3.0.0", url: url, notes: "", downloadURL: nil ) )
     }
 
     @Test
     func updateCheckResultFailsForInvalidReleaseURL() async throws
     {
-        let releases = [ ( version: "v2.0.0", url: "" ) ]
-        let result   = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let releases: [ ParsedRelease ] = [ ( version: "v2.0.0", notes: "", url: "", downloadURL: nil ) ]
+        let result                      = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
 
         #expect( result == .failed( reason: "Unable to parse release URL." ) )
+    }
+
+    @Test
+    func updateCheckResultPropagatesNotesAndDownloadURL() async throws
+    {
+        let releases: [ ParsedRelease ] = [ ( version: "v2.0.0", notes: "What's new", url: "https://example.com/2.0.0", downloadURL: "https://example.com/app.zip" ) ]
+        let result                      = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let url                         = try #require( URL( string: "https://example.com/2.0.0" ) )
+        let download                    = try #require( URL( string: "https://example.com/app.zip" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url, notes: "What's new", downloadURL: download ) )
+    }
+
+    @Test
+    func updateCheckResultHasNilDownloadURLWhenAssetMissing() async throws
+    {
+        let releases: [ ParsedRelease ] = [ ( version: "v2.0.0", notes: "What's new", url: "https://example.com/2.0.0", downloadURL: nil ) ]
+        let result                      = GitHubUpdater.updateCheckResult( current: "1.0.0", program: "App", releases: releases )
+        let url                         = try #require( URL( string: "https://example.com/2.0.0" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url, notes: "What's new", downloadURL: nil ) )
     }
 
     private struct StubError: Error
@@ -230,7 +309,29 @@ struct Test_GitHubUpdater
         let result  = await updater.performUpdateCheck()
         let url     = try #require( URL( string: "https://example.com/2.0.0" ) )
 
-        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url ) )
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url, notes: "", downloadURL: nil ) )
+    }
+
+    @Test
+    func performUpdateCheckCarriesNotesAndDownloadURL() async throws
+    {
+        let json = """
+            [
+                {
+                    "tag_name":  "v2.0.0",
+                    "html_url":  "https://example.com/2.0.0",
+                    "body":      "Release notes",
+                    "assets":    [ { "browser_download_url": "https://example.com/app.zip" } ]
+                }
+            ]
+            """
+
+        let updater  = try self.makeUpdater( currentVersion: "1.0.0", programName: "App", fetch: self.makeFetch( status: 200, json: json ) )
+        let result   = await updater.performUpdateCheck()
+        let url      = try #require( URL( string: "https://example.com/2.0.0" ) )
+        let download = try #require( URL( string: "https://example.com/app.zip" ) )
+
+        #expect( result == .updateAvailable( application: "App", version: "1.0.0", update: "v2.0.0", url: url, notes: "Release notes", downloadURL: download ) )
     }
 
     @Test

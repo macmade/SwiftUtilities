@@ -72,7 +72,7 @@
             case upToDate( application: String, version: String )
 
             /// Present the "update available" alert.
-            case updateAvailable( application: String, version: String, update: String, url: URL )
+            case updateAvailable( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
 
             /// Present the error alert.
             case error( message: String )
@@ -97,9 +97,9 @@
 
                     return messages.contains( .upToDate ) ? .upToDate( application: application, version: version ) : .none
 
-                case .updateAvailable( let application, let version, let update, let url ):
+                case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
-                    return messages.contains( .updateAvailable ) ? .updateAvailable( application: application, version: version, update: update, url: url ) : .none
+                    return messages.contains( .updateAvailable ) ? .updateAvailable( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL ) : .none
 
                 case .failed( let reason ):
 
@@ -155,9 +155,9 @@
 
                     self.showUpToDateAlert( application: application, version: version )
 
-                case .updateAvailable( let application, let version, let update, let url ):
+                case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
-                    self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url )
+                    self.showUpdateAvailableAlert( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
 
                 case .error( let message ):
 
@@ -202,8 +202,13 @@
         ///   - version:     The current version of the application.
         ///   - update:      The version of the available update.
         ///   - url:         The URL of the release page to open if the user accepts.
+        ///   - notes:       The release's Markdown notes. Currently unused by the
+        ///                  alert; carried for the forthcoming update window.
+        ///   - downloadURL: The direct download URL of the release's first asset, or
+        ///                  `nil`. Currently unused by the alert; carried for the
+        ///                  forthcoming update window.
         @MainActor
-        private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL )
+        private func showUpdateAvailableAlert( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
         {
             let alert             = NSAlert()
             alert.messageText     = Localization.string( "GitHubUpdater.alert.updateAvailable.title" )

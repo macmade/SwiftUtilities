@@ -1,0 +1,753 @@
+<meta charset="utf-8">
+<title>GitHubUpdater SwiftUI Update Window — Implementation Plan</title>
+<meta name="description" content="Milestone-based implementation plan for replacing the GitHubUpdater update-available NSAlert with a SwiftUI window.">
+<style>
+    :root
+    {
+        --bg:            #0d1117;
+        --surface:       #161b22;
+        --surface-2:     #1c2230;
+        --border:        #30363d;
+        --text:          #e6edf3;
+        --muted:         #9da7b3;
+        --accent:        #58a6ff;
+        --green:         #3fb950;
+        --green-bg:      #1b3322;
+        --amber:         #d29922;
+        --amber-bg:      #3a2e10;
+        --gray:          #8b949e;
+        --gray-bg:       #21262d;
+    }
+
+    *
+    {
+        box-sizing: border-box;
+    }
+
+    body
+    {
+        margin:                 0;
+        padding:                3rem 1.25rem 4rem;
+        background:             var(--bg);
+        color:                  var(--text);
+        font-family:            -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        line-height:            1.6;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap
+    {
+        max-width: 880px;
+        margin:    0 auto;
+    }
+
+    header.doc
+    {
+        border-bottom:  1px solid var(--border);
+        padding-bottom: 1.5rem;
+        margin-bottom:  2.5rem;
+    }
+
+    h1
+    {
+        font-size:   1.9rem;
+        margin:      0 0 0.6rem;
+        line-height: 1.2;
+    }
+
+    h2.section
+    {
+        font-size:     1.35rem;
+        margin:        2.75rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .meta
+    {
+        color:     var(--muted);
+        font-size: 0.9rem;
+    }
+
+    .meta strong
+    {
+        color: var(--text);
+    }
+
+    .meta code
+    {
+        font-size: 0.85em;
+    }
+
+    p
+    {
+        margin: 0 0 1rem;
+    }
+
+    .lead
+    {
+        color:     var(--muted);
+        font-size: 1.02rem;
+    }
+
+    code
+    {
+        background:    var(--gray-bg);
+        border-radius: 5px;
+        padding:       0.1rem 0.35rem;
+        font-family:   ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size:     0.88em;
+        color:         #d6deeb;
+    }
+
+    a
+    {
+        color: var(--accent);
+    }
+
+    .qa
+    {
+        background:    var(--surface);
+        border:        1px solid var(--border);
+        border-radius: 10px;
+        padding:       0.4rem 1.25rem;
+        margin:        0 0 1rem;
+    }
+
+    .qa dt
+    {
+        font-weight: 600;
+        margin-top:  0.85rem;
+    }
+
+    .qa dd
+    {
+        margin:    0.25rem 0 0.85rem;
+        color:     var(--muted);
+        padding-left: 1.1rem;
+        border-left:  2px solid var(--border);
+    }
+
+    .notes
+    {
+        background:    var(--surface);
+        border:        1px solid var(--border);
+        border-radius: 10px;
+        padding:       1.25rem 1.5rem;
+    }
+
+    .notes ul
+    {
+        margin:       0.5rem 0 0;
+        padding-left: 1.25rem;
+    }
+
+    .notes li
+    {
+        margin-bottom: 0.5rem;
+    }
+
+    ol.roadmap
+    {
+        list-style:    none;
+        counter-reset: item;
+        padding:       0;
+        margin:        0;
+    }
+
+    ol.roadmap > li
+    {
+        counter-increment: item;
+        background:        var(--surface);
+        border:            1px solid var(--border);
+        border-radius:     10px;
+        padding:           1.25rem 1.5rem;
+        margin:            0 0 1.25rem;
+        position:          relative;
+    }
+
+    ol.roadmap > li h3
+    {
+        font-size:   1.15rem;
+        margin:      0 0 0.75rem;
+        display:     flex;
+        align-items: baseline;
+        gap:         0.6rem;
+    }
+
+    ol.roadmap > li h3 .num
+    {
+        flex:            0 0 auto;
+        display:         inline-flex;
+        align-items:     center;
+        justify-content: center;
+        width:           1.6rem;
+        height:          1.6rem;
+        border-radius:   50%;
+        background:      var(--accent);
+        color:          #0d1117;
+        font-size:      0.85rem;
+        font-weight:    700;
+    }
+
+    .field
+    {
+        margin: 0.85rem 0;
+    }
+
+    .field > .label
+    {
+        display:        block;
+        font-size:      0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color:          var(--muted);
+        margin-bottom:  0.3rem;
+    }
+
+    .tasks
+    {
+        list-style:   none;
+        margin:       0;
+        padding:      0;
+    }
+
+    .tasks li
+    {
+        position:     relative;
+        padding-left: 1.7rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .tasks li input
+    {
+        position: absolute;
+        left:     0;
+        top:      0.35rem;
+    }
+
+    .capsule
+    {
+        display:        inline-block;
+        font-size:      0.78rem;
+        font-weight:    600;
+        padding:        0.15rem 0.7rem;
+        border-radius:  999px;
+        letter-spacing: 0.02em;
+    }
+
+    .capsule.not-started
+    {
+        background: var(--gray-bg);
+        color:      var(--gray);
+        border:     1px solid var(--border);
+    }
+
+    .capsule.in-progress
+    {
+        background: var(--amber-bg);
+        color:      var(--amber);
+        border:     1px solid #5a4a18;
+    }
+
+    .capsule.completed
+    {
+        background: var(--green-bg);
+        color:      var(--green);
+        border:     1px solid #245b34;
+    }
+
+    .placeholder
+    {
+        background:    var(--surface-2);
+        border:        1px dashed var(--border);
+        border-radius: 8px;
+        padding:       0.6rem 0.85rem;
+        color:         var(--muted);
+        font-style:    italic;
+        min-height:    1.2rem;
+    }
+
+    .phase-label
+    {
+        font-size:      0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color:          var(--accent);
+        margin:         2rem 0 0.75rem;
+        font-weight:    700;
+    }
+
+    pre
+    {
+        background:    var(--gray-bg);
+        border:        1px solid var(--border);
+        border-radius: 8px;
+        padding:       1rem;
+        overflow-x:    auto;
+        font-family:   ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size:     0.82rem;
+        line-height:   1.5;
+        color:         #d6deeb;
+    }
+
+    .appendix table
+    {
+        border-collapse: collapse;
+        width:           100%;
+        font-size:       0.9rem;
+    }
+
+    .appendix th,
+    .appendix td
+    {
+        border:     1px solid var(--border);
+        padding:    0.5rem 0.7rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .appendix th
+    {
+        background: var(--surface-2);
+    }
+</style>
+
+<div class="wrap">
+    <header class="doc">
+        <h1>GitHubUpdater SwiftUI Update Window — Implementation Plan</h1>
+        <p class="meta">
+            <strong>Generated:</strong> 2026-06-27<br>
+            <strong>Source:</strong> <code>Docs/agent-plans/2026-06-27-updater/updater.html</code>
+        </p>
+    </header>
+
+    <h2 class="section">Overview</h2>
+    <p class="lead">
+        Today <code>GitHubUpdater</code> reports the &ldquo;update available&rdquo; outcome with a plain
+        <code>NSAlert</code> (<em>View and Download</em> / <em>Later</em>) that opens the release page in the
+        default browser. This plan replaces only that outcome with a dedicated, SwiftUI-based update window that
+        renders the release&rsquo;s Markdown notes and offers richer actions (<strong>Download</strong>,
+        <strong>View on GitHub</strong>, <strong>Later</strong>). The up-to-date and error outcomes are out of
+        scope and keep their existing modal alerts.
+    </p>
+    <p class="lead">
+        The approach works outward from the data toward the UI: first carry the release notes and a direct
+        download link through the platform-agnostic check (the current parser captures only the tag and the
+        release-page URL), then add a Markdown renderer, then build the SwiftUI content, and finally host it in an
+        AppKit window and route the outcome to it. Each milestone keeps the package building and its tests green so
+        it can be reviewed and committed on its own.
+    </p>
+
+    <h2 class="section">Questions &amp; answers</h2>
+    <dl class="qa">
+        <dt>Which source document should the plan be built from?</dt>
+        <dd><code>Docs/agent-plans/2026-06-27-updater/updater.html</code> (the recommended candidate under <code>Docs/agent-plans</code>).</dd>
+
+        <dt>What output format should the plan use?</dt>
+        <dd>HTML, matching the source document&rsquo;s format.</dd>
+
+        <dt>How should the release notes&rsquo; Markdown be rendered? (The package currently has zero dependencies.)</dt>
+        <dd>
+            After discussing the trade-offs &mdash; a single SwiftUI <code>Text</code> renders inline styling but
+            ignores block structure; a hosted <code>NSTextView</code> can render blocks once intents are converted
+            to concrete attributes; and Apple&rsquo;s parsers give semantic intent rather than ready-to-display
+            styling &mdash; the chosen approach is to add <strong>Apple&rsquo;s <code>swift-markdown</code></strong>
+            and render its AST with <strong>custom SwiftUI views</strong>. This gives GitHub-Flavored-Markdown
+            fidelity (tables, task lists, strikethrough) and clean handling of nested structure, at the cost of one
+            Apple-maintained dependency.
+        </dd>
+
+        <dt>The &ldquo;Download&rdquo; button should open the release&rsquo;s direct download link. Which asset?</dt>
+        <dd>The <strong>first</strong> release asset&rsquo;s <code>browser_download_url</code>.</dd>
+
+        <dt>If a release has no downloadable asset, what should the Download button do?</dt>
+        <dd><strong>Hide the Download button</strong>; the window shows only <em>View on GitHub</em> and <em>Later</em>.</dd>
+    </dl>
+
+    <h2 class="section">Notes</h2>
+    <div class="notes">
+        <ul>
+            <li>
+                <strong>Key files.</strong>
+                <code>SwiftUtilities/GitHubUpdater.swift</code> (platform-agnostic check + release parsing),
+                <code>SwiftUtilities/UpdateCheckResult.swift</code> (the result enum),
+                <code>SwiftUtilities/GitHubUpdater+AppKit.swift</code> (AppKit presentation, <code>MessageOptions</code>,
+                the internal <code>Alert</code> routing), <code>SwiftUtilities/Localization.swift</code> +
+                <code>SwiftUtilities/en.lproj/Localizable.strings</code> (localized text), and the mirrored test
+                files under <code>SwiftUtilitiesTests/</code>.
+            </li>
+            <li>
+                <strong>Conventions to follow.</strong> Keep the existing license header on every new file; document
+                every type and member (public <em>and</em> private) with SwiftDoc; prefer <code>let</code> and
+                higher-order functions over raw loops; align consecutive <code>=</code> signs; separate calls from
+                assignments with a blank line; use early returns. Run the repo&rsquo;s Xcode-Format pass on changed
+                files. All user-facing strings go through <code>Localization.string(_:)</code> and
+                <code>Localizable.strings</code>.
+            </li>
+            <li>
+                <strong>Platform guards.</strong> The AppKit/SwiftUI code stays behind
+                <code>#if canImport( AppKit )</code> (and <code>canImport( SwiftUI )</code> where needed), consistent
+                with <code>GitHubUpdater+AppKit.swift</code>. <code>swift-markdown</code> is a cross-platform Swift
+                package added to the target unconditionally; it is only <em>imported and used</em> from guarded files.
+            </li>
+            <li>
+                <strong>API-change cascade (important for ordering).</strong> Adding associated values to
+                <code>UpdateCheckResult.updateAvailable</code> breaks every pattern-match on it &mdash; the internal
+                <code>Alert.updateAvailable</code> case, <code>alert(for:messages:)</code>, <code>present(_:messages:)</code>,
+                and the AppKit tests. Milestone&nbsp;1 therefore threads the new fields through all of those to keep
+                the build and tests green, even though presentation is still the old <code>NSAlert</code> at that point.
+            </li>
+            <li>
+                <strong>Window lifetime.</strong> <code>GitHubUpdater</code> is a <code>Sendable final class</code>
+                and <code>present(_:messages:)</code> is <code>@MainActor</code>. To avoid adding mutable state to the
+                updater, the window is owned by a dedicated <code>@MainActor</code> controller that self-retains until
+                its window closes (via <code>NSWindowDelegate</code>). The window is non-modal, unlike the alert it
+                replaces.
+            </li>
+            <li>
+                <strong>Testing reality.</strong> The pure value logic stays unit-tested (parsing, result mapping,
+                alert routing). SwiftUI views and AppKit window hosting are verified manually; where a Markdown
+                AST&rarr;model mapping is factored out as pure, it should be unit-tested too.
+            </li>
+            <li>
+                <strong>Open question for review.</strong> Whether to delete the now-unused
+                <code>GitHubUpdater.alert.updateAvailable.*</code> strings (title / message / buttons) once the window
+                replaces the alert, or keep them. Decided during Milestone&nbsp;4.
+            </li>
+        </ul>
+    </div>
+
+    <h2 class="section">Milestones</h2>
+
+    <div class="phase-label">Phase 1 &middot; Data</div>
+    <ol class="roadmap">
+
+        <li>
+            <h3><span class="num">1</span> Carry release notes and download link through the update check</h3>
+
+            <div class="field">
+                <span class="label">Goal</span>
+                <p>
+                    Extend the platform-agnostic check so it captures the release&rsquo;s Markdown body and a direct
+                    download URL (the first asset), in addition to the release-page URL it captures today. The new
+                    data flows into <code>UpdateCheckResult.updateAvailable</code> so the window has what it needs.
+                    Presentation is unchanged in this milestone; the build and all tests stay green.
+                </p>
+            </div>
+
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li><input type="checkbox" checked disabled> Extend <code>GitHubUpdater.parseReleases(from:)</code> to also read <code>body</code> (the Markdown notes, defaulting to an empty string when absent) and the first element of the release&rsquo;s <code>assets</code> array&rsquo;s <code>browser_download_url</code> (an optional URL string). Widen its return tuple accordingly (e.g. <code>(version, notes, releaseURL, downloadURL)</code>).</li>
+                    <li><input type="checkbox" checked disabled> Update <code>GitHubUpdater.updateCheckResult(current:program:releases:)</code> to thread <code>notes</code> and <code>downloadURL</code> from the newest release into the result.</li>
+                    <li><input type="checkbox" checked disabled> Add <code>notes: String</code> and <code>downloadURL: URL?</code> associated values to <code>UpdateCheckResult.updateAvailable</code>; update its doc comment to describe them.</li>
+                    <li><input type="checkbox" checked disabled> Update the cascade in <code>GitHubUpdater+AppKit.swift</code>: extend the internal <code>Alert.updateAvailable</code> case and <code>alert(for:messages:)</code> to carry the new fields, and adjust <code>present(_:messages:)</code> / <code>showUpdateAvailableAlert(...)</code> signatures so it still compiles (the alert may ignore the new fields for now).</li>
+                    <li><input type="checkbox" checked disabled> Update tests: in <code>SwiftUtilitiesTests/GitHubUpdater.swift</code> assert that <code>parseReleases</code> captures <code>notes</code> and the first asset&rsquo;s download URL, that a missing <code>assets</code>/<code>browser_download_url</code> yields <code>nil</code>, and that a missing <code>body</code> yields an empty string; assert <code>updateCheckResult</code> propagates both. In <code>SwiftUtilitiesTests/GitHubUpdater+AppKit.swift</code> update the <code>.updateAvailable</code> constructions/expectations to the new signature.</li>
+                    <li><input type="checkbox" checked disabled> Run <code>swift build</code> and <code>swift test</code>; confirm green.</li>
+                </ul>
+            </div>
+
+            <div class="field">
+                <span class="label">Status</span>
+                <span class="capsule completed">Completed</span>
+            </div>
+
+            <div class="field">
+                <span class="label">Completed</span>
+                <div>2026-06-27</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Implementation notes</span>
+                <div class="notes">
+                    <ul>
+                        <li>
+                            <strong>Parser.</strong> <code>GitHubUpdater.parseReleases(from:)</code> now returns the
+                            widened tuple <code>(version: String, notes: String, url: String, downloadURL: String?)</code>.
+                            <code>notes</code> reads the release&rsquo;s <code>body</code>, defaulting to
+                            <code>""</code> when absent. <code>downloadURL</code> reads
+                            <code>assets[0].browser_download_url</code>, staying <code>nil</code> when the
+                            <code>assets</code> key is missing, the array is empty, or the first asset has no
+                            <code>browser_download_url</code>. The existing release-page URL keeps the name
+                            <code>url</code> (rather than renaming to <code>releaseURL</code>) to avoid churning the
+                            unrelated <code>parseReleases</code> sorting tests.
+                        </li>
+                        <li>
+                            <strong>Result mapping.</strong> <code>updateCheckResult(current:program:releases:)</code>
+                            takes the widened tuple and threads <code>notes</code> through verbatim;
+                            <code>downloadURL</code> is converted from <code>String?</code> to <code>URL?</code> with
+                            <code>latest.downloadURL.flatMap { URL( string: $0 ) }</code>, so an unparseable asset URL
+                            simply becomes <code>nil</code> rather than failing the whole check (only the
+                            release-page <code>url</code> failing still produces <code>.failed</code>).
+                        </li>
+                        <li>
+                            <strong>Result enum.</strong>
+                            <code>UpdateCheckResult.updateAvailable</code> gained <code>notes: String</code> and
+                            <code>downloadURL: URL?</code> associated values, with the doc comment describing both.
+                        </li>
+                        <li>
+                            <strong>AppKit cascade.</strong> The internal <code>Alert.updateAvailable</code> case,
+                            <code>alert(for:messages:)</code>, the <code>present(_:messages:)</code> routing, and
+                            <code>showUpdateAvailableAlert(...)</code> now all carry <code>notes</code> and
+                            <code>downloadURL</code>. Presentation is unchanged for this milestone &mdash; the alert
+                            ignores the two new fields (documented as &ldquo;carried for the forthcoming update
+                            window&rdquo;).
+                        </li>
+                        <li>
+                            <strong>Tests (TDD).</strong> Wrote the new assertions first and watched them fail to
+                            compile (missing tuple members), then implemented. Added parser tests for notes capture,
+                            first-asset download URL, empty-body default, and the three no-download-URL shapes; added
+                            <code>updateCheckResult</code> propagation tests (with and without a download URL); added a
+                            <code>performUpdateCheck</code> end-to-end test carrying notes + download URL. Updated all
+                            existing <code>updateCheckResult</code> / <code>.updateAvailable</code> /
+                            <code>Alert.updateAvailable</code> constructions to the new signatures. Introduced a private
+                            <code>ParsedRelease</code> typealias in the test struct so the tuple literals (whose
+                            <code>downloadURL: nil</code> needs a contextual type) stay readable.
+                        </li>
+                        <li>
+                            <strong>Verification.</strong> <code>swift build</code> and <code>swift test</code> both
+                            green &mdash; 66 tests pass. (Editor SourceKit may still show stale errors against the old
+                            tuple type; the compiler is clean.)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="field">
+                <span class="label">Review comments</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+        </li>
+    </ol>
+
+    <div class="phase-label">Phase 2 &middot; Rendering &amp; UI</div>
+    <ol class="roadmap" start="2">
+
+        <li>
+            <h3><span class="num">2</span> Add swift-markdown and a Markdown-rendering SwiftUI view</h3>
+
+            <div class="field">
+                <span class="label">Goal</span>
+                <p>
+                    Bring in Apple&rsquo;s <code>swift-markdown</code> and build a reusable SwiftUI view that renders
+                    a Markdown string as native SwiftUI views &mdash; headings, paragraphs, emphasis/strong, inline
+                    code, code blocks, links, ordered and unordered (including nested) lists, block quotes, and
+                    thematic breaks &mdash; degrading gracefully for unsupported nodes.
+                </p>
+            </div>
+
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li><input type="checkbox" disabled> Add <code>.package(url: "https://github.com/apple/swift-markdown.git", ...)</code> to <code>Package.swift</code> with a pinned version, and add the <code>Markdown</code> product to the <code>SwiftUtilities</code> target&rsquo;s dependencies. Commit the resulting <code>Package.resolved</code>.</li>
+                    <li><input type="checkbox" disabled> Create a new guarded source file (e.g. <code>SwiftUtilities/GitHubUpdater+MarkdownView.swift</code>) under <code>#if canImport( SwiftUI )</code>, importing <code>Markdown</code> and <code>SwiftUI</code>.</li>
+                    <li><input type="checkbox" disabled> Implement a <code>MarkupVisitor</code> (or walker) that maps AST nodes to a small view model / SwiftUI views: inline runs (text, emphasis, strong, inline code, links) composed into <code>Text</code>/<code>AttributedString</code>; block nodes laid out in a <code>VStack</code>.</li>
+                    <li><input type="checkbox" disabled> Make links tappable, opening the target in the default browser via <code>NSWorkspace.shared.open</code>.</li>
+                    <li><input type="checkbox" disabled> Factor the AST&rarr;view-model mapping so the pure part is unit-testable; add tests for representative inputs (heading, nested list, link, code block). Note that the rendered views themselves are verified manually.</li>
+                    <li><input type="checkbox" disabled> Document every new type and member (public and private) with SwiftDoc. Run <code>swift build</code>.</li>
+                </ul>
+            </div>
+
+            <div class="field">
+                <span class="label">Status</span>
+                <span class="capsule not-started">Not started</span>
+            </div>
+
+            <div class="field">
+                <span class="label">Completed</span>
+                <div class="placeholder">&nbsp;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Implementation notes</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Review comments</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+        </li>
+
+        <li>
+            <h3><span class="num">3</span> Build the SwiftUI update window content</h3>
+
+            <div class="field">
+                <span class="label">Goal</span>
+                <p>
+                    Compose the window&rsquo;s SwiftUI content: a header (application name and a
+                    &ldquo;current&nbsp;&rarr;&nbsp;new version&rdquo; summary), the scrollable release notes rendered
+                    via the Markdown view, and the three action buttons. The Download button is hidden when there is
+                    no download URL; View on GitHub and Later are always shown.
+                </p>
+            </div>
+
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li><input type="checkbox" disabled> Create a guarded SwiftUI view (e.g. <code>SwiftUtilities/GitHubUpdater+UpdateAvailableView.swift</code>) taking the application name, current version, update version, notes, optional <code>downloadURL</code>, the release URL, and three action callbacks (<code>onDownload</code>, <code>onViewOnGitHub</code>, <code>onLater</code>).</li>
+                    <li><input type="checkbox" disabled> Lay out a header, a <code>ScrollView</code> wrapping the Markdown view from Milestone&nbsp;2, and a trailing button row, with sensible padding and a minimum content size.</li>
+                    <li><input type="checkbox" disabled> Conditionally render the Download button only when <code>downloadURL != nil</code>; keep View on GitHub and Later unconditional.</li>
+                    <li><input type="checkbox" disabled> Add localized strings to <code>en.lproj/Localizable.strings</code> (with descriptive comments) for the window title, the header/subtitle format, and the three button titles (Download / View on GitHub / Later); read them via <code>Localization.string(_:)</code>.</li>
+                    <li><input type="checkbox" disabled> Document every new type and member with SwiftDoc; run <code>swift build</code>.</li>
+                </ul>
+            </div>
+
+            <div class="field">
+                <span class="label">Status</span>
+                <span class="capsule not-started">Not started</span>
+            </div>
+
+            <div class="field">
+                <span class="label">Completed</span>
+                <div class="placeholder">&nbsp;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Implementation notes</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Review comments</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+        </li>
+    </ol>
+
+    <div class="phase-label">Phase 3 &middot; Integration</div>
+    <ol class="roadmap" start="4">
+
+        <li>
+            <h3><span class="num">4</span> Host the window in AppKit and route the update-available outcome to it</h3>
+
+            <div class="field">
+                <span class="label">Goal</span>
+                <p>
+                    Replace the update-available <code>NSAlert</code> with a real window hosting the SwiftUI content,
+                    wiring the three actions. The up-to-date and error outcomes keep their existing alerts.
+                </p>
+            </div>
+
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li><input type="checkbox" disabled> Add an <code>@MainActor</code> window controller (e.g. <code>UpdateWindowController</code>) that builds an <code>NSWindow</code> hosting <code>UpdateAvailableView</code> via <code>NSHostingController</code>/<code>NSHostingView</code>, sets the localized title, centers the window, and self-retains until the window closes (through <code>NSWindowDelegate</code>) so the <code>Sendable</code> updater needs no stored state.</li>
+                    <li><input type="checkbox" disabled> Wire the callbacks: <strong>Download</strong> &rarr; <code>NSWorkspace.shared.open(downloadURL)</code>; <strong>View on GitHub</strong> &rarr; open the release URL (<code>html_url</code>); <strong>Later</strong> &rarr; close the window. Bring the app/window to the front when shown.</li>
+                    <li><input type="checkbox" disabled> Update <code>present(_:messages:)</code> so the <code>.updateAvailable</code> case opens the window instead of calling <code>showUpdateAvailableAlert</code>; ensure <code>Alert.updateAvailable</code> carries notes, downloadURL, and the release URL through to it.</li>
+                    <li><input type="checkbox" disabled> Remove <code>showUpdateAvailableAlert</code>. Decide with the reviewer whether to delete the now-unused <code>GitHubUpdater.alert.updateAvailable.*</code> strings; record the decision.</li>
+                    <li><input type="checkbox" disabled> Leave <code>showUpToDateAlert</code> and <code>showErrorAlert</code> (and their routing) unchanged.</li>
+                    <li><input type="checkbox" disabled> Update the AppKit routing tests for the enriched <code>.updateAvailable</code> alert; run <code>swift build</code> and <code>swift test</code>.</li>
+                    <li><input type="checkbox" disabled> Manually smoke-test the window with sample data (notes that exercise headings/lists/links; with and without a download asset).</li>
+                </ul>
+            </div>
+
+            <div class="field">
+                <span class="label">Status</span>
+                <span class="capsule not-started">Not started</span>
+            </div>
+
+            <div class="field">
+                <span class="label">Completed</span>
+                <div class="placeholder">&nbsp;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Implementation notes</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Review comments</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+        </li>
+
+        <li>
+            <h3><span class="num">5</span> Verification, documentation, and formatting</h3>
+
+            <div class="field">
+                <span class="label">Goal</span>
+                <p>
+                    Final consolidation pass: a clean full build and test run, complete doc comments, consistent
+                    platform guards, and a formatting pass over the changed files.
+                </p>
+            </div>
+
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li><input type="checkbox" disabled> Run <code>swift build</code> and <code>swift test</code> and capture the output; confirm all tests pass.</li>
+                    <li><input type="checkbox" disabled> Verify the <code>#if canImport( AppKit )</code> / <code>canImport( SwiftUI )</code> guards on the new files are consistent with <code>GitHubUpdater+AppKit.swift</code>.</li>
+                    <li><input type="checkbox" disabled> Confirm every new public and private type and member has a SwiftDoc comment.</li>
+                    <li><input type="checkbox" disabled> Run the repository&rsquo;s Xcode-Format pass over the changed source files.</li>
+                    <li><input type="checkbox" disabled> Final manual verification of the window: notes render correctly (headings/lists/links), the Download button is hidden when no asset exists, and all three buttons behave as specified.</li>
+                </ul>
+            </div>
+
+            <div class="field">
+                <span class="label">Status</span>
+                <span class="capsule not-started">Not started</span>
+            </div>
+
+            <div class="field">
+                <span class="label">Completed</span>
+                <div class="placeholder">&nbsp;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Implementation notes</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Review comments</span>
+                <div class="placeholder">&mdash;</div>
+            </div>
+        </li>
+    </ol>
+
+    <h2 class="section">Appendix</h2>
+    <div class="appendix">
+        <p><strong>GitHub release JSON fields used</strong> (from the <code>releases</code> endpoint):</p>
+        <table>
+            <thead>
+                <tr><th>Field</th><th>Use</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>tag_name</code></td><td>Version comparison (normalized, <code>v</code>-prefix stripped).</td><td>Captured today.</td></tr>
+                <tr><td><code>html_url</code></td><td>Release page &mdash; the &ldquo;View on GitHub&rdquo; action.</td><td>Captured today.</td></tr>
+                <tr><td><code>draft</code> / <code>prerelease</code></td><td>Entries with either set to <code>true</code> are discarded.</td><td>Captured today.</td></tr>
+                <tr><td><code>body</code></td><td>Markdown release notes rendered in the window.</td><td>Added in Milestone&nbsp;1.</td></tr>
+                <tr><td><code>assets[0].browser_download_url</code></td><td>Direct download link &mdash; the &ldquo;Download&rdquo; action (button hidden if absent).</td><td>Added in Milestone&nbsp;1.</td></tr>
+            </tbody>
+        </table>
+
+        <p style="margin-top:1.5rem;"><strong>Data flow after the change:</strong></p>
+        <pre>GitHub releases JSON
+  &rarr; parseReleases(from:)            // + body, + assets[0].browser_download_url
+  &rarr; updateCheckResult(...)          // threads notes + downloadURL
+  &rarr; UpdateCheckResult.updateAvailable(application, version, update, url, notes, downloadURL)
+  &rarr; [AppKit] alert(for:messages:)   // Alert.updateAvailable carries the same fields
+  &rarr; present(_:messages:)            // .updateAvailable opens the window (was NSAlert)
+  &rarr; UpdateWindowController          // @MainActor, self-retaining NSWindow
+       hosts UpdateAvailableView (SwiftUI)
+         &rarr; MarkdownView(notes)       // swift-markdown AST &rarr; custom SwiftUI views
+         &rarr; [Download?] [View on GitHub] [Later]</pre>
+
+        <p style="margin-top:1.5rem;"><strong>Window layout sketch:</strong></p>
+        <pre>+--------------------------------------------------+
+|  Update Available                                |
+|  MyApp 2.0.0 is available (you have 1.0.0)       |
+|  ------------------------------------------------|
+|  | ## What's New                              |  |
+|  | - Faster startup                           |  |  &larr; ScrollView of
+|  | - Fixes [#42](https://...)                 |  |     rendered Markdown
+|  | ...                                        |  |
+|  ------------------------------------------------|
+|                  [ Later ]  [ View on GitHub ]  [ Download ] |
++--------------------------------------------------+
+  (Download omitted entirely when no asset exists)</pre>
+    </div>
+</div>
