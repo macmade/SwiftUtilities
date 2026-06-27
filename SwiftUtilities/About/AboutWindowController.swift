@@ -34,6 +34,28 @@
     @MainActor
     public final class AboutWindowController: HostingWindowController
     {
+        /// Shows the About window for the running application, reusing the existing one if open.
+        ///
+        /// The application's name, version, and copyright are read from the
+        /// bundle's `Info.plist` (see ``title``, ``version``, and ``copyright``),
+        /// and the icon defaults to the application's icon. This is the convenient
+        /// path; use ``show(applicationName:version:copyright:icon:)`` to supply
+        /// the values explicitly.
+        ///
+        /// - Parameters:
+        ///   - bundle: The bundle to read the application information from.
+        ///             Defaults to the main bundle.
+        ///   - icon:   The icon to display. Defaults to the application's icon.
+        public static func show( bundle: Bundle = .main, icon: NSImage = NSApp.applicationIconImage )
+        {
+            AboutWindowController.show(
+                applicationName: bundle.title,
+                version:         bundle.version,
+                copyright:       bundle.copyright,
+                icon:            icon
+            )
+        }
+
         /// Shows the About window, reusing the existing one if open.
         ///
         /// - Parameters:
