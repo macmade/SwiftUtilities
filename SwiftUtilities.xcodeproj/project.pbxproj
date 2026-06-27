@@ -41,6 +41,10 @@
 		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
+		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
+		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
+		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
+		C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +58,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		05398CAD2DEEC91B005904EC /* Benchmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Benchmark.swift; sourceTree = "<group>"; };
 		05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdater.swift; sourceTree = "<group>"; };
 		05398CAF2DEEC91B005904EC /* RuntimeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeError.swift; sourceTree = "<group>"; };
@@ -140,6 +145,9 @@
 		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 		05F0001F000000000000000A /* UpdateAvailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableView.swift; sourceTree = "<group>"; };
 		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
+		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
+		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -199,9 +207,11 @@
 		05D5890F2DD8E470000BA644 /* SwiftUtilities */ = {
 			isa = PBXGroup;
 			children = (
+				B30B0C7655D31455310CA29C /* About */,
 				05F00011000000000000000A /* GitHub */,
 				05F00012000000000000000A /* Markdown */,
 				05F00013000000000000000A /* Utilities */,
+				F76ED22C2C0BE7CFED28589D /* Windows */,
 			);
 			path = SwiftUtilities;
 			sourceTree = "<group>";
@@ -423,6 +433,26 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
+		B30B0C7655D31455310CA29C /* About */ = {
+			isa = PBXGroup;
+			children = (
+				1EF8FAA0661E567D42895EFD /* AboutView.swift */,
+				02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */,
+				30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */,
+			);
+			name = About;
+			path = About;
+			sourceTree = "<group>";
+		};
+		F76ED22C2C0BE7CFED28589D /* Windows */ = {
+			isa = PBXGroup;
+			children = (
+				7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */,
+			);
+			name = Windows;
+			path = Windows;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -471,8 +501,6 @@
 				05C5278E2DD8E36300843626 /* PBXTargetDependency */,
 			);
 			name = SwiftUtilitiesTests;
-			packageProductDependencies = (
-			);
 			productName = SwiftFITSTests;
 			productReference = 05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -565,6 +593,10 @@
 				05398CB42DEEC91B005904EC /* RuntimeError.swift in Sources */,
 				05398CB52DEEC91B005904EC /* UnsafeMutableSendable.swift in Sources */,
 				05398CB62DEEC91B005904EC /* UnsafeSendable.swift in Sources */,
+				940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */,
+				C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */,
+				474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */,
+				1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

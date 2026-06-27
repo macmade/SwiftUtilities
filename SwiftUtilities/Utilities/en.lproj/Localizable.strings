@@ -1,3 +1,6 @@
+/* Title of the About window. %@ is the application name. */
+"About.window.title" = "About %@";
+
 /* Title of the alert shown when an update check fails. */
 "GitHubUpdater.alert.error.title" = "Error";
 
