@@ -27,17 +27,24 @@
     import SwiftUI
 
     /// Renders a Markdown thematic break (horizontal rule) as a divider.
-    internal struct MarkdownThematicBreakView: View
+    public struct MarkdownThematicBreakView: View
     {
         /// Creates a thematic-break view.
-        init()
+        public init()
         {}
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             Divider()
         }
+    }
+
+    #Preview
+    {
+        MarkdownThematicBreakView()
+            .padding()
+            .frame( width: 200 )
     }
 
 #endif

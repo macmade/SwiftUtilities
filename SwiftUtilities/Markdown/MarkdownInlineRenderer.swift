@@ -31,14 +31,14 @@ import Foundation
 /// for hyperlinks. The resulting string is rendered by the heading and
 /// paragraph views; SwiftUI's `Text` resolves these attributes, and links open
 /// in the default browser.
-internal enum MarkdownInlineRenderer
+public enum MarkdownInlineRenderer
 {
     /// Builds an `AttributedString` for a sequence of inline elements.
     ///
     /// - Parameter inlines: The inline elements to render.
     ///
     /// - Returns: The concatenated, styled string.
-    static func attributedString( for inlines: [ MarkdownInline ] ) -> AttributedString
+    public static func attributedString( for inlines: [ MarkdownInline ] ) -> AttributedString
     {
         inlines.reduce( into: AttributedString() ) { $0 += MarkdownInlineRenderer.attributedString( for: $1 ) }
     }
@@ -48,7 +48,7 @@ internal enum MarkdownInlineRenderer
     /// - Parameter inline: The inline element to render.
     ///
     /// - Returns: The styled string.
-    static func attributedString( for inline: MarkdownInline ) -> AttributedString
+    public static func attributedString( for inline: MarkdownInline ) -> AttributedString
     {
         switch inline
         {

@@ -40,10 +40,10 @@
     /// `static` reference — works around Swift's lack of static stored properties on
     /// generic types while still keeping the single-window rule in one place.
     @MainActor
-    public class HostingWindowController: NSObject, NSWindowDelegate
+    open class HostingWindowController: NSObject, NSWindowDelegate
     {
         /// How a hosted window is sized before being centered.
-        enum Sizing
+        public enum Sizing
         {
             /// Use a fixed content size.
             case fixed( NSSize )
@@ -70,7 +70,7 @@
         /// - Parameters:
         ///   - make: Creates the controller when no window is currently open.
         ///   - body: Builds and shows the newly created controller's window.
-        static func show<T: HostingWindowController>( using make: () -> T, _ body: ( T ) -> Void )
+        public static func show<T: HostingWindowController>( using make: () -> T, _ body: ( T ) -> Void )
         {
             let key = ObjectIdentifier( T.self )
 
@@ -95,7 +95,7 @@
         ///   - sizing:    How the window is sized before being centered.
         ///   - configure: Applies the subclass-specific window chrome (title, style
         ///                mask, …) before the window is sized and centered.
-        func present( rootView: some View, sizing: Sizing, configure: ( NSWindow ) -> Void )
+        public func present( rootView: some View, sizing: Sizing, configure: ( NSWindow ) -> Void )
         {
             // Note: the hosting controller's `sizingOptions` are deliberately left
             // at their default. Opting into `.preferredContentSize` makes AppKit
@@ -127,14 +127,14 @@
         }
 
         /// Activates the application and brings the window to the front.
-        func bringToFront()
+        public func bringToFront()
         {
             NSApp.activate( ignoringOtherApps: true )
             self.window?.makeKeyAndOrderFront( nil )
         }
 
         /// Closes the hosted window, which in turn releases the controller.
-        func close()
+        public func close()
         {
             self.window?.close()
         }

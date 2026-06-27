@@ -30,7 +30,7 @@
     ///
     /// The heading's inline content is rendered with ``MarkdownInlineRenderer``
     /// and shown at a font size derived from the heading level.
-    internal struct MarkdownHeadingView: View
+    public struct MarkdownHeadingView: View
     {
         /// The heading level (`1` is the largest).
         private let level: Int
@@ -43,14 +43,14 @@
         /// - Parameters:
         ///   - level:   The heading level (`1` is the largest).
         ///   - inlines: The heading's inline content.
-        init( level: Int, inlines: [ MarkdownInline ] )
+        public init( level: Int, inlines: [ MarkdownInline ] )
         {
             self.level   = level
             self.inlines = inlines
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             Text( MarkdownInlineRenderer.attributedString( for: self.inlines ) )
                 .font( self.font( forLevel: self.level ) )
@@ -75,6 +75,17 @@
                 default: return .footnote
             }
         }
+    }
+
+    #Preview
+    {
+        VStack( alignment: .leading, spacing: 8 )
+        {
+            MarkdownHeadingView( level: 1, inlines: [ .text( "Heading level 1" ) ] )
+            MarkdownHeadingView( level: 2, inlines: [ .text( "Heading level 2" ) ] )
+            MarkdownHeadingView( level: 3, inlines: [ .text( "Heading level 3" ) ] )
+        }
+        .padding()
     }
 
 #endif

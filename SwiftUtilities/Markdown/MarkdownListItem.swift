@@ -26,20 +26,20 @@
 ///
 /// An item holds its own blocks, so nested lists and multi-paragraph items are
 /// represented naturally. `checkbox` is non-`nil` for GitHub task-list items.
-internal struct MarkdownListItem: Equatable
+public struct MarkdownListItem: Equatable
 {
     /// The task-list checkbox state, or `nil` when the item is not a task-list item.
-    let checkbox: MarkdownCheckbox?
+    public let checkbox: MarkdownCheckbox?
 
     /// The item's block content.
-    let blocks: [ MarkdownBlock ]
+    public let blocks: [ MarkdownBlock ]
 
     /// Creates a list item.
     ///
     /// - Parameters:
     ///   - checkbox: The task-list checkbox state, or `nil`.
     ///   - blocks:   The item's block content.
-    init( checkbox: MarkdownCheckbox?, blocks: [ MarkdownBlock ] )
+    public init( checkbox: MarkdownCheckbox?, blocks: [ MarkdownBlock ] )
     {
         self.checkbox = checkbox
         self.blocks   = blocks

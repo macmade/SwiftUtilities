@@ -88,10 +88,10 @@ public final class GitHubUpdater: Sendable
 
     /// Creates an updater with explicit dependencies.
     ///
-    /// This initializer is the test seam for the update-check orchestration: it
-    /// allows the current version, application name, and the fetching of release
-    /// data to be supplied directly, so the decision logic can be exercised
-    /// without `Bundle.main` or the network.
+    /// This initializer allows the current version, application name, and the
+    /// fetching of release data to be supplied directly, so the decision logic can
+    /// be exercised without `Bundle.main` or the network. It is also the dependency
+    /// injection seam for tests.
     ///
     /// - Parameters:
     ///   - owner:          The owner (user or organization) of the repository.
@@ -101,7 +101,7 @@ public final class GitHubUpdater: Sendable
     ///   - fetch:          The closure used to fetch the releases data.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    internal init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
+    public init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
     {
         guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases?per_page=100" )
         else

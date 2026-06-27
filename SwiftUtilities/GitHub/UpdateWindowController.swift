@@ -37,7 +37,7 @@
     /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
     /// which guarantees a single update window.
     @MainActor
-    internal final class UpdateWindowController: HostingWindowController
+    public final class UpdateWindowController: HostingWindowController
     {
         /// The default content size of the window.
         private static let contentSize = NSSize( width: 540, height: 460 )
@@ -52,7 +52,7 @@
         ///   - downloadURL:     The direct download URL, or `nil` when the release
         ///                      has no downloadable asset.
         ///   - releaseURL:      The URL of the release page on GitHub.
-        static func show(
+        public static func show(
             applicationName: String,
             currentVersion:  String,
             updateVersion:   String,

@@ -31,7 +31,7 @@
     /// The code is shown verbatim in a monospaced font on a subtly tinted,
     /// rounded background, and is selectable. The single trailing newline that
     /// the parser keeps on fenced code is trimmed for display.
-    internal struct MarkdownCodeBlockView: View
+    public struct MarkdownCodeBlockView: View
     {
         /// The verbatim code to display.
         private let code: String
@@ -39,13 +39,13 @@
         /// Creates a code-block view.
         ///
         /// - Parameter code: The verbatim code to display.
-        init( code: String )
+        public init( code: String )
         {
             self.code = code
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             Text( self.displayedCode )
                 .font( .system( .body, design: .monospaced ) )
@@ -60,6 +60,13 @@
         {
             self.code.hasSuffix( "\n" ) ? String( self.code.dropLast() ) : self.code
         }
+    }
+
+    #Preview
+    {
+        MarkdownCodeBlockView( code: "let answer = 42\nprint( answer )" )
+            .padding()
+            .frame( width: 300 )
     }
 
 #endif

@@ -30,7 +30,7 @@
     ///
     /// The quote's nested blocks are rendered by recursing through
     /// ``MarkdownView``, indented behind a vertical accent bar.
-    internal struct MarkdownBlockQuoteView: View
+    public struct MarkdownBlockQuoteView: View
     {
         /// The quote's nested blocks.
         private let blocks: [ MarkdownBlock ]
@@ -38,13 +38,13 @@
         /// Creates a block-quote view.
         ///
         /// - Parameter blocks: The quote's nested blocks.
-        init( blocks: [ MarkdownBlock ] )
+        public init( blocks: [ MarkdownBlock ] )
         {
             self.blocks = blocks
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             HStack( alignment: .top, spacing: 8 )
             {
@@ -56,6 +56,13 @@
             }
             .fixedSize( horizontal: false, vertical: true )
         }
+    }
+
+    #Preview
+    {
+        MarkdownBlockQuoteView( blocks: [ .paragraph( inlines: [ .text( "A quoted paragraph of text." ) ] ) ] )
+            .padding()
+            .frame( width: 300 )
     }
 
 #endif

@@ -32,7 +32,7 @@
     /// checkbox for task items, or a bullet otherwise — beside its content, which
     /// is rendered by recursing through ``MarkdownView`` so nested lists and
     /// multi-paragraph items work naturally.
-    internal struct MarkdownListView: View
+    public struct MarkdownListView: View
     {
         /// The list's items.
         private let items: [ MarkdownListItem ]
@@ -46,14 +46,14 @@
         ///   - items: The list's items.
         ///   - start: The starting number for an ordered list, or `nil` for a
         ///            bulleted list.
-        init( items: [ MarkdownListItem ], start: Int? )
+        public init( items: [ MarkdownListItem ], start: Int? )
         {
             self.items = items
             self.start = start
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             VStack( alignment: .leading, spacing: 6 )
             {
@@ -97,6 +97,31 @@
 
             return "\( start + index )."
         }
+    }
+
+    #Preview
+    {
+        VStack( alignment: .leading, spacing: 16 )
+        {
+            MarkdownListView(
+                items:
+                [
+                    MarkdownListItem( checkbox: nil, blocks: [ .paragraph( inlines: [ .text( "First item" ) ] ) ] ),
+                    MarkdownListItem( checkbox: nil, blocks: [ .paragraph( inlines: [ .text( "Second item" ) ] ) ] ),
+                ],
+                start: 1
+            )
+
+            MarkdownListView(
+                items:
+                [
+                    MarkdownListItem( checkbox: .checked,   blocks: [ .paragraph( inlines: [ .text( "Done" ) ] ) ] ),
+                    MarkdownListItem( checkbox: .unchecked, blocks: [ .paragraph( inlines: [ .text( "To do" ) ] ) ] ),
+                ],
+                start: nil
+            )
+        }
+        .padding()
     }
 
 #endif

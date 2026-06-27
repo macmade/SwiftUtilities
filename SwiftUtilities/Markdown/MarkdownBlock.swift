@@ -31,7 +31,7 @@
 ///
 /// Only the subset of Markdown used by release notes is modeled; unsupported
 /// nodes are dropped during parsing (see ``MarkdownContent/parse(_:)``).
-internal enum MarkdownBlock: Equatable
+public enum MarkdownBlock: Equatable
 {
     /// A heading, with its level (`1` through `6`) and inline content.
     case heading( level: Int, inlines: [ MarkdownInline ] )

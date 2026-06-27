@@ -33,7 +33,7 @@
     /// leading-aligned vertical stack. Each block is rendered by a dedicated
     /// view, and nested content (list items, block quotes) is rendered by
     /// recursing through this view. Links open in the default browser.
-    internal struct MarkdownView: View
+    public struct MarkdownView: View
     {
         /// The blocks to render.
         private let blocks: [ MarkdownBlock ]
@@ -41,7 +41,7 @@
         /// Creates a view that renders the given Markdown string.
         ///
         /// - Parameter markdown: The Markdown source to render.
-        init( _ markdown: String )
+        public init( _ markdown: String )
         {
             self.blocks = MarkdownContent.parse( markdown )
         }
@@ -52,13 +52,13 @@
         /// blocks of list items and block quotes.
         ///
         /// - Parameter blocks: The blocks to render.
-        init( blocks: [ MarkdownBlock ] )
+        public init( blocks: [ MarkdownBlock ] )
         {
             self.blocks = blocks
         }
 
         /// The view's body: the blocks laid out vertically.
-        var body: some View
+        public var body: some View
         {
             VStack( alignment: .leading, spacing: 10 )
             {
@@ -110,6 +110,30 @@
                     MarkdownThematicBreakView()
             }
         }
+    }
+
+    #Preview
+    {
+        MarkdownView(
+            """
+            # Heading
+
+            A paragraph with **bold**, *italic*, and `inline code`.
+
+            - First item
+            - Second item
+
+            > A block quote.
+
+            ---
+
+            ```swift
+            let answer = 42
+            ```
+            """
+        )
+        .padding()
+        .frame( width: 400 )
     }
 
 #endif

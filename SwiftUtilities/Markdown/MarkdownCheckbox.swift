@@ -23,7 +23,7 @@
  ******************************************************************************/
 
 /// The state of a GitHub task-list checkbox.
-internal enum MarkdownCheckbox: Equatable
+public enum MarkdownCheckbox: Equatable
 {
     /// A checked checkbox (`- [x]`).
     case checked

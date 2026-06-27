@@ -35,7 +35,7 @@
     /// owns the actual behavior; the **Download** action is shown only when a
     /// download URL exists, while **View on GitHub** and **Later** are always
     /// shown.
-    internal struct UpdateAvailableView: View
+    public struct UpdateAvailableView: View
     {
         /// The display name of the application.
         private let applicationName: String
@@ -75,7 +75,7 @@
         ///   - onDownload:      Invoked when the user chooses to download.
         ///   - onViewOnGitHub:  Invoked when the user chooses to view the release.
         ///   - onLater:         Invoked when the user dismisses the window.
-        init(
+        public init(
             applicationName: String,
             currentVersion:  String,
             updateVersion:   String,
@@ -97,7 +97,7 @@
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             VStack( alignment: .leading, spacing: 16 )
             {
@@ -161,6 +161,26 @@
                 }
             }
         }
+    }
+
+    #Preview
+    {
+        UpdateAvailableView(
+            applicationName: "Application",
+            currentVersion:  "1.0.0",
+            updateVersion:   "1.1.0",
+            notes:
+            """
+            ## What's New
+
+            - A shiny new feature
+            - A handful of bug fixes
+            """,
+            downloadURL:    URL( string: "https://example.com/download" ),
+            onDownload:     {},
+            onViewOnGitHub: {},
+            onLater:        {}
+        )
     }
 
 #endif

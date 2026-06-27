@@ -30,7 +30,7 @@
     ///
     /// The paragraph's inline content is rendered with ``MarkdownInlineRenderer``
     /// and allowed to wrap across as many lines as needed.
-    internal struct MarkdownParagraphView: View
+    public struct MarkdownParagraphView: View
     {
         /// The paragraph's inline content.
         private let inlines: [ MarkdownInline ]
@@ -38,17 +38,33 @@
         /// Creates a paragraph view.
         ///
         /// - Parameter inlines: The paragraph's inline content.
-        init( inlines: [ MarkdownInline ] )
+        public init( inlines: [ MarkdownInline ] )
         {
             self.inlines = inlines
         }
 
         /// The view's body.
-        var body: some View
+        public var body: some View
         {
             Text( MarkdownInlineRenderer.attributedString( for: self.inlines ) )
                 .fixedSize( horizontal: false, vertical: true )
         }
+    }
+
+    #Preview
+    {
+        MarkdownParagraphView(
+            inlines:
+            [
+                .text( "A paragraph with " ),
+                .strong( [ .text( "bold" ) ] ),
+                .text( " and " ),
+                .emphasis( [ .text( "italic" ) ] ),
+                .text( " text." ),
+            ]
+        )
+        .padding()
+        .frame( width: 300 )
     }
 
 #endif

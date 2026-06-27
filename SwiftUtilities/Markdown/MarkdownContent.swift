@@ -32,14 +32,14 @@ internal import Markdown
 /// checkboxes), block quotes, and thematic breaks. Nodes outside this subset
 /// (tables, images, raw HTML, and so on) are dropped, so the renderer never has
 /// to handle them.
-internal enum MarkdownContent
+public enum MarkdownContent
 {
     /// Parses a Markdown string into an array of ``MarkdownBlock`` values.
     ///
     /// - Parameter markdown: The Markdown source to parse.
     ///
     /// - Returns: The top-level blocks of the document, in order.
-    static func parse( _ markdown: String ) -> [ MarkdownBlock ]
+    public static func parse( _ markdown: String ) -> [ MarkdownBlock ]
     {
         MarkdownContent.blocks( from: Document( parsing: markdown ) )
     }

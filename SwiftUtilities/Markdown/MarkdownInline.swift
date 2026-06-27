@@ -26,7 +26,7 @@
 ///
 /// Containers (emphasis, strong, strikethrough, links) hold their own inline
 /// children so nested styling is preserved.
-internal indirect enum MarkdownInline: Equatable
+public indirect enum MarkdownInline: Equatable
 {
     /// A run of plain text.
     case text( String )
