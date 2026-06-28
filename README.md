@@ -12,8 +12,8 @@ SwiftUtilities
 
 Miscellaneous Swift utilities for macOS (15+) apps: a GitHub-releases update
 checker, a SwiftUI Markdown renderer, a generic About window, a window-hosting
-base class, a lightweight benchmarking helper, a simple error type, and
-`Sendable` escape hatches.
+base class, a SwiftUI window accessor, a lightweight benchmarking helper, a
+simple error type, and `Sendable` escape hatches.
 
 ### Installation
 
@@ -92,6 +92,19 @@ An `open` base class for hosting a single SwiftUI-backed `NSWindow` and owning
 its lifetime. It enforces one live window per subclass — reusing the existing
 one instead of opening another — and releases itself when the window closes.
 `AboutWindowController` is built on it; subclass it to host your own windows.
+
+#### WindowAccessor
+
+A zero-size SwiftUI bridge that hands back the `NSWindow` hosting a view, for
+window-level AppKit configuration SwiftUI does not expose — such as centering a
+`Settings` window. Drop it in a `.background(...)`; the callback fires each time
+the window is shown (re-armed after each close, so a reused window re-centers on
+every reopen), without polling or dispatched deferral.
+
+```swift
+PreferencesView()
+    .background( WindowAccessor { $0.center() } )
+```
 
 #### Benchmark
 
