@@ -42,12 +42,12 @@
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
-		AA01ACC0000000000000A002 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000A001 /* WindowAccessor.swift */; };
-		FCA5E7B0000000000000E002 /* WindowResizeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */; };
-		AA01ACC0000000000000B002 /* WindowResolvingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000B001 /* WindowResolvingView.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
 		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
+		AA01ACC0000000000000A002 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000A001 /* WindowAccessor.swift */; };
+		AA01ACC0000000000000B002 /* WindowResolvingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000B001 /* WindowResolvingView.swift */; };
 		C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */; };
+		FCA5E7B0000000000000E002 /* WindowResizeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,8 +152,8 @@
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
 		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
 		AA01ACC0000000000000A001 /* WindowAccessor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
-		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
 		AA01ACC0000000000000B001 /* WindowResolvingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResolvingView.swift; sourceTree = "<group>"; };
+		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -446,7 +446,6 @@
 				02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */,
 				30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */,
 			);
-			name = About;
 			path = About;
 			sourceTree = "<group>";
 		};
@@ -458,7 +457,6 @@
 				FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */,
 				AA01ACC0000000000000B001 /* WindowResolvingView.swift */,
 			);
-			name = Windows;
 			path = Windows;
 			sourceTree = "<group>";
 		};
@@ -522,7 +520,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					05C527812DD8E36300843626 = {
 						CreatedOnToolsVersion = 16.3;
