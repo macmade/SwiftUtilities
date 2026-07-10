@@ -40,6 +40,7 @@
 		05F0001D000000000000000B /* MarkdownThematicBreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001D000000000000000A /* MarkdownThematicBreakView.swift */; };
 		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
+		05F00030000000000000000B /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00030000000000000000A /* Pill.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
@@ -147,6 +148,7 @@
 		05F0001D000000000000000A /* MarkdownThematicBreakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownThematicBreakView.swift; sourceTree = "<group>"; };
 		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 		05F0001F000000000000000A /* UpdateAvailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableView.swift; sourceTree = "<group>"; };
+		05F00030000000000000000A /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
 		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 			isa = PBXGroup;
 			children = (
 				B30B0C7655D31455310CA29C /* About */,
+				05F00032000000000000000A /* Components */,
 				05F00011000000000000000A /* GitHub */,
 				05F00012000000000000000A /* Markdown */,
 				05F00013000000000000000A /* Utilities */,
@@ -449,6 +452,14 @@
 			path = About;
 			sourceTree = "<group>";
 		};
+		05F00032000000000000000A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				05F00030000000000000000A /* Pill.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		F76ED22C2C0BE7CFED28589D /* Windows */ = {
 			isa = PBXGroup;
 			children = (
@@ -582,6 +593,7 @@
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
+				05F00030000000000000000B /* Pill.swift in Sources */,
 				05F00008000000000000000B /* MarkdownBlock.swift in Sources */,
 				05F00009000000000000000B /* MarkdownInline.swift in Sources */,
 				05F0000A000000000000000B /* MarkdownListItem.swift in Sources */,

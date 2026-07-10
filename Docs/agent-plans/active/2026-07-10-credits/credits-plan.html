@@ -1,0 +1,539 @@
+<meta charset="utf-8">
+<title>Licenses &amp; Credits Window — Implementation Plan</title>
+<style>
+    :root {
+        --bg:            #14171c;
+        --bg-alt:        #1b1f27;
+        --bg-card:       #1e232c;
+        --border:        #2c333f;
+        --text:          #dfe4ec;
+        --text-dim:      #9aa4b2;
+        --accent:        #6ab0ff;
+        --code-bg:       #11141a;
+        --pill-todo-bg:  #333b47;
+        --pill-todo-fg:  #c3ccd8;
+        --pill-prog-bg:  #4a3a12;
+        --pill-prog-fg:  #f2c661;
+        --pill-done-bg:  #123a22;
+        --pill-done-fg:  #63d68c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin:      0;
+        padding:     2.5rem 1.5rem 4rem;
+        background:  var(--bg);
+        color:       var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        font-size:   16px;
+    }
+
+    main { max-width: 900px; margin: 0 auto; }
+
+    h1 { font-size: 2rem; margin: 0 0 0.25rem; line-height: 1.2; }
+    h2 {
+        font-size:      1.35rem;
+        margin:         2.75rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom:  1px solid var(--border);
+    }
+    h3 { font-size: 1.1rem; margin: 0 0 0.35rem; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+        background:    var(--code-bg);
+        border:        1px solid var(--border);
+        border-radius: 5px;
+        padding:       0.1em 0.4em;
+        font-family:   "SF Mono", Menlo, Monaco, Consolas, monospace;
+        font-size:     0.86em;
+    }
+
+    .meta {
+        display:     flex;
+        flex-wrap:   wrap;
+        gap:         0.4rem 1.5rem;
+        margin:      0.75rem 0 0;
+        color:       var(--text-dim);
+        font-size:   0.92rem;
+    }
+    .meta strong { color: var(--text); font-weight: 600; }
+
+    .lead { color: var(--text-dim); }
+
+    .card {
+        background:    var(--bg-card);
+        border:        1px solid var(--border);
+        border-radius: 10px;
+        padding:       1.25rem 1.5rem 1.4rem;
+        margin:        1.25rem 0;
+    }
+
+    .qa { margin: 0.6rem 0 1.1rem; }
+    .qa .q { font-weight: 600; }
+    .qa .a { color: var(--text-dim); margin-top: 0.15rem; }
+    .qa .a::before { content: "→ "; color: var(--accent); }
+
+    .milestone {
+        background:    var(--bg-alt);
+        border:        1px solid var(--border);
+        border-left:   4px solid var(--border);
+        border-radius: 10px;
+        padding:       1.25rem 1.5rem 1.4rem;
+        margin:        1.5rem 0;
+    }
+    .milestone-head {
+        display:         flex;
+        align-items:     center;
+        justify-content: space-between;
+        gap:             1rem;
+        flex-wrap:       wrap;
+    }
+    .milestone-head .num { color: var(--text-dim); font-weight: 600; font-size: 0.9rem; }
+
+    .pill {
+        display:        inline-block;
+        border-radius:  999px;
+        padding:        0.2em 0.85em;
+        font-size:      0.8rem;
+        font-weight:    600;
+        letter-spacing: 0.02em;
+        white-space:    nowrap;
+    }
+    .pill.todo { background: var(--pill-todo-bg); color: var(--pill-todo-fg); }
+    .pill.prog { background: var(--pill-prog-bg); color: var(--pill-prog-fg); }
+    .pill.done { background: var(--pill-done-bg); color: var(--pill-done-fg); }
+
+    .field { margin-top: 1rem; }
+    .field > .label {
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size:      0.72rem;
+        font-weight:    700;
+        color:          var(--text-dim);
+        margin-bottom:  0.3rem;
+    }
+    .field .placeholder { color: var(--text-dim); font-style: italic; }
+
+    ul.tasks { list-style: none; padding-left: 0; margin: 0.25rem 0; }
+    ul.tasks li { padding-left: 1.75rem; position: relative; margin: 0.3rem 0; }
+    ul.tasks li::before {
+        content:      "\2610";
+        position:     absolute;
+        left:         0;
+        top:          0;
+        color:        var(--text-dim);
+        font-size:    1.05rem;
+        line-height:  1.5;
+    }
+
+    ul.plain { margin: 0.25rem 0; padding-left: 1.35rem; }
+    ul.plain li { margin: 0.25rem 0; }
+
+    .filelist code { display: inline-block; margin: 0.1rem 0; }
+</style>
+
+<main>
+
+<h1>Licenses &amp; Credits Window</h1>
+<p class="lead">Milestone-based implementation plan</p>
+
+<div class="meta">
+    <span><strong>Generated:</strong> 2026-07-10</span>
+    <span><strong>Source:</strong> <code>Docs/agent-plans/active/2026-07-10-credits/credits.md</code></span>
+    <span><strong>Target:</strong> <code>SwiftUtilities</code> (macOS 15, SwiftUI + AppKit)</span>
+</div>
+
+<h2>Overview</h2>
+<p>
+    Add a reusable <strong>Credits</strong> window to the <code>SwiftUtilities</code> library that a consumer
+    application can configure and present to display the licenses and credits of the third-party projects it
+    uses. The window is a two-pane split view: a sidebar listing every credited project alphabetically (name,
+    author, and a license pill), and a detail pane showing the selected project's name, license pill, author,
+    description, website link, and its full license text in a scrollable area.
+</p>
+<p>
+    The approach mirrors the library's existing conventions established by the <strong>About</strong> window:
+    purely presentational SwiftUI views that receive their data through initializers (no bundle coupling), a
+    reusable public component for the license pill, a plain public value type describing one credited project,
+    and a thin <code>HostingWindowController</code> subclass that exposes a static <code>show(credits:)</code>
+    entry point and inherits the single-window lifetime management. Work is split bottom-up — leaf component
+    first, then the model, the views, and finally the window controller and public entry point — so each
+    milestone builds on a reviewed foundation and can be committed on its own.
+</p>
+
+<h2>Questions &amp; answers</h2>
+<div class="card">
+    <div class="qa">
+        <div class="q">How should the public API and types be named for this feature?</div>
+        <div class="a">Use <strong>Credits</strong> naming: <code>CreditsWindowController</code>,
+            <code>CreditsView</code>, and a <code>Credit</code> model type — concise and consistent with the
+            existing <code>About*</code> naming.</div>
+    </div>
+    <div class="qa">
+        <div class="q">The license name is shown as a pill in two places (sidebar + detail). How should that
+            pill be implemented?</div>
+        <div class="a">As a <strong>reusable public component</strong> (a small <code>Pill</code> view) usable
+            across apps and reused in both spots here, matching the library's public-first convention.</div>
+    </div>
+    <div class="qa">
+        <div class="q">Besides the explicit API where the consumer builds the credit items in code, should the
+            plan include a bundle-loading convenience?</div>
+        <div class="a"><strong>Explicit API only.</strong> Ship just the <code>show(credits:)</code> path,
+            mirroring the core <code>AboutWindowController.show(applicationName:…)</code>. Any resource-loading
+            helper is deferred.</div>
+    </div>
+</div>
+
+<h2>Notes</h2>
+<div class="card">
+    <p><strong>Conventions to follow (from the existing codebase and CLAUDE.md):</strong></p>
+    <ul class="plain">
+        <li>Every source file starts with the project's MIT license header block (copy it verbatim from an
+            existing file such as <code>SwiftUtilities/About/AboutView.swift</code>).</li>
+        <li>One type per file; group the feature's files under a new <code>SwiftUtilities/Credits/</code>
+            folder, and place the reusable pill under a new <code>SwiftUtilities/Components/</code> folder.</li>
+        <li>Pure SwiftUI files are gated with <code>#if canImport( SwiftUI )</code>; files touching AppkKit
+            (the window controller) use <code>#if canImport( AppKit )</code>, as
+            <code>AboutWindowController</code> does.</li>
+        <li>Presentational views take their data through <code>public init</code>s and expose no bundle
+            dependency (see <code>AboutView</code>, <code>UpdateAvailableView</code>). Every view has a
+            <code>#Preview</code>.</li>
+        <li>Prefer <code>public</code> for consumer-facing types, <code>let</code> over <code>var</code>, early
+            returns, no force-unwraps, and <code>forEach</code>/<code>map</code> over raw loops. Document
+            public <em>and</em> private members with doc comments. Align consecutive <code>=</code> signs.</li>
+        <li>User-facing strings go through <code>Localization.string(_:)</code> with keys added to
+            <code>SwiftUtilities/Utilities/en.lproj/Localizable.strings</code> (with a descriptive comment),
+            following the existing <code>About.window.title</code> / <code>GitHubUpdater.*</code> entries.</li>
+        <li><strong>Keep the Xcode project and the SPM manifest in sync.</strong> Each new file must be added to
+            the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>; the new folders are
+            already covered by the SPM <code>path: "SwiftUtilities"</code> target, so <code>Package.swift</code>
+            needs no change (no new resources are introduced). Prefer building/testing via
+            <code>xcodebuild</code> over <code>swift build</code>.</li>
+    </ul>
+    <p><strong>Key existing files to model after:</strong></p>
+    <ul class="plain filelist">
+        <li><code>SwiftUtilities/About/AboutView.swift</code> — presentational view shape &amp; preview.</li>
+        <li><code>SwiftUtilities/About/AboutWindowController.swift</code> — <code>show(…)</code> entry point,
+            window chrome.</li>
+        <li><code>SwiftUtilities/Windows/HostingWindowController.swift</code> — single-window base, <code>Sizing</code>.</li>
+        <li><code>SwiftUtilities/GitHub/UpdateAvailableView.swift</code> — scrollable area with a distinct
+            background/border (reuse for the license text).</li>
+        <li><code>SwiftUtilities/Utilities/Localization.swift</code> + <code>en.lproj/Localizable.strings</code>.</li>
+    </ul>
+    <p><strong>Design decisions taken as defaults (flag during review if undesired):</strong></p>
+    <ul class="plain">
+        <li>The <code>Credit</code> model carries: project name, author, project description, an optional
+            website <code>URL</code>, the license name (for the pill), and the full license text. It is
+            <code>Identifiable</code> + <code>Hashable</code> so it can drive a <code>NavigationSplitView</code>
+            selection.</li>
+        <li>Alphabetical ordering of the sidebar is done by the view (case-insensitive, by project name); the
+            consumer can pass the credits in any order.</li>
+        <li>Unlike the fixed-size About window, the Credits window is <strong>resizable</strong> with a sensible
+            minimum content size; it opens at a fixed initial size and is centered. The first project is
+            selected by default, with a placeholder shown if the credits list is empty.</li>
+        <li>Description and license text are rendered as plain text (the source doc does not call for Markdown);
+            the website is a SwiftUI <code>Link</code>.</li>
+    </ul>
+</div>
+
+<h2>Milestones</h2>
+
+<!-- Milestone 1 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 1</span><h3>Reusable license pill component</h3></div>
+        <span class="pill done">Completed</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Provide a small, public capsule-style <code>Pill</code> view that renders a short label (a license
+            name) legibly against varied backgrounds. It is the shared building block used by both the sidebar
+            rows and the detail header, and is composable by consumer apps.</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Create <code>SwiftUtilities/Components/Pill.swift</code> with a <code>public struct Pill: View</code>
+                (MIT header, <code>#if canImport( SwiftUI )</code>).</li>
+            <li>Accept the label text via a <code>public init( _ text: String )</code>; render a rounded capsule
+                (background + subtle border, compact padding, caption-scale font) that reads well in light and
+                dark.</li>
+            <li>Document the type and its members with doc comments.</li>
+            <li>Add a <code>#Preview</code> showing one or two example pills.</li>
+            <li>Add the file to the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>.</li>
+            <li>Build with <code>xcodebuild</code> to confirm it compiles.</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Created <code>SwiftUtilities/Components/Pill.swift</code>: a <code>public struct Pill: View</code> gated
+            with <code>#if canImport( SwiftUI )</code>. It takes the label via <code>public init( _ text: String )</code>
+            and renders a <code>Capsule</code> with a translucent <code>Color.primary</code> fill (opacity 0.08) and a
+            matching stroke border (opacity 0.15), a <code>.caption</code>/<code>.medium</code> font, a single line, and
+            compact horizontal/vertical padding. This mirrors the distinct-background treatment of
+            <code>UpdateAvailableView.releaseNotes</code> (fill + stroke overlay), adapted to a capsule with slightly
+            higher opacities so a small badge keeps enough contrast; deriving from <code>Color.primary</code> keeps it
+            legible in both light and dark.</p>
+        <p>Documented the type, the private <code>text</code> property, the <code>init</code>, and <code>body</code>;
+            added a <code>#Preview</code> with two example pills. Registered the file in the <code>SwiftUtilities</code>
+            target and added a new <code>Components</code> group in <code>SwiftUtilities.xcodeproj</code>; no
+            <code>Package.swift</code> change was needed (the folder is covered by the existing
+            <code>path: "SwiftUtilities"</code> target).</p>
+        <p><strong>TDD note:</strong> as a purely presentational view with no logic branches, there was no meaningful
+            unit to write a failing test for first; verification is via compilation and the preview. Confirmed with
+            <code>xcodebuild … build</code> (<strong>BUILD SUCCEEDED</strong>) and, for SPM parity,
+            <code>swift build</code> (<strong>Build complete</strong>).</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+        <p><strong>Review response (color configurable):</strong> Added a <code>color: Color = .primary</code> parameter
+            to <code>init</code> and a stored <code>color</code> property. A single tint now drives the whole pill —
+            full-strength for the text (<code>foregroundStyle</code>), 0.08 opacity for the fill, and 0.15 for the
+            border — so a consumer can pass a custom color for a tinted badge. The default of <code>.primary</code>
+            preserves the previous appearance exactly. Documented the new property and parameter, extended the
+            <code>#Preview</code> with a tinted example, and rebuilt with <code>xcodebuild</code>
+            (<strong>BUILD SUCCEEDED</strong>).</p>
+        <p><strong>Review response (font &amp; weight configurable):</strong> Added <code>font: Font = .caption</code>
+            and <code>weight: Font.Weight = .medium</code> parameters and matching stored properties, driving the
+            existing <code>.font</code>/<code>.fontWeight</code> modifiers. Using a semantic <code>Font</code> (rather
+            than a raw point size) preserves Dynamic Type and keeps the defaults identical to the original appearance.
+            Documented the new properties and parameters, added a preview example with a custom font and weight, and
+            rebuilt with <code>xcodebuild</code> (<strong>BUILD SUCCEEDED</strong>).</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer; build succeeded. No Critical/High/Medium
+            findings. Confirmed the pbxproj edits are internally consistent (build file, file reference,
+            <code>Components</code> group, and Sources phase all present with unique, correctly cross-referenced IDs and
+            no collisions) and that all conventions are met. Info-level observations (Deferred, no fix required):</p>
+        <ul class="plain">
+            <li><strong>Info — Stroke center-aligned on the capsule edge:</strong> <code>Capsule().stroke(…)</code>
+                strokes centered on the path so ~0.5pt falls outside the fill bounds. Idiomatic SwiftUI, matches the
+                reference file's pattern; purely cosmetic. <em>Deferred.</em></li>
+            <li><strong>Info — Font/weight could be combined:</strong> <code>.font(.caption)</code> +
+                <code>.fontWeight(.medium)</code> is equivalent to <code>.font(.caption.weight(.medium))</code>; current
+                form is valid and arguably clearer. <em>Deferred.</em></li>
+            <li><strong>Info — Sidebar/detail integration out of scope:</strong> those are consumer/later-milestone
+                responsibilities; the component is purely presentational as required, with no in-repo callers and thus
+                no regressions. <em>Deferred (informational).</em></li>
+        </ul>
+    </div>
+    <div class="field">
+        <div class="label">Review comments</div>
+        <ul class="plain">
+            <li>The pill's color should be configurable, with a default value.</li>
+            <li>Same for the font size and weight — make them configurable, with default values.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Milestone 2 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 2</span><h3>The <code>Credit</code> model</h3></div>
+        <span class="pill todo">Not started</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Define the public value type that describes one credited project, carrying everything the window
+            needs. It is the single piece of public data a consumer assembles and hands to the window.</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Create <code>SwiftUtilities/Credits/Credit.swift</code> with a <code>public struct Credit</code>
+                (MIT header, <code>Foundation</code> import).</li>
+            <li>Store: <code>name</code>, <code>author</code>, <code>description</code>, optional
+                <code>website: URL?</code>, <code>licenseName</code>, and <code>licenseText</code> — all
+                <code>let</code>, with a public memberwise-style <code>init</code> and doc comments for every
+                property.</li>
+            <li>Conform to <code>Identifiable</code> (stable <code>id</code>) and <code>Hashable</code> so it can
+                back a <code>NavigationSplitView</code> selection.</li>
+            <li>Add the file to the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>.</li>
+            <li>Add <code>SwiftUtilitiesTests/Credits/Credit.swift</code> verifying construction, identity, and
+                equality/hashing, following the existing test style (add the test file to the test target too).</li>
+            <li>Run the test suite via <code>xcodebuild test</code>.</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
+    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
+    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+</div>
+
+<!-- Milestone 3 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 3</span><h3>Credit detail view</h3></div>
+        <span class="pill todo">Not started</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Build the detail pane that presents a single <code>Credit</code>: the project name as a title with a
+            trailing license pill, a separator, then the author, description, a website link, and the full
+            license text in a scrollable area.</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Create <code>SwiftUtilities/Credits/CreditDetailView.swift</code> with a
+                <code>public struct CreditDetailView: View</code> taking a <code>Credit</code> via
+                <code>public init</code>.</li>
+            <li>Header row: title (project name) with a trailing <code>Pill</code> for the license name;
+                followed by a <code>Divider</code>.</li>
+            <li>Body: author (secondary style), description, and a <code>Link</code> to the website shown only
+                when a URL is present.</li>
+            <li>License text: a <code>ScrollView</code> on a distinct background with a rounded border (reuse the
+                treatment from <code>UpdateAvailableView.releaseNotes</code>), rendering the license as
+                selectable, monospaced-or-plain text.</li>
+            <li>Extract private subviews to keep the body short; document all members.</li>
+            <li>Add a <code>#Preview</code> with a sample <code>Credit</code> (including one without a website).</li>
+            <li>Add the file to the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>;
+                build with <code>xcodebuild</code>.</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
+    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
+    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+</div>
+
+<!-- Milestone 4 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 4</span><h3>Sidebar row and split-view container (<code>CreditsView</code>)</h3></div>
+        <span class="pill todo">Not started</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Assemble the full window content: an alphabetically ordered sidebar of credited projects driving a
+            <code>CreditDetailView</code> in the detail pane, with a default selection and an empty-state
+            placeholder.</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Create <code>SwiftUtilities/Credits/CreditRow.swift</code> — a <code>public struct CreditRow: View</code>
+                for one sidebar entry: project name, author below (secondary), and a trailing <code>Pill</code>
+                with the license name. Add a <code>#Preview</code>.</li>
+            <li>Create <code>SwiftUtilities/Credits/CreditsView.swift</code> — a <code>public struct CreditsView: View</code>
+                taking <code>[ Credit ]</code> via <code>public init</code>.</li>
+            <li>Use a <code>NavigationSplitView</code>: sidebar is a <code>List</code> of <code>CreditRow</code>s
+                sorted case-insensitively by name with selection state; detail shows
+                <code>CreditDetailView</code> for the selection.</li>
+            <li>Select the first (sorted) project by default; show a placeholder when the list is empty or nothing
+                is selected.</li>
+            <li>Document all members; add a <code>#Preview</code> with a few sample credits.</li>
+            <li>Add both files to the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>;
+                build with <code>xcodebuild</code>.</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
+    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
+    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+</div>
+
+<!-- Milestone 5 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 5</span><h3>Window controller, localization &amp; public entry point</h3></div>
+        <span class="pill todo">Not started</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Expose the feature to consumers through a single call that opens (or re-fronts) the Credits window,
+            reusing the library's single-window hosting infrastructure and localized chrome.</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Create <code>SwiftUtilities/Credits/CreditsWindowController.swift</code> with
+                <code>public final class CreditsWindowController: HostingWindowController</code>
+                (<code>@MainActor</code>, <code>#if canImport( AppKit )</code>), mirroring
+                <code>AboutWindowController</code>.</li>
+            <li>Add a static <code>show( credits: [ Credit ] )</code> that calls
+                <code>HostingWindowController.show( using: CreditsWindowController.init )</code> and
+                <code>present(rootView: CreditsView(credits:), sizing: .fixed(…))</code>.</li>
+            <li>Configure the window chrome: localized title, standard titlebar, and — unlike About — keep the
+                window <strong>resizable</strong> with a reasonable minimum content size.</li>
+            <li>Add a <code>Credits.window.title</code> key (with a descriptive comment) to
+                <code>SwiftUtilities/Utilities/en.lproj/Localizable.strings</code>, plus any other user-facing
+                strings introduced (e.g. website link label / empty-state text) via <code>Localization.string</code>.</li>
+            <li>Add the file to the <code>SwiftUtilities</code> target in <code>SwiftUtilities.xcodeproj</code>.</li>
+            <li>Build and run the full test suite via <code>xcodebuild test</code>; confirm the window opens,
+                re-fronts on a second call, and releases on close (following the About behavior).</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
+    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
+    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+</div>
+
+<!-- Milestone 6 -->
+<div class="milestone">
+    <div class="milestone-head">
+        <div><span class="num">Milestone 6</span><h3>Documentation &amp; final sync</h3></div>
+        <span class="pill todo">Not started</span>
+    </div>
+    <div class="field">
+        <div class="label">Goal</div>
+        <div>Surface the new public API in the project's documentation and confirm the Xcode project and SPM
+            build are consistent, matching the repo's practice of documenting new components (see recent
+            commits).</div>
+    </div>
+    <div class="field">
+        <div class="label">Tasks</div>
+        <ul class="tasks">
+            <li>Update <code>README.md</code> to list the new public components (<code>CreditsWindowController</code>,
+                <code>CreditsView</code>, <code>Credit</code>, <code>Pill</code>) in the same style as the
+                existing About / updater entries.</li>
+            <li>Review all new files for complete doc comments on public and private members, aligned
+                <code>=</code> signs, and no force-unwraps or raw loops.</li>
+            <li>Confirm the Xcode project builds and all tests pass via <code>xcodebuild test</code>, and that a
+                <code>swift build</code> also succeeds (SPM parity).</li>
+            <li>Optionally note in the plan any follow-up ideas (e.g. a deferred bundle-loading convenience) for a
+                future initiative.</li>
+        </ul>
+    </div>
+    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
+    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
+    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+</div>
+
+<h2>Appendix</h2>
+<div class="card">
+    <p><strong>New files introduced by this plan:</strong></p>
+    <ul class="plain filelist">
+        <li><code>SwiftUtilities/Components/Pill.swift</code></li>
+        <li><code>SwiftUtilities/Credits/Credit.swift</code></li>
+        <li><code>SwiftUtilities/Credits/CreditDetailView.swift</code></li>
+        <li><code>SwiftUtilities/Credits/CreditRow.swift</code></li>
+        <li><code>SwiftUtilities/Credits/CreditsView.swift</code></li>
+        <li><code>SwiftUtilities/Credits/CreditsWindowController.swift</code></li>
+        <li><code>SwiftUtilitiesTests/Credits/Credit.swift</code></li>
+    </ul>
+    <p><strong>Files modified:</strong></p>
+    <ul class="plain filelist">
+        <li><code>SwiftUtilities/Utilities/en.lproj/Localizable.strings</code> (new keys)</li>
+        <li><code>SwiftUtilities.xcodeproj</code> (target membership for new files)</li>
+        <li><code>README.md</code> (document new components)</li>
+    </ul>
+    <p><strong>Deferred (out of scope for this plan):</strong> a <code>Bundle</code>-based convenience that
+        loads credit items from bundled resource files, analogous to <code>Bundle+About</code>. Explicitly
+        excluded per the planning decision; can become a future initiative.</p>
+</div>
+
+</main>
