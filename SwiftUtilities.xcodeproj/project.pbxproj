@@ -17,6 +17,7 @@
 		05398CC62DEECB38005904EC /* UnsafeMutableSendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */; };
 		05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC72DEECBF1005904EC /* Benchmark.swift */; };
 		05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC92DEECD14005904EC /* GitHubUpdater.swift */; };
+		05F00033000000000000000B /* Credit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00033000000000000000A /* Credit.swift */; };
 		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
 		05F00001000000000000000B /* UpdateCheckResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00001000000000000000A /* UpdateCheckResult.swift */; };
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
@@ -41,6 +42,7 @@
 		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
 		05F00030000000000000000B /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00030000000000000000A /* Pill.swift */; };
+		05F00035000000000000000B /* Credit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00035000000000000000A /* Credit.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
@@ -73,6 +75,7 @@
 		05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsafeMutableSendable.swift; sourceTree = "<group>"; };
 		05398CC72DEECBF1005904EC /* Benchmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Benchmark.swift; sourceTree = "<group>"; };
 		05398CC92DEECD14005904EC /* GitHubUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdater.swift; sourceTree = "<group>"; };
+		05F00033000000000000000A /* Credit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credit.swift; sourceTree = "<group>"; };
 		05C527822DD8E36300843626 /* SwiftUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftUtilitiesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		05D589112DD8E47A000BA644 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
@@ -149,6 +152,7 @@
 		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 		05F0001F000000000000000A /* UpdateAvailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableView.swift; sourceTree = "<group>"; };
 		05F00030000000000000000A /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
+		05F00035000000000000000A /* Credit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credit.swift; sourceTree = "<group>"; };
 		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
@@ -205,6 +209,7 @@
 		05D5890C2DD8E46E000BA644 /* SwiftUtilitiesTests */ = {
 			isa = PBXGroup;
 			children = (
+				05F00034000000000000000A /* Credits */,
 				05F00014000000000000000A /* GitHub */,
 				05F00015000000000000000A /* Markdown */,
 				05F00016000000000000000A /* Utilities */,
@@ -212,11 +217,20 @@
 			path = SwiftUtilitiesTests;
 			sourceTree = "<group>";
 		};
+		05F00034000000000000000A /* Credits */ = {
+			isa = PBXGroup;
+			children = (
+				05F00033000000000000000A /* Credit.swift */,
+			);
+			path = Credits;
+			sourceTree = "<group>";
+		};
 		05D5890F2DD8E470000BA644 /* SwiftUtilities */ = {
 			isa = PBXGroup;
 			children = (
 				B30B0C7655D31455310CA29C /* About */,
 				05F00032000000000000000A /* Components */,
+				05F00036000000000000000A /* Credits */,
 				05F00011000000000000000A /* GitHub */,
 				05F00012000000000000000A /* Markdown */,
 				05F00013000000000000000A /* Utilities */,
@@ -460,6 +474,14 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		05F00036000000000000000A /* Credits */ = {
+			isa = PBXGroup;
+			children = (
+				05F00035000000000000000A /* Credit.swift */,
+			);
+			path = Credits;
+			sourceTree = "<group>";
+		};
 		F76ED22C2C0BE7CFED28589D /* Windows */ = {
 			isa = PBXGroup;
 			children = (
@@ -594,6 +616,7 @@
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
 				05F00030000000000000000B /* Pill.swift in Sources */,
+				05F00035000000000000000B /* Credit.swift in Sources */,
 				05F00008000000000000000B /* MarkdownBlock.swift in Sources */,
 				05F00009000000000000000B /* MarkdownInline.swift in Sources */,
 				05F0000A000000000000000B /* MarkdownListItem.swift in Sources */,
@@ -630,6 +653,7 @@
 				05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */,
 				05398CC22DEEC9E3005904EC /* RuntimeError.swift in Sources */,
 				05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */,
+				05F00033000000000000000B /* Credit.swift in Sources */,
 				05F0000E000000000000000B /* MarkdownContent.swift in Sources */,
 				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,

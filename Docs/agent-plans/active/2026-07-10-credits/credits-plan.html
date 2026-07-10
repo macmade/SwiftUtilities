@@ -336,7 +336,7 @@
 <div class="milestone">
     <div class="milestone-head">
         <div><span class="num">Milestone 2</span><h3>The <code>Credit</code> model</h3></div>
-        <span class="pill todo">Not started</span>
+        <span class="pill done">Completed</span>
     </div>
     <div class="field">
         <div class="label">Goal</div>
@@ -360,10 +360,51 @@
             <li>Run the test suite via <code>xcodebuild test</code>.</li>
         </ul>
     </div>
-    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
-    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
-    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Created <code>SwiftUtilities/Credits/Credit.swift</code>: a <code>public struct Credit: Identifiable, Hashable</code>
+            (MIT header, <code>Foundation</code> import). It stores six <code>public let</code> properties —
+            <code>name</code>, <code>author</code>, <code>description</code>, <code>website: URL?</code>,
+            <code>licenseName</code>, and <code>licenseText</code> — with a public memberwise-style <code>init</code> and
+            a doc comment on every property, the <code>id</code>, and the <code>init</code>.</p>
+        <p><strong>Identity/hashing design:</strong> <code>id</code> is a computed property returning the project
+            <code>name</code> (a stable identifier that suits a <code>NavigationSplitView</code> selection), while
+            <code>Equatable</code>/<code>Hashable</code> are synthesized over the six stored properties, so equality
+            reflects content. As <code>id</code> is not stored, it does not participate in the synthesized equality.</p>
+        <p><strong>TDD:</strong> wrote <code>SwiftUtilitiesTests/Credits/Credit.swift</code> (<code>struct Test_Credit</code>)
+            first with a <code>makeCredit</code> helper and cases covering construction (all fields + missing website),
+            identity (<code>id == name</code>), and equality/hashing (equal values compare equal and hash equally,
+            differing values compare unequal). Ran <code>xcodebuild test</code> and confirmed the <strong>red</strong>
+            state (<em>cannot find type 'Credit'</em>), then implemented the model to reach <strong>green</strong>.</p>
+        <p>Registered both files in the Xcode project: the model in the <code>SwiftUtilities</code> target under a new
+            <code>Credits</code> group, and the test in the <code>SwiftUtilitiesTests</code> target under a matching
+            <code>Credits</code> group. No <code>Package.swift</code> change was needed (both folders are covered by the
+            existing target <code>path</code>s). Full suite: <strong>TEST SUCCEEDED</strong>, 82 tests / 9 suites.</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer; clean build and full test suite pass
+            (82 tests / 9 suites). Verified pbxproj internal consistency across <em>both</em> targets (unique,
+            correctly cross-referenced IDs for the model in the framework target and the test in the test target),
+            SPM parity (no manifest change needed), all source conventions, sound value/identity/hashing semantics, and
+            genuine test coverage of construction, identity, and equality/hashing. No Critical/High/Medium findings.
+            Info-level observations (Deferred, no fix required):</p>
+        <ul class="plain">
+            <li><strong>Info — Intentional id/equality asymmetry:</strong> <code>id</code> derives from <code>name</code>
+                alone while equality spans all six properties, so two credits with the same name but differing fields
+                share an <code>id</code> yet compare unequal. This is the chosen design, fine for an id-keyed selection;
+                the <code>differingCreditsAreNotEqual</code> test already exercises it. <em>Deferred.</em></li>
+            <li><strong>Info — Optional extra tests:</strong> the suite could additionally assert that unequal values
+                hash differently (not required by the <code>Hashable</code> contract) or that changing <code>name</code>
+                alone flips equality; current coverage is sufficient for the milestone. <em>Deferred.</em></li>
+            <li><strong>Info — <code>description</code> property name:</strong> no conflict with
+                <code>CustomStringConvertible</code> since <code>Credit</code> does not conform to it. <em>Deferred
+                (informational).</em></li>
+        </ul>
+    </div>
     <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
 </div>
 
