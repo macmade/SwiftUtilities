@@ -523,7 +523,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M3.</span>Code-signature validation</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -544,10 +544,40 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD. <strong>APIs were verified against the actual Security framework SDK headers</strong> (<code>CSCommon.h</code>, <code>SecCode.h</code>, <code>SecStaticCode.h</code>, <code>SecRequirement.h</code>) rather than from memory, and the requirement-string format was confirmed against a real Developer-ID app (VS Code's designated requirement). The full Security path was additionally verified at runtime with throwaway scratchpad scripts: reading a real app's identity, a positive validation, rejection of a bogus Team ID (<code>errSecCSReqFailed</code>), and the <code>SecCodeCopySelf</code> &rarr; <code>SecCodeCopyStaticCode</code> &rarr; <code>SecCodeCopySigningInformation</code> sequence.</p>
+                <ul class="plain">
+                    <li><strong>Types (all in <code>SwiftUtilities/GitHub/</code>):</strong> <code>CodeSigningIdentity</code> (pure value type, platform-agnostic) holding <code>identifier</code> + <code>teamIdentifier</code> with a pure <code>requirement</code> builder; <code>CodeSignatureError</code> (pure enum, <code>LocalizedError</code>); <code>CodeSignatureInspecting</code> (the injectable protocol seam, mirroring the <code>Fetcher</code> seam); <code>SecurityCodeSignatureInspector</code> (the real implementation, gated behind <code>#if canImport( Security )</code>); and <code>CodeSignatureValidator</code> (composes the two).</li>
+                    <li><strong>Requirement (the gate):</strong> <code>identifier "&lt;id&gt;" and anchor apple generic and certificate leaf[subject.OU] = "&lt;team&gt;"</code> &mdash; pins the signing identifier, an Apple-issued certificate chain (essential: without the anchor the Team-ID clause is spoofable), and the Team ID. Values are quoted and escaped (backslash then quote) so the requirement is injection-safe. Deliberately does not pin the Developer-ID-specific policy OIDs, so the same app+team signed through a different Apple channel still validates.</li>
+                    <li><strong>Root of trust:</strong> the expected requirement is derived from the <em>running process's own validated identity</em> via <code>SecCodeCopySelf</code> (revised after review; see Automated review), not from an on-disk bundle read by path. The running code is validated with <code>SecCodeCheckValidity</code> before its signing information is trusted, so a tampered self is refused.</li>
+                    <li><strong>Candidate verification:</strong> <code>SecStaticCodeCreateWithPath</code> + <code>SecRequirementCreateWithString</code> + <code>SecStaticCodeCheckValidityWithErrors</code>, using strict flags (<code>kSecCSCheckAllArchitectures | kSecCSCheckNestedCode | kSecCSStrictValidate</code>). Expiration/revocation are intentionally not enforced (matching Gatekeeper's default so a timestamped older build is not falsely rejected); this is documented in a code comment. The validator refuses on <em>any</em> failure and never accepts a candidate unless verification succeeds.</li>
+                    <li><strong>Later-milestone hooks (from review):</strong> validation targets a path, so there is a TOCTOU window between validation and the eventual on-disk replacement &mdash; the installer milestones (M4/M6/M8) must re-validate the exact bundle they move into place (and consider <code>realpath</code>-normalizing the path), not rely on this pre-download/pre-move check alone.</li>
+                    <li>Tests: <code>Test_CodeSigningIdentity</code> (requirement format + escaping), <code>Test_CodeSignatureValidator</code> (derive-then-verify happy path, verify-fails, identity-unavailable-skips-verify &mdash; all via a stub seam), and <code>Test_SecurityCodeSignatureInspector</code> (real error paths: nonexistent bundle, and rejection of an unsigned file). The Security-backed success path needs a Developer-ID-signed bundle and is documented as manually/runtime-verified rather than run in CI. One suite per file, matching the repo convention.</li>
+                    <li>Xcode project kept in sync (5 source files + 3 test files wired into the correct targets/groups/Sources phases, IDs <code>05F0003F</code>&ndash;<code>05F00046</code>). <code>Package.swift</code> is path-based, no change. Verified with <code>xcodebuild test</code>: <strong>105 tests pass</strong>.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 2 rounds. Round 1 (security-focused, fresh context) confirmed the gate is sound and injection-safe and raised one Medium; round 2 verified the fix and reported no Critical/High/Medium remaining. Fixes applied as described below.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1</strong> (fresh-context, security-focused) &mdash; confirmed the requirement is a sound, injection-safe gate; <code>kSecCSSigningInformation</code> is the correct flag for the Team ID; the strict flags only tighten validation; memory management (<code>CF_RETURNS_RETAINED</code>, <code>Unmanaged&lt;CFError&gt;</code>) is correct; and the decision flow never accepts without full success.</p>
+                <ul class="plain">
+                    <li><strong>Running-app identity read from the on-disk bundle, not the running process</strong> &mdash; Medium (security/design). The requirement was derived from <code>SecStaticCodeCreateWithPath( Bundle.main.bundleURL )</code>, which reads the on-disk bundle without validating it. <strong>Fixed</strong> &mdash; switched to <code>SecCodeCopySelf</code> (the kernel-launched process code), replacing the seam's <code>signingIdentity(ofBundleAt:)</code> with <code>runningApplicationIdentity()</code> and dropping the running-app-URL parameter from <code>validate</code>. This also matches the later XPC design, where only the app derives the requirement and the helper just verifies against it.</li>
+                    <li><strong>TOCTOU between path validation and eventual replacement</strong> &mdash; Low/Info. Acceptable for M3 (the Security API validates a path); <strong>Deferred</strong> &mdash; recorded as a constraint for the installer milestones to re-validate the moved bundle.</li>
+                    <li><strong>Expiration/revocation not enforced</strong> &mdash; Info. Defensible (matches Gatekeeper). <strong>Fixed</strong> (documented) &mdash; added a comment noting the deliberate choice.</li>
+                    <li><strong>Test file bundled three suites</strong> &mdash; Low (style). <strong>Fixed</strong> &mdash; split into one suite per file and added a reliable unsigned-file rejection test.</li>
+                </ul>
+                <p><strong>Round 2</strong> (fresh-context) &mdash; verified all round-1 fixes against the SDK headers; no Critical/High/Medium remaining. One Low:</p>
+                <ul class="plain">
+                    <li><strong>Self identity read without first validating the running code</strong> &mdash; Low (security/robustness). Signing information is only guaranteed reliable after a validity check. <strong>Fixed</strong> &mdash; added <code>SecCodeCheckValidity( code, [], nil )</code> on the running code before reading its signing information, so the tamper-resistance claim holds.</li>
+                </ul>
+            </div>
+        </div>
         <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
     </div>
 
