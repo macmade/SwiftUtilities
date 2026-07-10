@@ -24,24 +24,12 @@
 
 import Foundation
 
-/// A phase of an in-app update installation, reported by an ``UpdateInstaller``
-/// so the UI can describe what is happening.
+/// Lets an install phase travel back to the app as a progress message.
 ///
-/// The phases occur in declaration order. This is a pure value type, so it lives
-/// in the platform-agnostic layer. It is `Codable` so it can be streamed back to
-/// the app as a progress message across the updater XPC connection (see
-/// ``XPCMessage``).
-public enum InstallProgress: Sendable, Equatable, Codable
-{
-    /// The downloaded archive is being unpacked.
-    case extracting
-
-    /// The extracted application's code signature is being validated.
-    case validating
-
-    /// The validated application is being written into place.
-    case replacing
-
-    /// The application is being relaunched.
-    case relaunching
-}
+/// The service reports each phase through
+/// ``UpdaterClientProtocol/updateDidProgress(_:)`` in its ``XPCMessage/encoded()``
+/// `Data` form; the app decodes it straight back into an ``InstallProgress`` to
+/// drive the update window. `InstallProgress` is `Codable` and `Sendable`, so it
+/// satisfies ``XPCMessage`` with no additional wire mapping.
+extension InstallProgress: XPCMessage
+{}

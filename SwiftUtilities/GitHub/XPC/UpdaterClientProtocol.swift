@@ -24,24 +24,24 @@
 
 import Foundation
 
-/// A phase of an in-app update installation, reported by an ``UpdateInstaller``
-/// so the UI can describe what is happening.
+/// The interface the app vends to the updater service to receive progress.
 ///
-/// The phases occur in declaration order. This is a pure value type, so it lives
-/// in the platform-agnostic layer. It is `Codable` so it can be streamed back to
-/// the app as a progress message across the updater XPC connection (see
-/// ``XPCMessage``).
-public enum InstallProgress: Sendable, Equatable, Codable
+/// This is the client side of the bidirectional `NSXPCConnection`: the app sets it
+/// as the connection's `exportedInterface` and provides a conforming
+/// `exportedObject`; the service reaches it through the incoming connection's
+/// remote-object proxy and calls it as each install phase begins. Like the service
+/// interface, `NSXPCConnection` requires it to be an `@objc` protocol.
+///
+/// It carries progress only. The terminal success or failure is delivered through
+/// the reply block of ``UpdaterServiceProtocol/installUpdate(_:withReply:)``, not
+/// here. The call is one-way (no reply block), so the service never blocks on the
+/// app to report progress.
+@objc
+public protocol UpdaterClientProtocol
 {
-    /// The downloaded archive is being unpacked.
-    case extracting
-
-    /// The extracted application's code signature is being validated.
-    case validating
-
-    /// The validated application is being written into place.
-    case replacing
-
-    /// The application is being relaunched.
-    case relaunching
+    /// Reports that the installation has entered a new phase.
+    ///
+    /// - Parameter progress: An ``InstallProgress`` in its ``XPCMessage/encoded()``
+    ///                       `Data` form. It may be invoked on an arbitrary queue.
+    func updateDidProgress( _ progress: Data )
 }

@@ -34,8 +34,9 @@ import Foundation
 ///
 /// This is a pure value type used to gate in-app eligibility from an asset's
 /// filename or URL, so it lives in the platform-agnostic layer alongside
-/// ``UpdateCheckResult`` and ``UpdateBehavior``.
-public enum UpdateArchiveFormat: Sendable, Equatable, CaseIterable
+/// ``UpdateCheckResult`` and ``UpdateBehavior``. It is `Codable` so it can travel
+/// as a field of an ``UpdateInstallRequest`` across the updater XPC connection.
+public enum UpdateArchiveFormat: Sendable, Equatable, CaseIterable, Codable
 {
     /// A Zip archive (`.zip`), extracted with `ditto`.
     case zip

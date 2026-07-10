@@ -836,7 +836,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M7.</span>Shared XPC protocol &amp; message types</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -858,11 +858,55 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
-        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD (tests first &mdash; watched them fail as unresolved symbols, <code>type 'InstallProgress' has no member 'decoded'/'encoded'</code> &mdash; then implemented to green). M7 delivers only the <em>contract</em>; the service (M8) and client (M9) are out of scope.</p>
+                <p><strong>Transport &amp; sandbox model verified against Apple documentation</strong> (not memory), per the milestone task. From <code>NSXPCConnection</code> / <code>NSXPCInterface</code>: the connection is bidirectional; the interface protocol <strong>must be <code>@objc</code></strong>; results return via <strong>reply blocks</strong>; the reverse direction (service&rarr;client progress) uses <code>exportedInterface</code>/<code>exportedObject</code> reached through the incoming connection's <code>remoteObjectProxy</code>; and XPC only transports <code>NSSecureCoding</code> types, with <strong><code>Data</code>/<code>NSData</code> allowed by default</strong> (so no <code>setClasses(_:for:argumentIndex:ofReply:)</code> whitelisting is needed). From the archived <em>Creating XPC Services</em> guide: services live in <code>Contents/XPCServices</code>, are looked up by <code>CFBundleIdentifier</code>, and <strong>each has its own sandbox</strong> &mdash; a service can't be <em>less</em> restricted than a <em>sandboxed</em> app (why MAS is out of scope), but a non-sandboxed Developer-ID app can ship a non-sandboxed service that performs privileged file ops (the Sparkle&nbsp;2 model). The framework-bundled placement/entitlements are finalized in M8.</p>
+                <p><strong>Design (Data-over-XPC).</strong> Because XPC won't carry arbitrary Swift value types, each message serializes to <code>Data</code> via a small <code>XPCMessage</code> seam rather than adopting <code>NSSecureCoding</code> (which would force <code>NSObject</code> subclasses and lose value semantics). This keeps the messages pure value types in the platform-agnostic layer whose wire form is unit-testable by an encode&rarr;decode round-trip.</p>
+                <ul class="plain">
+                    <li><strong>New files in <code>SwiftUtilities/GitHub/XPC/</code>:</strong>
+                        <ul class="plain">
+                            <li><code>XPCMessage.swift</code> &mdash; marker <code>protocol XPCMessage: Codable, Sendable</code> with public <code>encoded() -&gt; Data</code> / <code>static decoded(from:) -&gt; Self</code> (JSON) in a public extension.</li>
+                            <li><code>UpdateInstallRequest.swift</code> &mdash; <code>struct</code> (<code>XPCMessage, Equatable</code>) carrying <code>archivePath</code>, <code>targetPath</code>, <code>requirement</code>, <code>format</code>, <code>processIdentifier: Int32</code>. Its <code>init</code> takes <code>URL</code>s and stores POSIX paths (unambiguous on the wire), with <code>archiveURL</code>/<code>targetURL</code> accessors.</li>
+                            <li><code>UpdateInstallResult.swift</code> &mdash; <code>enum</code> (<code>XPCMessage, Equatable</code>) <code>.success</code> / <code>.failure(reason:)</code>, plus <code>failure(from:)</code> reducing an error to a user-facing reason (<code>LocalizedError.errorDescription</code> else <code>localizedDescription</code>).</li>
+                            <li><code>UpdaterServiceProtocol.swift</code> &mdash; <code>@objc</code>, <code>installUpdate(_ request: Data, withReply reply: @escaping @Sendable ( Data ) -&gt; Void )</code>.</li>
+                            <li><code>UpdaterClientProtocol.swift</code> &mdash; <code>@objc</code>, one-way <code>updateDidProgress(_ progress: Data)</code>.</li>
+                            <li><code>InstallProgress+XPC.swift</code> &mdash; <code>extension InstallProgress: XPCMessage {}</code>, the progress wire form.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Edits to existing files:</strong> added <code>Codable</code> to <code>InstallProgress</code> and <code>UpdateArchiveFormat</code> (additive &mdash; both are plain enums with no custom coding, so synthesis is purely additive and changes no existing behavior; needed so a phase and the request's <code>format</code> can cross the wire).</li>
+                    <li><strong>Progress vs. terminal result (task 2):</strong> progress streams service&rarr;client over the bidirectional connection (the app exports an <code>UpdaterClientProtocol</code> object; the service calls it via <code>remoteObjectProxy</code>) as an encoded <code>InstallProgress</code>; the terminal <code>UpdateInstallResult</code> returns through the <code>installUpdate</code> reply block; a dropped connection surfaces via the client proxy's error handler (M9). Documented on the two protocol files.</li>
+                    <li><strong>Requirement is app-derived (root of trust):</strong> the request carries the CSRL string the app derives from its own validated identity, because the service can't (it would pin its own identifier). Recorded constraint for M8: the service must independently verify the connecting client's identity via its audit token, and re-validate the exact extracted bundle.</li>
+                    <li><strong>Format field beyond the plan's four listed params:</strong> included because the install composition (<code>UpdateInstaller.install</code>) needs the format and carrying it avoids re-detection from the path.</li>
+                    <li><strong>Post-review revision (human):</strong> empty protocol/extension bodies rewritten as <code>{}</code> on a single line (see Review comments).</li>
+                    <li><code>Package.swift</code> is path-based, so no change. Xcode project kept in sync (file/build IDs <code>05F0005D</code>&ndash;<code>05F00065</code>, groups <code>05F00066</code>/<code>05F00067</code>): 6 source files into the framework target, 3 test files into the test target, each with its file ref, build file, <code>XPC</code> group entry, and Sources-phase entry. Verified with <code>xcodebuild test</code>: <strong>144 tests pass</strong> (133 + 11 new); <code>swift build</code> also compiles the XPC code (in-app code still builds in both distributions; the <code>#if !SWIFT_PACKAGE</code> gating remains deferred to the entry-point milestone).</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 1 round (converged immediately &mdash; the fresh-context reviewer reported no Critical/High/Medium findings; it independently re-ran the build/144 tests and audited the pbxproj ID wiring). Four Info/Low observations, none requiring a fix, are recorded below for the user.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p>Round 1 (fresh-context sub-agent) &mdash; no Critical/High/Medium findings; loop converged. Verified the build and 144 tests pass, the pbxproj wires all 9 files into the correct targets with consistent IDs (every <code>&hellip;A</code> fileRef 3&times;, every <code>&hellip;B</code> build file 2&times;, group IDs 2&times; &mdash; no dangling/duplicate references, and the <code>+</code> path is correctly quoted), <code>Package.swift</code> is path-based, and the <code>Codable</code> additions are a clean, non-breaking regression check.</p>
+                <ul class="plain">
+                    <li><strong>Requirement is trusted, app-supplied CSRL</strong> &mdash; Info (Security). Correctly documented as a contract-level decision; the reviewer flags that <strong>M8 must implement the client audit-token check</strong> and harden against a malformed/weak requirement. <strong>Deferred</strong> &mdash; already recorded as an M8 constraint in the request's doc comment.</li>
+                    <li><strong>No cancellation in the install contract</strong> &mdash; Info (API surface). The downloader has cancellation, but <code>UpdaterServiceProtocol</code> exposes none. Likely intentional (an install past the replace phase shouldn't be interruptible). <strong>Deferred</strong> &mdash; to confirm as a deliberate contract decision in M8.</li>
+                    <li><strong>No version/discriminator field in the messages</strong> &mdash; Info (Wire format). Acceptable because the service ships inside the same framework as the app, so both sides always agree on the JSON shape; a version field would only matter if the service became independently updatable. <strong>Deferred.</strong></li>
+                    <li><strong><code>encoded()</code>/<code>decoded(from:)</code> allocate a fresh <code>JSONEncoder</code>/<code>JSONDecoder</code> per call</strong> &mdash; Low (micro-efficiency). Negligible at a few calls per update. <strong>Deferred.</strong></li>
+                </ul>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li>Empty braces should be written as <code>{}</code> on a single line, not as an opening brace and a closing brace on separate lines.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- M8 -->

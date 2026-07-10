@@ -23,25 +23,30 @@
  ******************************************************************************/
 
 import Foundation
+@testable import SwiftUtilities
+import Testing
 
-/// A phase of an in-app update installation, reported by an ``UpdateInstaller``
-/// so the UI can describe what is happening.
-///
-/// The phases occur in declaration order. This is a pure value type, so it lives
-/// in the platform-agnostic layer. It is `Codable` so it can be streamed back to
-/// the app as a progress message across the updater XPC connection (see
-/// ``XPCMessage``).
-public enum InstallProgress: Sendable, Equatable, Codable
+struct Test_XPCMessage
 {
-    /// The downloaded archive is being unpacked.
-    case extracting
+    @Test
+    func installProgressPhasesRoundTripThroughData() throws
+    {
+        try [ InstallProgress.extracting, .validating, .replacing, .relaunching ].forEach
+        {
+            phase in
 
-    /// The extracted application's code signature is being validated.
-    case validating
+            let decoded = try InstallProgress.decoded( from: phase.encoded() )
 
-    /// The validated application is being written into place.
-    case replacing
+            #expect( decoded == phase )
+        }
+    }
 
-    /// The application is being relaunched.
-    case relaunching
+    @Test
+    func decodingInvalidDataThrows() throws
+    {
+        #expect( throws: ( any Error ).self )
+        {
+            try InstallProgress.decoded( from: Data( "not a phase".utf8 ) )
+        }
+    }
 }
