@@ -46,6 +46,7 @@
 		05F00037000000000000000B /* CreditDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00037000000000000000A /* CreditDetailView.swift */; };
 		05F00038000000000000000B /* CreditRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00038000000000000000A /* CreditRow.swift */; };
 		05F00039000000000000000B /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00039000000000000000A /* CreditsView.swift */; };
+		05F0003A000000000000000B /* CreditsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003A000000000000000A /* CreditsWindowController.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
@@ -159,6 +160,7 @@
 		05F00037000000000000000A /* CreditDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditDetailView.swift; sourceTree = "<group>"; };
 		05F00038000000000000000A /* CreditRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditRow.swift; sourceTree = "<group>"; };
 		05F00039000000000000000A /* CreditsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditsView.swift; sourceTree = "<group>"; };
+		05F0003A000000000000000A /* CreditsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditsWindowController.swift; sourceTree = "<group>"; };
 		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
@@ -487,6 +489,7 @@
 				05F00037000000000000000A /* CreditDetailView.swift */,
 				05F00038000000000000000A /* CreditRow.swift */,
 				05F00039000000000000000A /* CreditsView.swift */,
+				05F0003A000000000000000A /* CreditsWindowController.swift */,
 			);
 			path = Credits;
 			sourceTree = "<group>";
@@ -629,6 +632,7 @@
 				05F00037000000000000000B /* CreditDetailView.swift in Sources */,
 				05F00038000000000000000B /* CreditRow.swift in Sources */,
 				05F00039000000000000000B /* CreditsView.swift in Sources */,
+				05F0003A000000000000000B /* CreditsWindowController.swift in Sources */,
 				05F00008000000000000000B /* MarkdownBlock.swift in Sources */,
 				05F00009000000000000000B /* MarkdownInline.swift in Sources */,
 				05F0000A000000000000000B /* MarkdownListItem.swift in Sources */,

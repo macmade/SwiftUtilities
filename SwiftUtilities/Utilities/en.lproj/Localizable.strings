@@ -1,6 +1,9 @@
 /* Title of the About window. %@ is the application name. */
 "About.window.title" = "About %@";
 
+/* Title of the Credits window. */
+"Credits.window.title" = "Credits";
+
 /* Placeholder shown in the Credits window's detail pane when no project is selected. */
 "Credits.placeholder" = "This application makes use of the following third-party projects.";
 

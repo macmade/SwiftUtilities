@@ -40,6 +40,8 @@ struct Test_Localization
         #expect( Localization.string( "GitHubUpdater.window.button.download" )       == "Download" )
         #expect( Localization.string( "GitHubUpdater.window.button.view" )           == "View on GitHub" )
         #expect( Localization.string( "GitHubUpdater.window.button.later" )          == "Later" )
+        #expect( Localization.string( "Credits.window.title" )                       == "Credits" )
+        #expect( Localization.string( "Credits.placeholder" )                        == "This application makes use of the following third-party projects." )
     }
 
     @Test

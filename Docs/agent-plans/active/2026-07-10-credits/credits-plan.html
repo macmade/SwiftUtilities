@@ -626,7 +626,7 @@
 <div class="milestone">
     <div class="milestone-head">
         <div><span class="num">Milestone 5</span><h3>Window controller, localization &amp; public entry point</h3></div>
-        <span class="pill todo">Not started</span>
+        <span class="pill done">Completed</span>
     </div>
     <div class="field">
         <div class="label">Goal</div>
@@ -653,10 +653,54 @@
                 re-fronts on a second call, and releases on close (following the About behavior).</li>
         </ul>
     </div>
-    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
-    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
-    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Created <code>SwiftUtilities/Credits/CreditsWindowController.swift</code>: a
+            <code>@MainActor public final class CreditsWindowController: HostingWindowController</code> (gated with
+            <code>#if canImport( AppKit )</code>), mirroring <code>AboutWindowController</code>. Its static
+            <code>show( credits: [ Credit ] )</code> calls
+            <code>HostingWindowController.show( using: CreditsWindowController.init )</code> and
+            <code>present( rootView: CreditsView( credits ), sizing: .fixed( 720×480 ) )</code>, configuring the window
+            with a localized title and a <code>contentMinSize</code> of 600×360.</p>
+        <p><strong>Resizable, unlike About:</strong> the controller deliberately does <em>not</em> touch
+            <code>styleMask</code>. The base builds the window via <code>NSWindow( contentViewController: )</code>, whose
+            default style mask is resizable, so the Credits window stays resizable with a standard titlebar — whereas
+            <code>AboutWindowController</code> removes <code>.resizable</code> and adds <code>.fullSizeContentView</code>.
+            The initial and minimum sizes are held as named <code>private static let</code> constants and documented.
+            Single-window reuse (re-fronting on a second call, release on close) is inherited unchanged from
+            <code>HostingWindowController</code>.</p>
+        <p><strong>Localization (TDD):</strong> first added assertions for <code>Credits.window.title</code> and
+            <code>Credits.placeholder</code> to <code>Test_Localization.stringResolvesTable</code> and confirmed the
+            <strong>red</strong> state (<code>Credits.window.title</code> resolving to the key itself), then added the
+            <code>Credits.window.title</code> key (value "Credits", with a descriptive comment) to
+            <code>en.lproj/Localizable.strings</code> to reach <strong>green</strong>. This also closes the Milestone 4
+            follow-up to cover <code>Credits.placeholder</code> in the localization test.</p>
+        <p><strong>Window-controller testing:</strong> following the codebase precedent — there is no unit test for
+            <code>AboutWindowController</code>, and the AppKit tests cover pure logic only — the controller's UI
+            behavior (open / re-front / release) is verified by mirroring the reviewed About implementation and by
+            build, not by an automated UI test (which would need a running <code>NSApplication</code>).</p>
+        <p>Registered the file in the <code>SwiftUtilities</code> target under the <code>Credits</code> group; no
+            <code>Package.swift</code> change needed (no new resource). <code>xcodebuild … build</code> →
+            <strong>BUILD SUCCEEDED</strong>; <code>xcodebuild … test</code> → <strong>TEST SUCCEEDED</strong>
+            (82 tests / 9 suites).</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer; build succeeded, full suite passes, and the
+            pbxproj lints clean (<code>plutil -lint … OK</code>). Explicitly confirmed: the window stays resizable (no
+            <code>styleMask</code> mutation) with a standard titlebar; no conflict between the 720×480 initial and
+            600×360 minimum sizes, and the <code>contentMinSize</code>/<code>setContentSize</code> ordering is safe;
+            single-window lifetime reuse, re-fronting, release-on-close, and the no-retain-cycle registry are inherited
+            correctly and match About; <code>@MainActor</code> and the <code>show(credits:)</code> signature are correct;
+            the localized title is added with a descriptive comment and consumed correctly, with deterministic
+            (non-flaky) test assertions; and the pbxproj edits are internally consistent with a unique, correctly
+            cross-referenced ID and no collisions. No Critical/High/Medium findings; only Info notes (alignment rule
+            not applicable across doc-comment-separated declarations; full doc coverage present; no maximum content size,
+            which is appropriate for a resizable list window). All Deferred, no fix required.</p>
+    </div>
     <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
 </div>
 
