@@ -468,7 +468,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M2.</span>Archive format detection</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -488,10 +488,34 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD (tests first &mdash; watched them fail as an unresolved <code>UpdateArchiveFormat</code> symbol &mdash; then implemented to green).</p>
+                <ul class="plain">
+                    <li>Added <code>SwiftUtilities/GitHub/UpdateArchiveFormat.swift</code>: a public <code>enum UpdateArchiveFormat: Sendable, Equatable, CaseIterable</code> with <code>.zip</code> and <code>.dmg</code>. Pure value type (no UI/IO), so it lives in the platform-agnostic layer alongside <code>UpdateCheckResult</code> / <code>UpdateBehavior</code> &mdash; no <code>#if canImport( AppKit )</code> gate.</li>
+                    <li><strong>Detection API:</strong> a single <code>fileExtension</code> property is the source of truth for each format's extension; three failable initializers funnel into it &mdash; <code>init?( fileExtension: )</code> (case-insensitive match via <code>lowercased()</code> + <code>allCases.first( where: )</code>, no raw loop), <code>init?( filename: )</code> (uses <code>NSString.pathExtension</code>), and <code>init?( url: )</code> (uses <code>URL.pathExtension</code>). <code>URL.pathExtension</code> ignores query strings and fragments, and multi-dot names like <code>App.tar.gz</code> resolve to the last component (<code>gz</code> &rarr; unsupported &rarr; <code>nil</code>), both verified.</li>
+                    <li><strong>Eligibility gate:</strong> extended <code>updateWindowMode( for:downloadURL: )</code> so <code>.inApp</code> is chosen only when the behavior is <code>.inApp</code> <em>and</em> there is a download URL <em>and</em> <code>UpdateArchiveFormat( url: )</code> recognizes it (<code>.zip</code>/<code>.dmg</code>); otherwise it falls back to <code>.link</code>. The gate delegates to <code>UpdateArchiveFormat</code> rather than hardcoding extensions. Absent or unsupported assets (e.g. <code>.pkg</code>) fall back to the link path; M1's supported-asset and no-asset behavior is unchanged.</li>
+                    <li><strong>Content-type detection deferred:</strong> the plan mentions content type &ldquo;where available,&rdquo; but the eligibility gate runs pre-download from the asset URL only, and the release JSON's <code>content_type</code> field is not currently parsed. Rather than add unused/speculative code, content-type detection is left for a milestone that actually has the response/asset content type in hand.</li>
+                    <li>Tests: added <code>SwiftUtilitiesTests/GitHub/UpdateArchiveFormat.swift</code> (<code>Test_UpdateArchiveFormat</code>) covering zip/dmg from filename and URL, case-insensitivity, query/fragment URLs, direct <code>init?( fileExtension: )</code>, the <code>fileExtension</code> round-trip over <code>allCases</code>, and unsupported/no-extension/empty cases. Extended <code>Test_GitHubUpdaterBehavior</code> with the in-app&rarr;link fallback for an unsupported archive and in-app selection for a <code>.dmg</code>.</li>
+                    <li>Xcode project kept in sync (new file refs, build files, group and Sources-phase entries for both targets). <code>Package.swift</code> is path-based, so no change. Verified with <code>xcodebuild test</code>: <strong>98 tests pass</strong>.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 1 round (converged immediately &mdash; the fresh-context reviewer reported no Critical/High/Medium findings, and empirically confirmed the query-string/fragment and multi-dot edge cases and the absence of an M1 regression). Two Low test-coverage findings were addressed as cheap, in-scope hardening; one Info was left as-is.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p>Round 1 (fresh-context sub-agent) &mdash; no Critical/High/Medium findings; loop converged.</p>
+                <ul class="plain">
+                    <li><strong>No test for URL with query string / fragment</strong> &mdash; Low (Test coverage). The milestone lists this case; behavior was correct but unpinned. <strong>Fixed</strong> &mdash; added <code>detectsFromURLIgnoringQueryAndFragment</code>.</li>
+                    <li><strong><code>init?( fileExtension: )</code> and the unsupported/no-extension URL path not directly tested</strong> &mdash; Low (Test coverage). Public API exercised only indirectly. <strong>Fixed</strong> &mdash; added <code>detectsFromFileExtension</code>, a <code>fileExtension</code> round-trip test, and an unsupported-URL assertion.</li>
+                    <li><strong><code>init?( fileExtension: )</code> is sensitive to a leading dot</strong> &mdash; Info (API robustness). Passing <code>".zip"</code> returns <code>nil</code>; documented as &ldquo;without a leading dot,&rdquo; and no internal caller hits it. <strong>Deferred</strong> &mdash; left as the documented contract.</li>
+                </ul>
+            </div>
+        </div>
         <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
     </div>
 

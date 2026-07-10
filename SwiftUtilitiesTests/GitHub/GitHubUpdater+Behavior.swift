@@ -54,6 +54,22 @@
         }
 
         @Test
+        func inAppBehaviorFallsBackToLinkForUnsupportedArchive() async throws
+        {
+            let pkg = try #require( URL( string: "https://example.com/app.pkg" ) )
+
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: pkg ) == .link )
+        }
+
+        @Test
+        func inAppBehaviorSelectsInAppModeForDmg() async throws
+        {
+            let dmg = try #require( URL( string: "https://example.com/app.dmg" ) )
+
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: dmg ) == .inApp )
+        }
+
+        @Test
         func behaviorDefaultsToLinkAtConstruction() async throws
         {
             let updater = try #require( GitHubUpdater( owner: "apple", repository: "swift" ) )

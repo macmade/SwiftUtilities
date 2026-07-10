@@ -127,11 +127,12 @@
 
         /// Determines how the update-available window should present a newer release.
         ///
-        /// Pure: maps the caller's ``UpdateBehavior`` and the presence of a
-        /// downloadable asset to the ``UpdateWindowMode`` to use. In-app
-        /// installation requires an asset to download, so ``UpdateBehavior/inApp``
-        /// falls back to ``UpdateWindowMode/link`` when no download URL is
-        /// available. ``UpdateBehavior/link`` always maps to
+        /// Pure: maps the caller's ``UpdateBehavior`` and the release's downloadable
+        /// asset to the ``UpdateWindowMode`` to use. In-app installation requires a
+        /// downloadable asset in a supported ``UpdateArchiveFormat`` (`.zip` or
+        /// `.dmg`), so ``UpdateBehavior/inApp`` falls back to
+        /// ``UpdateWindowMode/link`` when there is no download URL or the asset is
+        /// not a supported archive. ``UpdateBehavior/link`` always maps to
         /// ``UpdateWindowMode/link``. Performs no UI work.
         ///
         /// - Parameters:
@@ -142,7 +143,9 @@
         /// - Returns: The window mode to present.
         internal static func updateWindowMode( for behavior: UpdateBehavior, downloadURL: URL? ) -> UpdateWindowMode
         {
-            guard behavior == .inApp, downloadURL != nil
+            guard behavior == .inApp,
+                  let downloadURL,
+                  UpdateArchiveFormat( url: downloadURL ) != nil
             else
             {
                 return .link

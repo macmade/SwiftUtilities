@@ -23,6 +23,7 @@
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00003000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F0003C000000000000000B /* GitHubUpdater+Behavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */; };
+		05F0003E000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003E000000000000000A /* UpdateArchiveFormat.swift */; };
 		05F00004000000000000000B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F00004000000000000000A /* Localizable.strings */; };
 		05F00006000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00006000000000000000A /* Localization.swift */; };
 		05F00007000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00007000000000000000A /* Localization.swift */; };
@@ -50,6 +51,7 @@
 		05F0003A000000000000000B /* CreditsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003A000000000000000A /* CreditsWindowController.swift */; };
 		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		05F0003B000000000000000B /* UpdateBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003B000000000000000A /* UpdateBehavior.swift */; };
+		05F0003D000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003D000000000000000A /* UpdateArchiveFormat.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
 		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
@@ -166,6 +168,8 @@
 		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		05F0003B000000000000000A /* UpdateBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBehavior.swift; sourceTree = "<group>"; };
 		05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Behavior.swift"; sourceTree = "<group>"; };
+		05F0003D000000000000000A /* UpdateArchiveFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateArchiveFormat.swift; sourceTree = "<group>"; };
+		05F0003E000000000000000A /* UpdateArchiveFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateArchiveFormat.swift; sourceTree = "<group>"; };
 		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
 		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
@@ -400,6 +404,7 @@
 				05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */,
 				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05F0003B000000000000000A /* UpdateBehavior.swift */,
+				05F0003D000000000000000A /* UpdateArchiveFormat.swift */,
 				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05F0001F000000000000000A /* UpdateAvailableView.swift */,
 				05F00020000000000000000A /* UpdateWindowController.swift */,
@@ -446,6 +451,7 @@
 				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
 				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */,
+				05F0003E000000000000000A /* UpdateArchiveFormat.swift */,
 			);
 			path = GitHub;
 			sourceTree = "<group>";
@@ -631,6 +637,7 @@
 				05398CB22DEEC91B005904EC /* GitHubUpdater.swift in Sources */,
 				05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F0003B000000000000000B /* UpdateBehavior.swift in Sources */,
+				05F0003D000000000000000B /* UpdateArchiveFormat.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
@@ -680,6 +687,7 @@
 				05F0000E000000000000000B /* MarkdownContent.swift in Sources */,
 				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
 				05F0003C000000000000000B /* GitHubUpdater+Behavior.swift in Sources */,
+				05F0003E000000000000000B /* UpdateArchiveFormat.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);
