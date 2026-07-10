@@ -28,17 +28,19 @@ import Foundation
 ///
 /// It carries everything the service needs to run the install composition off the
 /// sandbox: the downloaded `archive`, the `target` application bundle to replace,
-/// the `requirement` the extracted application must satisfy, the archive `format`,
-/// and the `processIdentifier` of the running application so the service can wait
-/// for it to exit before relaunching.
+/// the expected signing `identity` the extracted application must match, the
+/// archive `format`, and the `processIdentifier` of the running application so the
+/// service can wait for it to exit before relaunching.
 ///
-/// The **app** derives the expected `requirement` from its own validated running
-/// identity (the root of trust), because the service cannot: reading its own
-/// identity would pin the service's signing identifier, not the application's. The
-/// service therefore verifies the extracted application against this requirement
-/// rather than deriving one. This trusts the caller to supply a strong requirement,
-/// so the service must independently confirm the connecting client's identity (via
-/// its audit token) before acting — a constraint for the service milestone.
+/// The **app** supplies its own validated running ``CodeSigningIdentity`` (the root
+/// of trust), because the service cannot derive it: reading its own identity would
+/// pin the service's signing identifier, not the application's. The service rebuilds
+/// the requirement from this identity with the vetted, injection-safe
+/// ``CodeSigningIdentity/requirement`` builder — it never executes a raw
+/// requirement string chosen by the caller — and verifies the extracted application
+/// against it. Because the identity is still caller-supplied, the service must also
+/// independently confirm the connecting client's identity (via its audit token)
+/// before acting — a constraint enforced by the service's listener.
 ///
 /// File locations travel as POSIX paths rather than `URL`s so the wire form is an
 /// unambiguous string; ``archiveURL`` and ``targetURL`` reconstruct file URLs from
@@ -51,9 +53,9 @@ public struct UpdateInstallRequest: XPCMessage, Equatable
     /// The POSIX path of the application bundle to replace.
     public let targetPath: String
 
-    /// The Code Signing Requirement Language string the extracted application must
-    /// satisfy before it can replace the target.
-    public let requirement: String
+    /// The signing identity the extracted application must match before it can
+    /// replace the target. The service rebuilds the code requirement from it.
+    public let identity: CodeSigningIdentity
 
     /// The archive's format.
     public let format: UpdateArchiveFormat
@@ -67,14 +69,14 @@ public struct UpdateInstallRequest: XPCMessage, Equatable
     /// - Parameters:
     ///   - archive:           A file URL to the downloaded archive.
     ///   - target:            A file URL to the application bundle to replace.
-    ///   - requirement:       The requirement the extracted application must satisfy.
+    ///   - identity:          The signing identity the extracted application must match.
     ///   - format:            The archive's format.
     ///   - processIdentifier: The running application's process identifier.
-    public init( archive: URL, target: URL, requirement: String, format: UpdateArchiveFormat, processIdentifier: Int32 )
+    public init( archive: URL, target: URL, identity: CodeSigningIdentity, format: UpdateArchiveFormat, processIdentifier: Int32 )
     {
         self.archivePath       = archive.path
         self.targetPath        = target.path
-        self.requirement       = requirement
+        self.identity          = identity
         self.format            = format
         self.processIdentifier = processIdentifier
     }

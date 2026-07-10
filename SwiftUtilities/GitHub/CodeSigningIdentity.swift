@@ -36,8 +36,10 @@ import Foundation
 /// This is a pure value type — it performs no code-signing IO — so it lives in
 /// the platform-agnostic layer and its requirement construction is fully
 /// unit-testable. Reading a real bundle's identity is the job of a
-/// ``CodeSignatureInspecting`` implementation.
-public struct CodeSigningIdentity: Sendable, Equatable
+/// ``CodeSignatureInspecting`` implementation. It is `Codable` so the app can
+/// carry the expected identity to the updater service in an
+/// ``UpdateInstallRequest``, where the service rebuilds the requirement from it.
+public struct CodeSigningIdentity: Sendable, Equatable, Codable
 {
     /// The code-signing identifier sealed into the signature.
     ///
@@ -89,7 +91,7 @@ public struct CodeSigningIdentity: Sendable, Equatable
     /// - Parameter value: The raw value to quote.
     ///
     /// - Returns: The quoted, escaped string literal.
-    private static func quoted( _ value: String ) -> String
+    static func quoted( _ value: String ) -> String
     {
         let escaped = value.replacingOccurrences( of: "\\", with: "\\\\" ).replacingOccurrences( of: "\"", with: "\\\"" )
 

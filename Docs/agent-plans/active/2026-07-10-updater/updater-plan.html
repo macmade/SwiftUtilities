@@ -913,7 +913,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M8.</span>Bundled updater XPC service</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -937,11 +937,44 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
-        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-11</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented full M8 (hand-edited target, per the user's choice). The service <strong>builds, embeds, signs, and unit-tests</strong> here; only the live runtime behavior (a real signed host app connecting and driving an actual <code>/Applications</code> replace + relaunch) needs a host app and is documented as runtime-verify-only.</p>
+                <p><strong>Design decision (user-approved):</strong> the service cannot reuse M6's derive-from-running-process validation (its running identity is the <em>service</em>, not the app). So <strong>M7's <code>UpdateInstallRequest</code> was revised to carry the app's <code>CodeSigningIdentity</code></strong> (instead of a raw requirement string); a new <code>ExpectedIdentityInspector</code> substitutes that identity for the running-identity read while delegating the real <code>verify</code> to <code>SecurityCodeSignatureInspector</code>, letting the service <strong>reuse M6's <code>UpdateInstallation</code> unchanged</strong>. The service rebuilds the requirement with the vetted, injection-safe <code>CodeSigningIdentity.requirement</code> builder — it never executes a caller-supplied requirement string. (<code>CodeSigningIdentity</code> gained <code>Codable</code>; its <code>quoted</code> helper became <code>internal</code> for reuse.)</p>
+                <p><strong>Apple-doc verification (per task):</strong> the peer-verification and listener APIs were confirmed against Apple docs / the SDK headers, not memory. Confirmed <code>NSXPCConnection.auditToken</code> is <strong>SPI</strong> (absent from the public header) &mdash; read via KVC and documented; the audit token (not the PID, which is reuse-attackable) names the exact peer. Peer validation uses <code>SecCodeCopyGuestWithAttributes</code> (<code>kSecGuestAttributeAudit</code>) + <code>SecCodeCheckValidity</code>; the lazy-validation caveat is mitigated by requiring the client's hardened runtime.</p>
+                <ul class="plain">
+                    <li><strong>New framework code (<code>SwiftUtilities/GitHub/XPC/</code>):</strong> <code>ExpectedIdentityInspector</code> (identity-sourced validator adapter); <code>UpdaterService</code> (the <code>@objc</code> exported object; a testable static <code>run</code> core decodes the request, composes <code>UpdateInstallation</code>, streams progress, maps success/error to <code>UpdateInstallResult</code>); <code>RelaunchWaiter</code> (poll the app PID via signal-0, then <code>/usr/bin/open</code>; injectable seams); <code>ProcessRelauncher</code> (spawns a detached copy of the service binary in relaunch mode); <code>RelaunchError</code>; <code>XPCClientVerifier</code> (same-Team-ID audit-token requirement).</li>
+                    <li><strong>New service target sources (<code>UpdaterService/</code>):</strong> <code>main.swift</code> (two modes: relaunch-wait vs. <code>NSXPCListener.service()</code>); <code>UpdaterServiceListenerDelegate.swift</code> (verifies the peer, wires the bidirectional interfaces, builds <code>UpdaterService</code> with production blocks + progress&rarr;client-proxy sink); <code>Info.plist</code> (<code>XPCService.ServiceType = Application</code>); non-sandboxed <code>Updater.entitlements</code>.</li>
+                    <li><strong>Relaunch survival:</strong> because a plain child stays in the service's <code>launchd</code> job, <code>spawnDetached</code> uses <code>posix_spawn</code> with <code>POSIX_SPAWN_SETSID</code> so the waiter becomes a session leader in a new session, decoupled from the service's lifecycle (see Automated review, finding 1). No shell, no consumer helper.</li>
+                    <li><strong>Xcode target (hand-edited pbxproj):</strong> a new <code>Updater</code> XPC-service target compiling the 2 service files + 28 shared framework sources (the service can't link the framework it's embedded in without a build cycle, so it compiles the sources &mdash; the Sparkle&nbsp;2 approach), embedded into <code>SwiftUtilities.framework/Versions/A/XPCServices</code> via a Copy Files phase (<code>dstSubfolderSpec = 16</code>, <code>dstPath = $(CONTENTS_FOLDER_PATH)/XPCServices</code>), with a target dependency so the framework builds it first. Library-only inherited settings (<code>BUILD_LIBRARY_FOR_DISTRIBUTION</code>, <code>DEFINES_MODULE</code>) are overridden off for the executable; signing/team/hardened-runtime are inherited from the project xcconfig.</li>
+                    <li><strong>Verification:</strong> <code>xcodebuild build -scheme Updater</code> &rarr; <strong>BUILD SUCCEEDED</strong> (30 sources); <code>xcodebuild test -scheme SwiftUtilities</code> &rarr; <strong>159 tests / 27 suites pass</strong>; <code>swift build</code> OK (the <code>UpdaterService/</code> target dir is outside the SwiftPM package, which stays link-only). On disk the embedded <code>Updater.xpc</code> is code-signed with <strong>hardened runtime</strong> (<code>flags=0x10000(runtime)</code>), team <code>326Y53CJMD</code>, <code>ServiceType=Application</code>, no app-sandbox entitlement.</li>
+                    <li><strong>Deferred to later milestones:</strong> the <code>#if !SWIFT_PACKAGE</code> gating remains for the entry-point milestone; the client that connects to this service is M9; the UI is M10.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 1 round. The fresh-context reviewer found no Critical/High and confirmed the security composition, client verification, no-unvalidated-install guarantee, Swift-6 concurrency, and pbxproj wiring are sound. One Medium (relaunch child session detachment) was fixed with the reviewer's recommended <code>POSIX_SPAWN_SETSID</code> approach; the fix is isolated (runtime-only spawn) and re-verified (Updater builds, 159 tests pass), so the loop is treated as converged rather than re-running a full fresh review of the whole milestone for a self-contained fix. Low/Info items are recorded below for the user.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p>Round 1 (fresh-context sub-agent) &mdash; no Critical/High. Verified: no path installs or relaunches an unvalidated app (validate precedes replace, throws on failure); client verification is fail-closed and uses the audit token pinned to the service's own team; no M7 regression (no remaining <code>requirement</code> references); Swift-6 concurrency is sound (Sendable locals in the <code>Task</code>, documented <code>UnsafeSendable</code> box); pbxproj compiles exactly 30 files into <code>Updater</code>, embed + dependency correct, no duplicate/dangling IDs; the embedded <code>.xpc</code> is hardened-runtime signed with no app sandbox.</p>
+                <ul class="plain">
+                    <li><strong>Relaunch child may not survive service teardown (no session detachment)</strong> &mdash; Medium (Correctness). <code>Process().run()</code> left the waiter in the service's <code>launchd</code> job, which could be torn down with the service before the app is reopened. <strong>Fixed</strong> &mdash; <code>spawnDetached</code> now uses <code>posix_spawn</code> with <code>POSIX_SPAWN_SETSID</code> (new session). Worst case was a missed relaunch, never an unvalidated install.</li>
+                    <li><strong><code>RelaunchWaiter</code> is vulnerable to PID reuse</strong> &mdash; Low (Robustness). Between the app exiting and the next 200&nbsp;ms poll, the PID could be recycled, so the waiter would wait on the wrong process and eventually time out without reopening. <strong>Deferred</strong> &mdash; acceptable given the tight poll; a <code>kqueue</code> <code>NOTE_EXIT</code> on the PID captured before quit would eliminate the window. Recorded for the user.</li>
+                    <li><strong>Two <code>ProcessRelauncher</code> statics could be <code>internal</code></strong> &mdash; Info (Visibility). <code>arguments(for:)</code>/<code>invocation(from:)</code> are impl details of the two-mode CLI contract; the reviewer noted leaving them <code>public</code> is defensible under the codebase's public-by-default philosophy. <strong>Deferred</strong> &mdash; left as-is.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li><strong>Q:</strong> What about the app relauncher &mdash; is it handled by the XPC service, does it require a separate app, and is it covered by a future milestone? &mdash; <em>Answered:</em> the relaunch is handled entirely by the XPC service; there is no separate app or helper executable. <code>ProcessRelauncher</code> re-invokes the service's <em>own</em> binary in a second &ldquo;relaunch-wait&rdquo; mode as a detached, new-session process (<code>posix_spawn</code> + <code>POSIX_SPAWN_SETSID</code>), which runs <code>RelaunchWaiter</code> (poll the app's PID, then <code>/usr/bin/open</code>). The mechanism is complete in M8. The only remaining piece is the app terminating itself to trigger the relaunch, which is wired on the app side (M10 UI); no future milestone adds a separate relauncher app.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- M9 -->

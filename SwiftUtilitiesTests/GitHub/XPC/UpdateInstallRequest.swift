@@ -28,14 +28,14 @@ import Testing
 
 struct Test_UpdateInstallRequest
 {
-    private static let requirement = "identifier \"com.example.App\" and anchor apple generic and certificate leaf[subject.OU] = \"ABCDE12345\""
+    private static let identity = CodeSigningIdentity( identifier: "com.example.App", teamIdentifier: "ABCDE12345" )
 
     private func makeRequest() -> UpdateInstallRequest
     {
         UpdateInstallRequest(
             archive:           URL( fileURLWithPath: "/tmp/Update.zip" ),
             target:            URL( fileURLWithPath: "/Applications/App.app" ),
-            requirement:       Test_UpdateInstallRequest.requirement,
+            identity:          Test_UpdateInstallRequest.identity,
             format:            .zip,
             processIdentifier: 4321
         )
@@ -57,7 +57,7 @@ struct Test_UpdateInstallRequest
 
         #expect( decoded.archiveURL        == URL( fileURLWithPath: "/tmp/Update.zip" ) )
         #expect( decoded.targetURL         == URL( fileURLWithPath: "/Applications/App.app" ) )
-        #expect( decoded.requirement       == Test_UpdateInstallRequest.requirement )
+        #expect( decoded.identity          == Test_UpdateInstallRequest.identity )
         #expect( decoded.format            == .zip )
         #expect( decoded.processIdentifier == 4321 )
     }
