@@ -655,7 +655,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M5.</span>Archive extraction &amp; app discovery</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -677,10 +677,38 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD. The <code>ditto</code>/<code>hdiutil</code> invocations and flags were verified against their man pages before implementing (<code>ditto -x -k</code>; <code>hdiutil attach &hellip; -readonly -nobrowse -mountpoint</code>, <code>detach [-force]</code>, and <code>create -srcfolder &hellip;</code> for fixtures). The real tool paths are exercised end-to-end by integration tests (unlike M3/M4, no separate scratchpad was needed).</p>
+                <ul class="plain">
+                    <li><strong>Types (in <code>SwiftUtilities/GitHub/</code>, Foundation-only, no gate):</strong> <code>ArchiveExtractionError</code> (pure enum, <code>LocalizedError</code>: <code>.extractionFailed(reason:)</code>, <code>.applicationNotFound</code>, <code>.multipleApplicationsFound</code>); <code>ArchiveExtracting</code> (the protocol seam so the installer milestones can inject a stub); <code>ArchiveExtractor</code> (concrete, runs the real tools).</li>
+                    <li><strong>Extraction:</strong> creates a unique subdirectory of the working directory; <code>.zip</code> &rarr; <code>ditto -x -k</code>; <code>.dmg</code> &rarr; <code>hdiutil attach &hellip; -readonly -nobrowse -mountpoint</code>, copy the app out, then detach. The whole subdirectory is removed on any failure.</li>
+                    <li><strong>App discovery</strong> (<code>application(in:)</code>, pure/testable): recursive, skips hidden files, <strong>skips symbolic links</strong> (so a <code>.dmg</code>'s <code>/Applications</code> symlink is never followed), does not descend into <code>.app</code> bundles; throws for zero or multiple apps.</li>
+                    <li><strong>Mount safety:</strong> the disk image is detached on every path (success, discovery failure, copy failure), with a <code>detach -force</code> fallback. On success the detach is best-effort so a rare detach failure does not discard a validly-extracted app.</li>
+                    <li>Tests: pure discovery tests (single/nested/none/multiple app, and the <code>/Applications</code>-symlink skip) plus real-tool integration tests (zip extract, dmg extract, corrupt zip, zip with no app, and a dmg-with-no-app case asserting the mount was detached and the container cleaned up). Fixtures are generated at runtime with <code>ditto</code>/<code>hdiutil</code>.</li>
+                    <li>Xcode project kept in sync (IDs <code>05F0004D</code>&ndash;<code>05F00050</code>). <code>Package.swift</code> is path-based, no change. Verified with <code>xcodebuild test</code>: <strong>127 tests pass</strong> (the suite takes ~11s because two tests do real <code>hdiutil</code> disk-image round-trips).</li>
+                </ul>
+                <p><strong>Note on fixtures:</strong> the plan says &ldquo;small fixture archives committed to the test target.&rdquo; I generate the fixtures at runtime with the real tools instead, avoiding committed binary blobs and test-resource wiring (which differs between SPM and the Xcode framework bundle) while still exercising real <code>ditto</code>/<code>hdiutil</code> on real archives. Happy to switch to committed fixtures if preferred &mdash; see Review comments.</p>
+                <p><strong>Automated review loop:</strong> 2 rounds. Round 1 confirmed mount cleanup is correct on all paths and flags match the man pages, and raised two Medium items; round 2 verified the fixes (notably the rewritten subprocess runner) and found no Critical/High/Medium remaining.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1</strong> (fresh-context, subprocess/mount-safety focused) &mdash; verified: no path leaves an image mounted; tool flags correct per the man pages; stderr drained before <code>waitUntilExit()</code> (no pipe deadlock); symlink-safe discovery; argv-array (no shell injection); pbxproj in sync.</p>
+                <ul class="plain">
+                    <li><strong>Blocking subprocess ran on the cooperative thread pool</strong> &mdash; Medium (concurrency). <code>Task.detached { &hellip; }.value</code> blocks a cooperative-pool thread for the subprocess lifetime. <strong>Fixed</strong> &mdash; rewrote <code>run</code> to bridge a <code>DispatchQueue.global(qos:.userInitiated)</code> block (sized for blocking work) back to <code>async</code> via <code>withCheckedThrowingContinuation</code>, keeping the deadlock-safe drain-then-wait.</li>
+                    <li><strong>No test for the dmg failure-path detach / cleanup-on-failure</strong> &mdash; Medium (test adequacy). <strong>Fixed</strong> &mdash; added <code>detachesAndCleansUpWhenDiskImageHasNoApplication</code>, which asserts the working directory is empty afterward (evidence the mount was released and the container removed).</li>
+                    <li><strong>Detach failure on the success path discarded the extracted app</strong> &mdash; Low (robustness). <strong>Fixed</strong> &mdash; success-path detach is now best-effort.</li>
+                    <li><strong>No subprocess timeout / cooperative cancellation</strong> &mdash; Low. <strong>Deferred</strong> &mdash; extraction tools do not hang in practice; can be added if cancellable extraction becomes a goal.</li>
+                    <li><strong><code>-mountpoint</code> single-volume assumption; trailing-slash URL shape; zip-slip relies on <code>ditto</code>; doc wording</strong> &mdash; Low/Info. <strong>Addressed</strong> (comment added; doc clarified) or accepted.</li>
+                </ul>
+                <p><strong>Round 2</strong> (fresh-context) &mdash; verified the rewritten <code>run</code> resumes the continuation exactly once on every path, is Sendable-clean (nothing non-Sendable captured), and remains deadlock-safe; confirmed the best-effort detach, the new test's soundness, and no regressions. No Critical/High/Medium remaining. One Info (doc wording) was addressed; cooperative cancellation noted as a pre-existing, non-regressing gap.</p>
+            </div>
+        </div>
         <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
     </div>
 
