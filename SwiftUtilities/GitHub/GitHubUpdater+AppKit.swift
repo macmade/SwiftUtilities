@@ -57,9 +57,27 @@
             public static let all: MessageOptions = [ .upToDate, .updateAvailable, .error ]
         }
 
+        /// How the update-available window should present a newer release.
+        ///
+        /// This is the value-level decision made by ``updateWindowMode(for:downloadURL:)``:
+        /// given the caller's ``UpdateBehavior`` and whether the release has a
+        /// downloadable asset, it selects the link window or the in-app update
+        /// window, without performing any UI work. It is the test seam for the
+        /// behavior-to-window routing.
+        internal enum UpdateWindowMode: Equatable, Sendable
+        {
+            /// Present the link-based window, whose **Download** action opens the
+            /// release in the browser.
+            case link
+
+            /// Present the in-app update window, which downloads, verifies, and
+            /// installs the update in place.
+            case inApp
+        }
+
         /// The alert to present for an update-check outcome.
         ///
-        /// This is the value-level decision made by ``present(_:messages:)``: given a
+        /// This is the value-level decision made by ``present(_:messages:behavior:)``: given a
         /// result and the enabled ``MessageOptions``, it describes which alert (if any)
         /// to show, without performing any UI work. It is the test seam for the
         /// option-to-alert routing.
@@ -107,11 +125,38 @@
             }
         }
 
+        /// Determines how the update-available window should present a newer release.
+        ///
+        /// Pure: maps the caller's ``UpdateBehavior`` and the presence of a
+        /// downloadable asset to the ``UpdateWindowMode`` to use. In-app
+        /// installation requires an asset to download, so ``UpdateBehavior/inApp``
+        /// falls back to ``UpdateWindowMode/link`` when no download URL is
+        /// available. ``UpdateBehavior/link`` always maps to
+        /// ``UpdateWindowMode/link``. Performs no UI work.
+        ///
+        /// - Parameters:
+        ///   - behavior:    The update-delivery behavior chosen by the caller.
+        ///   - downloadURL: The release's direct download URL, or `nil` when the
+        ///                  release has no downloadable asset.
+        ///
+        /// - Returns: The window mode to present.
+        internal static func updateWindowMode( for behavior: UpdateBehavior, downloadURL: URL? ) -> UpdateWindowMode
+        {
+            guard behavior == .inApp, downloadURL != nil
+            else
+            {
+                return .link
+            }
+
+            return .inApp
+        }
+
         /// Checks for updates, reporting the outcome to the user.
         ///
         /// The check runs in a detached task. Alerts are shown for every outcome,
         /// including when the application is already up-to-date and when an error
-        /// occurs.
+        /// occurs. An available update is delivered according to the updater's
+        /// ``behavior``, configured at construction.
         func checkForUpdates()
         {
             Task.detached( priority: .userInitiated )
@@ -125,7 +170,9 @@
         /// Checks for updates silently, only alerting the user when a newer version is available.
         ///
         /// The check runs in a low-priority detached task. No alert is shown when the
-        /// application is already up-to-date or when an error occurs.
+        /// application is already up-to-date or when an error occurs. An available
+        /// update is delivered according to the updater's ``behavior``, configured
+        /// at construction.
         func checkForUpdatesInBackground()
         {
             Task.detached( priority: .background )
@@ -139,7 +186,9 @@
         /// Presents an update-check result to the user.
         ///
         /// The up-to-date and error outcomes are shown as modal alerts; the
-        /// update-available outcome opens the non-modal update window.
+        /// update-available outcome opens the non-modal update window, whose flavor
+        /// is chosen by ``updateWindowMode(for:downloadURL:)`` from the updater's
+        /// ``behavior``.
         ///
         /// - Parameters:
         ///   - result:   The outcome to present.
@@ -160,7 +209,16 @@
 
                 case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
-                    self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+                    switch GitHubUpdater.updateWindowMode( for: self.behavior, downloadURL: downloadURL )
+                    {
+                        case .link:
+
+                            self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+
+                        case .inApp:
+
+                            self.showInAppUpdateWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+                    }
 
                 case .error( let message ):
 
@@ -222,6 +280,31 @@
                 downloadURL:     downloadURL,
                 releaseURL:      url
             )
+        }
+
+        /// Opens the window offering to download and install an available update in place.
+        ///
+        /// This is the entry point for the in-app update flow, selected when the
+        /// caller opts into ``UpdateBehavior/inApp`` and the release has a
+        /// downloadable asset.
+        ///
+        /// - Note: The in-app download and installation experience is delivered in a
+        ///   later milestone. Until it lands, this presents the same link-based
+        ///   window as ``showUpdateAvailableWindow(application:version:update:url:notes:downloadURL:)``
+        ///   so an available update stays reachable.
+        ///
+        /// - Parameters:
+        ///   - application: The display name of the application.
+        ///   - version:     The current version of the application.
+        ///   - update:      The version of the available update.
+        ///   - url:         The URL of the release page on GitHub.
+        ///   - notes:       The release's Markdown notes.
+        ///   - downloadURL: The direct download URL of the release's first asset, or
+        ///                  `nil` when the release has no downloadable asset.
+        @MainActor
+        private func showInAppUpdateWindow( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
+        {
+            self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
         }
     }
 

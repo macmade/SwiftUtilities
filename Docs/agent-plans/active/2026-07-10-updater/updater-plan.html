@@ -1,0 +1,856 @@
+<meta charset="utf-8">
+<title>In-App Updates for GitHubUpdater — Implementation Plan</title>
+<style>
+    :root
+    {
+        color-scheme: dark;
+
+        --bg:          #16181d;
+        --panel:       #1d2027;
+        --panel-2:     #22262f;
+        --border:      #2c2f38;
+        --text:        #d8dce3;
+        --text-strong: #f2f4f8;
+        --muted:       #8a909c;
+        --accent:      #7aa2ff;
+        --code:        #e3c88a;
+    }
+
+    body
+    {
+        margin:           0;
+        padding:          2.5rem 1.5rem 5rem;
+        background-color: var( --bg );
+        color:            var( --text );
+        font-family:      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height:      1.6;
+    }
+
+    .container
+    {
+        max-width: 900px;
+        margin:    0 auto;
+    }
+
+    header.doc-header
+    {
+        border-bottom:  1px solid var( --border );
+        padding-bottom: 1.25rem;
+        margin-bottom:  2rem;
+    }
+
+    h1
+    {
+        margin:      0 0 0.5rem;
+        font-size:   2.1rem;
+        font-weight: 700;
+        color:       var( --text-strong );
+    }
+
+    .meta
+    {
+        margin:    0;
+        font-size: 0.9rem;
+        color:     var( --muted );
+    }
+
+    .meta strong
+    {
+        color: var( --text );
+    }
+
+    h2.section-title
+    {
+        font-size:      1.25rem;
+        color:          var( --text-strong );
+        margin:         2.75rem 0 1.25rem;
+        padding-bottom: 0.4rem;
+        border-bottom:  1px solid var( --border );
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    h3.phase-title
+    {
+        font-size:      1.05rem;
+        color:          var( --accent );
+        margin:         2.25rem 0 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    p
+    {
+        margin: 0 0 1rem;
+    }
+
+    code
+    {
+        background-color: var( --panel-2 );
+        border-radius:    4px;
+        padding:          0.1rem 0.35rem;
+        font-family:      ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:        0.9em;
+        color:            var( --code );
+    }
+
+    .qa
+    {
+        background-color: var( --panel );
+        border:           1px solid var( --border );
+        border-radius:    10px;
+        padding:          1rem 1.25rem;
+        margin-bottom:    1rem;
+    }
+
+    .qa .q
+    {
+        color:         var( --text-strong );
+        font-weight:   600;
+        margin-bottom: 0.35rem;
+    }
+
+    .qa .a
+    {
+        margin:      0;
+        color:       var( --text );
+    }
+
+    .qa .a::before
+    {
+        content:      "→ ";
+        color:        var( --accent );
+        font-weight:  700;
+    }
+
+    .note
+    {
+        border-left:  3px solid var( --accent );
+        padding-left: 0.9rem;
+        color:        #a9b0bd;
+        font-size:    0.95rem;
+        margin:       0 0 1rem;
+    }
+
+    .milestone
+    {
+        background-color: var( --panel );
+        border:           1px solid var( --border );
+        border-radius:    12px;
+        padding:          1.4rem 1.6rem;
+        margin-bottom:    1.5rem;
+    }
+
+    .milestone-head
+    {
+        display:         flex;
+        align-items:     center;
+        gap:             0.75rem;
+        flex-wrap:       wrap;
+        margin-bottom:   0.75rem;
+    }
+
+    .milestone h4
+    {
+        margin:      0;
+        font-size:   1.15rem;
+        color:       var( --text-strong );
+        font-weight: 600;
+        flex:        1 1 auto;
+    }
+
+    .milestone h4 .num
+    {
+        color:                var( --accent );
+        margin-right:         0.4rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .field
+    {
+        margin: 0.9rem 0 0;
+    }
+
+    .field .label
+    {
+        display:        block;
+        font-size:      0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color:          var( --muted );
+        margin-bottom:  0.3rem;
+    }
+
+    .field .value
+    {
+        color: var( --text );
+    }
+
+    .field.placeholder .value
+    {
+        color:      var( --muted );
+        font-style: italic;
+    }
+
+    ul.tasks
+    {
+        margin:       0.4rem 0 0;
+        padding-left: 0;
+        list-style:   none;
+    }
+
+    ul.tasks li
+    {
+        position:      relative;
+        padding-left:  1.7rem;
+        margin-bottom: 0.4rem;
+    }
+
+    ul.tasks li::before
+    {
+        content:     "\2610";
+        position:    absolute;
+        left:        0;
+        top:         0;
+        color:       var( --muted );
+        font-size:   1.05rem;
+    }
+
+    ul.plain
+    {
+        margin:       0.4rem 0 0;
+        padding-left: 1.3rem;
+    }
+
+    ul.plain li
+    {
+        margin-bottom: 0.3rem;
+    }
+
+    .status
+    {
+        display:        inline-block;
+        padding:        0.2rem 0.7rem;
+        border-radius:  999px;
+        font-size:      0.78rem;
+        font-weight:    600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space:    nowrap;
+    }
+
+    .status.not-started
+    {
+        background-color: #33363f;
+        color:            #b8bec9;
+        border:           1px solid #444852;
+    }
+
+    .status.in-progress
+    {
+        background-color: #4a3410;
+        color:            #f0c56a;
+        border:           1px solid #6b4d18;
+    }
+
+    .status.completed
+    {
+        background-color: #163a22;
+        color:            #63d18a;
+        border:           1px solid #205234;
+    }
+
+    .diagram
+    {
+        background-color: var( --panel-2 );
+        border:           1px solid var( --border );
+        border-radius:    8px;
+        padding:          1rem 1.25rem;
+        overflow-x:       auto;
+        font-family:      ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:        0.85rem;
+        color:            #c3c9d4;
+        line-height:      1.5;
+    }
+
+    table.map
+    {
+        width:           100%;
+        border-collapse: collapse;
+        margin:          0.5rem 0 1rem;
+        font-size:       0.9rem;
+    }
+
+    table.map th,
+    table.map td
+    {
+        border:       1px solid var( --border );
+        padding:      0.5rem 0.7rem;
+        text-align:   left;
+        vertical-align: top;
+    }
+
+    table.map th
+    {
+        background-color: var( --panel-2 );
+        color:            var( --text-strong );
+    }
+
+    a
+    {
+        color: var( --accent );
+    }
+</style>
+
+<div class="container">
+
+    <header class="doc-header">
+        <h1>In-App Updates for GitHubUpdater</h1>
+        <p class="meta"><strong>Generated:</strong> 2026-07-10</p>
+        <p class="meta"><strong>Source:</strong> Docs/agent-plans/active/2026-07-10-updater/updater.html</p>
+    </header>
+
+    <h2 class="section-title">Overview</h2>
+
+    <p>
+        Today <code>GitHubUpdater</code> only points the user at a release download:
+        the &ldquo;update available&rdquo; window opens the asset&rsquo;s
+        <code>browser_download_url</code> or the release page in the browser via
+        <code>NSWorkspace</code>. This plan adds a full <em>in-app</em> update path:
+        download the new application, verify its code signature, replace the running
+        application on disk, and relaunch it &mdash; while keeping the existing
+        link-based behavior as the default, opt-out-free option for consumers that do
+        not enable in-app updates.
+    </p>
+
+    <p>
+        The work is delivered as a set of small, independently testable building
+        blocks (downloader, archive extractor, signature validator, on-disk
+        replacer, relaunch step), composed by two installer implementations behind a
+        shared protocol: an <strong>in-process installer</strong> for non-sandboxed
+        apps and an <strong>XPC-backed installer</strong> for sandboxed apps. Because
+        a SwiftPM library cannot embed or sign an XPC service into a consuming
+        app&rsquo;s bundle, the library ships the client logic, the shared XPC
+        protocol, and a reusable service handler plus a template <code>main</code>;
+        the consuming app adds, entitles, signs, and embeds the actual XPC service
+        target. The UI reuses the existing update window, extended with a view model
+        that drives download and install progress.
+    </p>
+
+    <h2 class="section-title">Questions &amp; answers</h2>
+
+    <div class="qa">
+        <p class="q">How far should this plan take sandboxed-app support, given a SwiftPM library can&rsquo;t embed/sign an XPC service into a consuming app?</p>
+        <p class="a">Full XPC path now. Define the XPC service protocol and ship a reusable service source/template the consuming app embeds and signs, plus documentation for wiring it in.</p>
+    </div>
+
+    <div class="qa">
+        <p class="q">Before replacing the running app with a download, should the updater verify the downloaded app&rsquo;s code signature?</p>
+        <p class="a">Yes. Validate that the downloaded <code>.app</code> is properly code-signed and that its Team ID / signing identity matches the running app before replacing it. Without this an in-app updater is a code-execution vector.</p>
+    </div>
+
+    <div class="qa">
+        <p class="q">Which release-asset archive formats should in-app update support?</p>
+        <p class="a">Zip (<code>.zip</code>) and disk image (<code>.dmg</code>). Installer packages (<code>.pkg</code>) are out of scope.</p>
+    </div>
+
+    <div class="qa">
+        <p class="q">How should download/install progress be presented?</p>
+        <p class="a">Extend the existing window. Reuse <code>UpdateAvailableView</code>: after the user chooses to update, show progress and status in the same window, then relaunch.</p>
+    </div>
+
+    <h2 class="section-title">Notes</h2>
+
+    <p><strong>Guiding principles</strong></p>
+    <ul class="plain">
+        <li><strong>Opt-in, no regression.</strong> The current link-based flow stays the default. In-app update is enabled explicitly by the consumer; existing callers of <code>checkForUpdates()</code> / <code>checkForUpdatesInBackground()</code> keep today&rsquo;s behavior unchanged.</li>
+        <li><strong>Keep the pure core pure.</strong> <code>GitHubUpdater</code> and <code>UpdateCheckResult</code> in the platform-agnostic layer stay UI- and IO-free. All download/replace/relaunch code lives behind <code>#if canImport( AppKit )</code>, mirroring the existing split.</li>
+        <li><strong>Dependency-injection seams, like the existing tests.</strong> Each building block is a protocol with an injectable implementation, so routing and pure logic are unit-testable without the network, the filesystem, or a live XPC connection &mdash; matching the existing <code>Fetcher</code> seam.</li>
+        <li><strong>Security first.</strong> No on-disk replacement ever happens without a successful code-signature validation against a requirement derived from the running app.</li>
+        <li><strong>Follow the repo conventions.</strong> <code>public</code> by default in the library, one type per file organized into subfolders, <code>let</code> over <code>var</code>, no force-unwrap, early returns, localized strings via <code>Localization.string(...)</code>, SwiftUI views with previews, and the MIT license header on every new file.</li>
+    </ul>
+
+    <p><strong>Sandbox reality &amp; scope</strong></p>
+    <ul class="plain">
+        <li>An XPC service that is itself sandboxed inherits the container restrictions and cannot write to <code>/Applications</code>. The sandboxed path therefore targets <strong>Developer-ID, sandboxed</strong> apps that embed a <em>non-sandboxed</em> (or differently entitled) XPC service to perform the privileged file operations and relaunch. This must be verified against Apple&rsquo;s documentation during Milestone&nbsp;7.</li>
+        <li><strong>Mac App Store apps are out of scope</strong> for in-app updates: they update through the App Store, and MAS-embedded XPC services must be sandboxed. This is documented, not worked around.</li>
+        <li>Replacing an app in a protected location (e.g. <code>/Applications</code>) may require additional authorization. This plan keeps the replacement in the helper; obtaining rights for protected directories is called out as a risk/consideration rather than fully solved, to be confirmed during implementation.</li>
+    </ul>
+
+    <p><strong>Key existing files</strong></p>
+    <ul class="plain">
+        <li><code>SwiftUtilities/GitHub/GitHubUpdater.swift</code> &mdash; platform-agnostic check logic (unchanged by this plan).</li>
+        <li><code>SwiftUtilities/GitHub/GitHubUpdater+AppKit.swift</code> &mdash; AppKit presentation and option-to-alert routing; the in-app entry points hook in here.</li>
+        <li><code>SwiftUtilities/GitHub/UpdateCheckResult.swift</code> &mdash; value-level result (carries <code>downloadURL</code>).</li>
+        <li><code>SwiftUtilities/GitHub/UpdateWindowController.swift</code> &amp; <code>UpdateAvailableView.swift</code> &mdash; the update window and its SwiftUI content, extended for progress.</li>
+        <li><code>SwiftUtilities/Windows/HostingWindowController.swift</code> &mdash; base window controller reused by the update window.</li>
+        <li><code>SwiftUtilities/Utilities/Localization.swift</code> and <code>Utilities/en.lproj</code> &mdash; localized strings; every new user-facing string is added here.</li>
+        <li>Tests live under <code>SwiftUtilitiesTests/GitHub/</code>; new tests join them.</li>
+    </ul>
+
+    <p class="note">
+        The repository has both a Swift package (<code>Package.swift</code>) and
+        <code>SwiftUtilities.xcodeproj</code>. Every milestone that adds or moves a
+        source file must keep <strong>both</strong> in sync, and tests are run through
+        <code>xcodebuild</code> against the Xcode project, per the project conventions.
+    </p>
+
+    <h2 class="section-title">Milestones</h2>
+
+    <!-- ============ PHASE 1 ============ -->
+    <h3 class="phase-title">Phase 1 &mdash; Configuration &amp; client-side abstractions</h3>
+
+    <!-- M1 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M1.</span>Update behavior option &amp; opt-in plumbing</h4>
+            <span class="status completed">Completed</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Introduce a way for consumers to choose between the
+            existing link behavior and in-app updates, without changing the default.
+            This establishes the seam every later milestone plugs into, while keeping
+            the current flow byte-for-byte identical for callers that do nothing.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add an <code>UpdateBehavior</code> type (e.g. <code>.link</code> vs <code>.inApp</code>) in a new file under <code>SwiftUtilities/GitHub/</code>, documented for public use.</li>
+                <li>Thread the behavior through the AppKit entry points (<code>checkForUpdates</code> / <code>checkForUpdatesInBackground</code> and <code>present(_:messages:)</code>), defaulting to <code>.link</code> so existing calls are unaffected.</li>
+                <li>Decide and document where the behavior and the (later) installer are supplied &mdash; a small configuration value passed to the entry points or stored at construction &mdash; keeping <code>GitHubUpdater</code>&rsquo;s <code>Sendable</code>, immutable model layer untouched.</li>
+                <li>Add a unit test asserting the default routing is unchanged (link mode) and that in-app mode selects the in-app presentation path (stubbed for now).</li>
+                <li>Keep <code>Package.swift</code> and <code>SwiftUtilities.xcodeproj</code> in sync; build and run tests via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD (test first, watched it fail as unresolved symbols, then implemented to green).</p>
+                <ul class="plain">
+                    <li>Added <code>SwiftUtilities/GitHub/UpdateBehavior.swift</code>: a public <code>enum UpdateBehavior: Sendable, Equatable</code> with <code>.link</code> and <code>.inApp</code>. It is a pure value type (no UI/IO), so it lives in the platform-agnostic layer alongside <code>UpdateCheckResult</code>. <code>Sendable</code> is required because the value is captured across the <code>Task.detached</code> boundary in the entry points; <code>Equatable</code> is used by the routing seam.</li>
+                    <li><strong>Where the behavior is supplied (revised after review &mdash; see Review comments):</strong> configured once, at construction, as an immutable <code>public let behavior: UpdateBehavior</code> on <code>GitHubUpdater</code> (default <code>.link</code>), threaded through both initializers (<code>init?( owner:repository:behavior: )</code> and the designated <code>init?( owner:repository:currentVersion:programName:behavior:fetch: )</code>). This makes it a single source of truth: because it is set once and immutable, concurrent <code>checkForUpdates()</code> / <code>checkForUpdatesInBackground()</code> calls can never disagree on the mode. Both entry points and the private <code>present(_:messages:)</code> now read <code>self.behavior</code> and take no behavior parameter, so existing call sites remain source- and behavior-compatible.</li>
+                    <li><strong>Routing seam:</strong> added a pure, testable static <code>updateWindowMode( for:downloadURL: ) -&gt; UpdateWindowMode</code> (nested internal enum <code>.link</code> / <code>.inApp</code>), mirroring the existing <code>alert( for:messages: )</code> seam. It still takes the behavior explicitly (the entry points pass <code>self.behavior</code>). <code>.link</code> always maps to the link window; <code>.inApp</code> maps to the in-app window only when a download URL exists, otherwise it falls back to <code>.link</code> (in-app install needs an asset). The default <code>.link</code> path is byte-for-byte identical to the prior flow.</li>
+                    <li><strong>In-app presentation is stubbed:</strong> <code>present</code> routes the <code>.inApp</code> case to a new <code>showInAppUpdateWindow(...)</code> that currently delegates to the existing link window, documented as a placeholder the later UI milestone (M10) replaces. This avoids branch duplication while giving M10 a real named seam.</li>
+                    <li>Tests: added <code>SwiftUtilitiesTests/GitHub/GitHubUpdater+Behavior.swift</code> (<code>Test_GitHubUpdaterBehavior</code>) covering link-mode routing under both URL states, in-app selection with a download, the in-app&rarr;link fallback with no download, and that <code>behavior</code> defaults to <code>.link</code> and reflects the constructed value.</li>
+                    <li>Xcode project kept in sync (new file refs, build files, group and Sources-phase entries for both the main and test targets). <code>Package.swift</code> is path-based, so it needs no change. Verified with <code>xcodebuild test</code>: <strong>87 tests pass</strong>.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 1 round (converged immediately &mdash; the fresh-context reviewer reported no Critical/High/Medium findings). Two Low findings were nonetheless fixed as cheap, in-scope polish; one Info was left as-is.</p>
+                <p><strong>Post-review revision:</strong> after human review, the behavior was moved from per-call parameters to a single immutable property on <code>GitHubUpdater</code> set at construction (see Review comments). Re-verified: <strong>87 tests pass</strong>.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p>Round 1 (fresh-context sub-agent) &mdash; no Critical/High/Medium findings; loop converged.</p>
+                <ul class="plain">
+                    <li><strong>Stale DocC references after the signature change</strong> &mdash; Low (Documentation/Regression). The class doc in <code>GitHubUpdater.swift</code> linked <code>checkForUpdates()</code> / <code>checkForUpdatesInBackground()</code>, which no longer exist after adding the <code>behavior:</code> parameter. <strong>Fixed</strong> &mdash; updated the links to the new signatures and dropped the now-stale &ldquo;as an <code>NSAlert</code>&rdquo; wording.</li>
+                    <li><strong>Tautological test <code>defaultBehaviorIsLink</code></strong> &mdash; Low (Test quality). Asserted <code>UpdateBehavior.link == UpdateBehavior.link</code>, which verifies nothing; the default-routing intent is already covered by <code>linkBehaviorSelectsLinkModeRegardlessOfDownload</code>. <strong>Fixed</strong> &mdash; removed the redundant test.</li>
+                    <li><strong>Unnecessary <code>import Foundation</code> in <code>UpdateBehavior.swift</code></strong> &mdash; Info (Style). Harmless and consistent with sibling files. <strong>Deferred</strong> &mdash; left as-is for consistency.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li>The updater mode should be configured separately, in one place, rather than passed per call. Passing the behavior to both <code>checkForUpdates</code> and <code>checkForUpdatesInBackground</code> means they could be called simultaneously with different values, leaving the mode inconsistent.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- M2 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M2.</span>Archive format detection</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Classify a release asset as a supported archive
+            (<code>.zip</code> or <code>.dmg</code>) or as unsupported, so the flow can
+            decide whether in-app installation is possible and fall back to the link
+            otherwise. Pure and fully unit-testable.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add an <code>UpdateArchiveFormat</code> enum (<code>.zip</code>, <code>.dmg</code>) with detection from the asset URL / filename (and, where available, content type).</li>
+                <li>Define behavior when the asset is unsupported or absent: in-app update is not offered and the flow falls back to the link path.</li>
+                <li>Unit-test detection across representative filenames and the unsupported/nil cases.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- M3 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M3.</span>Code-signature validation</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Provide the security gate: build a signing
+            requirement from the running application and validate a candidate
+            <code>.app</code> against it, so replacement can be refused unless the
+            download is properly signed and matches the running app&rsquo;s identity
+            (Team ID / designated requirement).
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add a <code>CodeSignatureValidator</code> using the Security framework (<code>SecStaticCode</code> / <code>SecRequirement</code>) to (a) derive an expected requirement from the running app and (b) verify a candidate bundle satisfies it.</li>
+                <li>Confirm the exact APIs and requirement-string construction against Apple&rsquo;s official Security framework documentation before implementing &mdash; do not rely on memory.</li>
+                <li>Isolate the pure, testable part (requirement-string construction, decision logic) behind an injectable seam; unit-test it. Validate against the running/test bundle where a real signed fixture is available, and document any parts that can only be exercised with a signed app.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- ============ PHASE 2 ============ -->
+    <h3 class="phase-title">Phase 2 &mdash; Download &amp; extraction</h3>
+
+    <!-- M4 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M4.</span>Update downloader with progress</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Download the release asset to a temporary location,
+            reporting progress and supporting cancellation. Runs in the app process in
+            both sandboxed and non-sandboxed cases (network access is available to the
+            app), so the installer only ever receives a local archive file.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add an <code>UpdateDownloader</code> built on <code>URLSession</code> download tasks, surfacing fractional progress and errors, with an injectable session for tests (mirroring the existing <code>Fetcher</code> seam).</li>
+                <li>Report progress as an <code>async</code> stream / callback consumable by the view model in M10.</li>
+                <li>Support cancellation and clean temp-file handling on success and failure.</li>
+                <li>Unit-test progress reporting, success, error, and cancellation with a stubbed session.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- M5 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M5.</span>Archive extraction &amp; app discovery</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Turn a downloaded archive into an extracted
+            <code>.app</code> ready for validation and replacement. Shared by both
+            installers (in-process for non-sandboxed apps; inside the helper for
+            sandboxed apps), so it may use command-line tools freely &mdash; it never
+            runs inside a sandbox.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add an <code>ArchiveExtractor</code> that unpacks <code>.zip</code> (via <code>ditto</code>) and mounts/copies from <code>.dmg</code> (via <code>hdiutil</code>), locating the contained <code>.app</code> and cleaning up mounts/temp dirs.</li>
+                <li>Verify the tool invocations and flags against their official man pages / Apple docs before implementing.</li>
+                <li>Handle failure modes: no <code>.app</code> found, multiple candidates, mount/unmount errors, corrupt archive.</li>
+                <li>Unit-test with small fixture archives committed to the test target; test the &ldquo;no app found&rdquo; and error paths.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- ============ PHASE 3 ============ -->
+    <h3 class="phase-title">Phase 3 &mdash; In-process installer (non-sandboxed)</h3>
+
+    <!-- M6 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M6.</span>Replacement, relaunch &amp; the in-process installer</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Define the installer protocol and deliver the first
+            concrete implementation for non-sandboxed apps: verify the extracted app,
+            atomically replace the running app on disk, and relaunch it. This is the
+            first end-to-end in-app update path.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Define an <code>UpdateInstaller</code> protocol taking a downloaded archive plus the expected signing requirement and target app path, reporting install progress and a terminal result.</li>
+                <li>Add an <code>AppReplacer</code> building block: atomic on-disk swap of the running bundle (move-aside + move-in or <code>FileManager.replaceItemAt</code>), verified against Foundation documentation.</li>
+                <li>Add a relaunch step that waits for the current process to exit and re-opens the app (a detached process that watches the PID then <code>open</code>s the new bundle), then terminates the running app.</li>
+                <li>Implement <code>InProcessUpdateInstaller</code> composing M3 (validate) &rarr; M5 (extract) &rarr; replace &rarr; relaunch, refusing to proceed on validation failure.</li>
+                <li>Unit-test the composition/decision logic and error propagation with injected building blocks; document which steps require a real signed app / manual verification.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- ============ PHASE 4 ============ -->
+    <h3 class="phase-title">Phase 4 &mdash; XPC-backed installer (sandboxed)</h3>
+
+    <!-- M7 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M7.</span>Shared XPC protocol &amp; message types</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Define the contract between the app (client) and the
+            embedded XPC service: the operations, the parameters (archive path,
+            expected requirement, target path, PID), and the progress/result messages.
+            Shipped in the library so both sides share one definition.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Confirm, against Apple&rsquo;s official XPC / <code>NSXPCConnection</code> documentation, the transport and the entitlement/sandbox model that lets a Developer-ID app&rsquo;s embedded service perform privileged file operations (see Notes). Record findings in the milestone.</li>
+                <li>Define the XPC protocol and the request/response/progress message types in a new <code>SwiftUtilities/GitHub/XPC/</code> subfolder, public so the service target can adopt them.</li>
+                <li>Specify how progress is streamed back to the client and how terminal success/failure is reported.</li>
+                <li>Add tests for any pure encoding/routing logic in the message types.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- M8 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M8.</span>Reusable service handler &amp; embedding template</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Provide the privileged side as reusable library
+            code plus a thin template the consuming app compiles into its XPC service
+            target. The handler performs verify &rarr; extract &rarr; replace &rarr;
+            relaunch (reusing M3/M5/M6 building blocks) off the sandbox.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add an <code>UpdateServiceHandler</code> in the library that implements the M7 protocol by composing the shared building blocks (validate, extract, replace, relaunch).</li>
+                <li>Provide a documented template <code>main.swift</code> (and listener setup) the app copies into its XPC service target, wired to <code>UpdateServiceHandler</code>.</li>
+                <li>Verify the connection-listener and exported-object setup against Apple&rsquo;s official documentation.</li>
+                <li>Unit-test the handler&rsquo;s composition and error handling with injected building blocks (no live connection required).</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- M9 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M9.</span>XPC client installer &amp; installer selection</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Add the client-side <code>XPCUpdateInstaller</code>
+            that talks to the embedded service, and the logic that automatically picks
+            the right installer &mdash; XPC when the app is sandboxed and the service is
+            available, in-process otherwise, and the link fallback when neither can run.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Implement <code>XPCUpdateInstaller</code> conforming to <code>UpdateInstaller</code>: connect to the embedded service by name, forward the request, stream progress back, and surface the terminal result and connection errors.</li>
+                <li>Add installer selection: detect sandboxing and service availability, choosing XPC vs in-process, and gracefully falling back to the link path when in-app update cannot proceed.</li>
+                <li>Verify sandbox detection and service-connection APIs against Apple&rsquo;s documentation.</li>
+                <li>Unit-test the selection logic with injected environment probes; test fallback behavior.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- ============ PHASE 5 ============ -->
+    <h3 class="phase-title">Phase 5 &mdash; User interface</h3>
+
+    <!-- M10 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M10.</span>In-app update UI in the existing window</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Drive the in-app flow from the existing update
+            window. In link mode the window behaves exactly as today; in in-app mode,
+            choosing to update shows download and install progress in place, then
+            relaunches, with clear error handling and a fallback to &ldquo;View on
+            GitHub&rdquo;.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Add a view model (<code>@MainActor</code>, <code>@Observable</code> / <code>ObservableObject</code>) modeling states: idle &rarr; downloading(progress) &rarr; installing &rarr; relaunching &rarr; failed(error).</li>
+                <li>Extend <code>UpdateAvailableView</code> to render those states (progress bar + status text) while keeping the link-mode layout and the <code>View on GitHub</code> / <code>Later</code> actions; wire <code>UpdateWindowController</code> to supply the downloader/installer.</li>
+                <li>Add all new user-facing strings to <code>Localization</code> / <code>en.lproj</code>.</li>
+                <li>Update the SwiftUI preview(s) to cover the new states; keep one view per file.</li>
+                <li>On failure, surface a readable message and keep the release page reachable.</li>
+                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <!-- ============ PHASE 6 ============ -->
+    <h3 class="phase-title">Phase 6 &mdash; Documentation &amp; consumer wiring</h3>
+
+    <!-- M11 -->
+    <div class="milestone">
+        <div class="milestone-head">
+            <h4><span class="num">M11.</span>Documentation &amp; integration guide</h4>
+            <span class="status not-started">Not started</span>
+        </div>
+
+        <p>
+            <strong>Goal:</strong> Document how a consumer enables in-app updates and,
+            for sandboxed apps, how to embed, entitle, and sign the XPC service. Make
+            the constraints and the MAS out-of-scope note explicit so integrators
+            aren&rsquo;t surprised.
+        </p>
+
+        <div class="field">
+            <span class="label">Tasks</span>
+            <ul class="tasks">
+                <li>Update <code>README.md</code> with an in-app updates section: enabling the behavior, the non-sandboxed path, and the sandboxed path.</li>
+                <li>Document embedding the XPC service: adding the target, required entitlements (non-sandboxed / differently entitled service), signing, the <code>Contents/XPCServices</code> placement, and the service name the client expects.</li>
+                <li>State clearly that Mac App Store apps are out of scope and continue to use the link/App Store path.</li>
+                <li>Verify the doc comments across all new public types are complete (the repo documents public and private members) &mdash; optionally via the <code>xs:doc</code> workflow.</li>
+                <li>Final pass keeping <code>Package.swift</code> and <code>SwiftUtilities.xcodeproj</code> in sync; full build + test run via <code>xcodebuild</code>.</li>
+            </ul>
+        </div>
+
+        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
+        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
+        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
+        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+    </div>
+
+    <h2 class="section-title">Appendix</h2>
+
+    <p><strong>End-to-end flow (in-app mode)</strong></p>
+    <div class="diagram">GitHubUpdater.performUpdateCheck()
+    &rarr; .updateAvailable( ..., downloadURL )
+
+present( result, behavior: .inApp )
+    &rarr; asset is .zip / .dmg ?  &mdash; no &rarr; fall back to link path
+                             &mdash; yes &darr;
+
+UpdateWindow  ──▶  view model
+    Download  &rarr;  UpdateDownloader        (app process, progress)
+              &rarr;  select installer:
+                     sandboxed + service?  &rarr;  XPCUpdateInstaller  ──▶  embedded XPC service
+                     else                  &rarr;  InProcessUpdateInstaller
+
+installer:  validate signature  (M3, gate)
+         &rarr; extract archive     (M5)
+         &rarr; replace app on disk (M6 AppReplacer)
+         &rarr; relaunch            (wait for PID, open new bundle)</div>
+
+    <p><strong>Component map</strong></p>
+    <table class="map">
+        <thead>
+            <tr><th>Component</th><th>Milestone</th><th>Runs in</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>UpdateBehavior</code></td><td>M1</td><td>App</td><td>Link vs in-app opt-in.</td></tr>
+            <tr><td><code>UpdateArchiveFormat</code></td><td>M2</td><td>App</td><td>Detect zip/dmg; gate in-app eligibility.</td></tr>
+            <tr><td><code>CodeSignatureValidator</code></td><td>M3</td><td>App / helper</td><td>Security gate before replacement.</td></tr>
+            <tr><td><code>UpdateDownloader</code></td><td>M4</td><td>App</td><td>Download asset with progress.</td></tr>
+            <tr><td><code>ArchiveExtractor</code></td><td>M5</td><td>App / helper</td><td>Unpack archive, find <code>.app</code>.</td></tr>
+            <tr><td><code>UpdateInstaller</code> (protocol)</td><td>M6</td><td>App</td><td>Common install contract.</td></tr>
+            <tr><td><code>AppReplacer</code> + relaunch</td><td>M6</td><td>App / helper</td><td>Atomic swap + relaunch.</td></tr>
+            <tr><td><code>InProcessUpdateInstaller</code></td><td>M6</td><td>App (non-sandboxed)</td><td>Full install in-process.</td></tr>
+            <tr><td>XPC protocol &amp; messages</td><td>M7</td><td>Shared</td><td>Client&harr;service contract.</td></tr>
+            <tr><td><code>UpdateServiceHandler</code> + template</td><td>M8</td><td>XPC service</td><td>Privileged install off the sandbox.</td></tr>
+            <tr><td><code>XPCUpdateInstaller</code> + selection</td><td>M9</td><td>App (sandboxed)</td><td>Drive service; choose installer.</td></tr>
+            <tr><td>Update view model + view</td><td>M10</td><td>App</td><td>Progress UI in the existing window.</td></tr>
+            <tr><td>Docs / integration guide</td><td>M11</td><td>&mdash;</td><td>Enable + embed + sign guidance.</td></tr>
+        </tbody>
+    </table>
+
+    <p class="note">
+        Reused, unchanged building blocks: <code>GitHubUpdater</code> (check logic),
+        <code>UpdateCheckResult</code>, <code>HostingWindowController</code>,
+        <code>MarkdownView</code>, and <code>Localization</code>. The
+        platform-agnostic model layer is intentionally left untouched; all new
+        download / install / relaunch code stays under <code>#if canImport( AppKit )</code>.
+    </p>
+
+</div>

@@ -35,8 +35,8 @@ import Foundation
 ///
 /// ``performUpdateCheck()`` is platform-agnostic and returns a value. On
 /// platforms where AppKit is available, ``checkForUpdates()`` and
-/// ``checkForUpdatesInBackground()`` present the result to the user as an
-/// `NSAlert`.
+/// ``checkForUpdatesInBackground()`` present the result to the user, delivering
+/// an available update according to ``behavior``.
 public final class GitHubUpdater: Sendable
 {
     /// The type of the closure used to fetch the data for a request.
@@ -56,6 +56,15 @@ public final class GitHubUpdater: Sendable
     /// returns releases newest-first by creation date.
     public let url: URL
 
+    /// How an available update is delivered to the user.
+    ///
+    /// Configured once, at construction, so it is a single source of truth: every
+    /// check made through this updater — including concurrent
+    /// ``checkForUpdates()`` and ``checkForUpdatesInBackground()`` calls — uses the
+    /// same behavior. Defaults to ``UpdateBehavior/link``. This value is consumed
+    /// only by the AppKit presentation layer; it carries no UI or IO.
+    public let behavior: UpdateBehavior
+
     /// The running application's version, captured from its `Info.plist`.
     private let currentVersion: String?
 
@@ -73,15 +82,18 @@ public final class GitHubUpdater: Sendable
     /// - Parameters:
     ///   - owner:      The owner (user or organization) of the repository.
     ///   - repository: The name of the repository.
+    ///   - behavior:   How an available update is delivered to the user. Defaults
+    ///                 to ``UpdateBehavior/link``.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    public convenience init?( owner: String, repository: String )
+    public convenience init?( owner: String, repository: String, behavior: UpdateBehavior = .link )
     {
         self.init(
             owner:          owner,
             repository:     repository,
             currentVersion: Bundle.main.object( forInfoDictionaryKey: "CFBundleShortVersionString" ) as? String,
             programName:    Bundle.main.object( forInfoDictionaryKey: "CFBundleName" ) as? String,
+            behavior:       behavior,
             fetch:          { try await URLSession.shared.data( for: $0 ) }
         )
     }
@@ -98,10 +110,12 @@ public final class GitHubUpdater: Sendable
     ///   - repository:     The name of the repository.
     ///   - currentVersion: The running application's version, or `nil` if unknown.
     ///   - programName:    The running application's display name, or `nil` if unknown.
+    ///   - behavior:       How an available update is delivered to the user. Defaults
+    ///                     to ``UpdateBehavior/link``.
     ///   - fetch:          The closure used to fetch the releases data.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    public init?( owner: String, repository: String, currentVersion: String?, programName: String?, fetch: @escaping Fetcher )
+    public init?( owner: String, repository: String, currentVersion: String?, programName: String?, behavior: UpdateBehavior = .link, fetch: @escaping Fetcher )
     {
         guard let url = URL( string: "https://api.github.com/repos/\( owner )/\( repository )/releases?per_page=100" )
         else
@@ -114,6 +128,7 @@ public final class GitHubUpdater: Sendable
         self.url            = url
         self.currentVersion = currentVersion
         self.programName    = programName
+        self.behavior       = behavior
         self.fetch          = fetch
     }
 
