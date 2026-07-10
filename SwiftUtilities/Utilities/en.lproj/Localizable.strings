@@ -1,6 +1,9 @@
 /* Title of the About window. %@ is the application name. */
 "About.window.title" = "About %@";
 
+/* Placeholder shown in the Credits window's detail pane when no project is selected. */
+"Credits.placeholder" = "This application makes use of the following third-party projects.";
+
 /* Title of the alert shown when an update check fails. */
 "GitHubUpdater.alert.error.title" = "Error";
 

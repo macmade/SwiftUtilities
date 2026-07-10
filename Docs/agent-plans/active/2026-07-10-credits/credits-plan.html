@@ -517,7 +517,7 @@
 <div class="milestone">
     <div class="milestone-head">
         <div><span class="num">Milestone 4</span><h3>Sidebar row and split-view container (<code>CreditsView</code>)</h3></div>
-        <span class="pill todo">Not started</span>
+        <span class="pill done">Completed</span>
     </div>
     <div class="field">
         <div class="label">Goal</div>
@@ -543,11 +543,83 @@
                 build with <code>xcodebuild</code>.</li>
         </ul>
     </div>
-    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
-    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
-    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Created two files under <code>SwiftUtilities/Credits/</code>:</p>
+        <ul class="plain">
+            <li><strong><code>CreditRow.swift</code></strong> — a <code>public struct CreditRow: View</code> taking a
+                <code>Credit</code> via <code>public init( _ credit: Credit )</code>. An <code>HStack</code> with a
+                leading <code>VStack</code> (project name; author below in <code>.caption</code>/<code>.secondary</code>),
+                a <code>Spacer</code>, and a trailing license <code>Pill</code> — matching the detail header's approved
+                layout (pill trailing, vertically centered). Includes a <code>#Preview</code> inside a <code>List</code>.</li>
+            <li><strong><code>CreditsView.swift</code></strong> — a <code>public struct CreditsView: View</code> taking
+                <code>[ Credit ]</code> via <code>public init( _ credits: [ Credit ] )</code>. A
+                <code>NavigationSplitView</code> whose sidebar is a <code>List( selection: )</code> of
+                <code>CreditRow</code>s (<code>ForEach … .tag( credit )</code>) and whose detail shows
+                <code>CreditDetailView</code> for the selection, or a placeholder otherwise. Credits are sorted in the
+                <code>init</code> with <code>localizedCaseInsensitiveCompare</code> (consumer may pass any order); the
+                first sorted credit is the default selection via <code>State( initialValue: sorted.first )</code>, so an
+                empty list yields <code>nil</code> → placeholder with no force-unwrap. Documented all members; extracted
+                <code>detail</code> and <code>placeholder</code> subviews; <code>#Preview</code> with three sample
+                credits.</li>
+        </ul>
+        <p><strong>Localization:</strong> the empty-state placeholder is user-facing copy, so it goes through
+            <code>Localization.string( "Credits.placeholder" )</code>. I introduced the <code>Credits.placeholder</code>
+            key (value "No Project Selected", with a descriptive comment) in
+            <code>en.lproj/Localizable.strings</code> now — a small, deliberate step ahead of Milestone 5's localization
+            work — so this milestone is self-contained and convention-compliant rather than shipping a broken/hardcoded
+            placeholder. Milestone 5 will add the remaining strings (window title) and can add a matching assertion to
+            the localization test.</p>
+        <p><strong>TDD note:</strong> both are purely presentational SwiftUI views (the only branch is the
+            selection/empty <code>if let</code>), so there was no meaningful failing unit to write first; verification is
+            via compilation, the previews, and the full suite. <code>xcodebuild … build</code> →
+            <strong>BUILD SUCCEEDED</strong>; <code>xcodebuild … test</code> → <strong>TEST SUCCEEDED</strong>
+            (82 tests / 9 suites, unchanged).</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+        <p><strong>Review response (sidebar width):</strong> Added
+            <code>.navigationSplitViewColumnWidth( min: 250, ideal: 250 )</code> to the sidebar <code>List</code> so the
+            sidebar is wider than the SwiftUI default (~200), per the requested 250/250. Rebuilt
+            (<strong>BUILD SUCCEEDED</strong>).</p>
+        <p><strong>Review response (placeholder redesign):</strong> Replaced the bare "No Project Selected" text with a
+            centered <code>VStack</code> — a large secondary <code>Image( systemName: "heart" )</code> above a message
+            explaining that the application uses the listed projects. Updated the <code>Credits.placeholder</code> value
+            to "This application makes use of the following third-party projects." Rebuilt
+            (<strong>BUILD SUCCEEDED</strong>).</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer; build succeeded, full suite passes, no
+            localization-test regression. Verified the pbxproj integrity for both files (unique, correctly
+            cross-referenced IDs, no collisions), correct in-view case-insensitive sort, correct default selection and
+            crash-free empty-state handling, the <code>List(selection:)</code> + <code>.tag</code> pattern driving the
+            detail pane, and layout consistency with the approved detail-view feedback. No Critical/High/Medium findings.
+            Lower-severity findings (Deferred, no fix required):</p>
+        <ul class="plain">
+            <li><strong>Low — <code>@State</code> selection is seeded once at creation:</strong> if the same
+                <code>CreditsView</code> identity were reused with a different <code>credits</code> array, the default-
+                selection logic would not re-run and a stale detail pane could result. A non-issue for the intended use
+                (the window is built once from a static list); could be reconciled with <code>.onChange( of: credits )</code>
+                or noted in the <code>init</code> doc if dynamic credit sets ever arise. <em>Deferred.</em></li>
+            <li><strong>Info — Duplicate project names:</strong> because <code>Credit.id</code> is the <code>name</code>
+                (a prior design decision), two credits sharing a name would collide on <code>ForEach</code>/<code>List</code>
+                identity. Unlikely for a credits list; revisit <code>Credit</code>'s <code>id</code> in its own file if
+                duplicates ever become plausible. <em>Deferred.</em></li>
+            <li><strong>Info — <code>Credits.placeholder</code> not covered by the localization test:</strong> the key is
+                correctly added and consumed but not asserted by <code>stringResolvesTable</code>; an assertion could be
+                added (naturally in Milestone 5's localization work). <em>Deferred.</em></li>
+        </ul>
+    </div>
+    <div class="field">
+        <div class="label">Review comments</div>
+        <ul class="plain">
+            <li>The sidebar should be larger (wider).</li>
+            <li>Use a sidebar column width of 250 for both the minimum and the ideal.</li>
+            <li>Replace the "No Project Selected" placeholder text with a message explaining that the application makes
+                use of the listed projects, and add an icon above the text.</li>
+        </ul>
+    </div>
 </div>
 
 <!-- Milestone 5 -->
