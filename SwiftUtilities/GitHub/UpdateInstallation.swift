@@ -83,7 +83,7 @@ public struct UpdateInstallation: UpdateInstaller
     ///
     /// - Throws: An error if any step fails; on a validation failure the
     ///   application on disk is left untouched.
-    public func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL = FileManager.default.temporaryDirectory, progress: @Sendable ( InstallProgress ) -> Void = { _ in } ) async throws
+    public func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL = FileManager.default.temporaryDirectory, progress: @escaping @Sendable ( InstallProgress ) -> Void = { _ in } ) async throws
     {
         let work = try self.makeWorkingDirectory( for: target, fallback: workingDirectory )
 

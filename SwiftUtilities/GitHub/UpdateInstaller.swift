@@ -50,5 +50,5 @@ public protocol UpdateInstaller: Sendable
     ///
     /// - Throws: An error if any step fails; on a validation failure the
     ///   application on disk is left untouched.
-    func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL, progress: @Sendable ( InstallProgress ) -> Void ) async throws
+    func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL, progress: @escaping @Sendable ( InstallProgress ) -> Void ) async throws
 }

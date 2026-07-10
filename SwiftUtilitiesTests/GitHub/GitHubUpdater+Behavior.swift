@@ -35,8 +35,8 @@
         {
             let url = try #require( URL( string: "https://example.com/app.zip" ) )
 
-            #expect( GitHubUpdater.updateWindowMode( for: .link, downloadURL: url )  == .link )
-            #expect( GitHubUpdater.updateWindowMode( for: .link, downloadURL: nil )  == .link )
+            #expect( GitHubUpdater.updateWindowMode( for: .link, downloadURL: url, serviceAvailable: true )  == .link )
+            #expect( GitHubUpdater.updateWindowMode( for: .link, downloadURL: nil, serviceAvailable: true )  == .link )
         }
 
         @Test
@@ -44,13 +44,13 @@
         {
             let url = try #require( URL( string: "https://example.com/app.zip" ) )
 
-            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: url ) == .inApp )
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: url, serviceAvailable: true ) == .inApp )
         }
 
         @Test
         func inAppBehaviorFallsBackToLinkWhenNoDownload() async throws
         {
-            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: nil ) == .link )
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: nil, serviceAvailable: true ) == .link )
         }
 
         @Test
@@ -58,7 +58,7 @@
         {
             let pkg = try #require( URL( string: "https://example.com/app.pkg" ) )
 
-            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: pkg ) == .link )
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: pkg, serviceAvailable: true ) == .link )
         }
 
         @Test
@@ -66,7 +66,17 @@
         {
             let dmg = try #require( URL( string: "https://example.com/app.dmg" ) )
 
-            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: dmg ) == .inApp )
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: dmg, serviceAvailable: true ) == .inApp )
+        }
+
+        @Test
+        func inAppBehaviorFallsBackToLinkWhenServiceUnavailable() async throws
+        {
+            let url = try #require( URL( string: "https://example.com/app.zip" ) )
+
+            // The SwiftPM distribution carries no bundled service, so a supported
+            // in-app request must still fall back to the link window.
+            #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: url, serviceAvailable: false ) == .link )
         }
 
         @Test

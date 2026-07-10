@@ -90,7 +90,15 @@
 		05F0006B000000000000000B /* RelaunchWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006B000000000000000A /* RelaunchWaiter.swift */; };
 		05F0006C000000000000000B /* ProcessRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006C000000000000000A /* ProcessRelauncher.swift */; };
 		05F00071000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00071000000000000000A /* XPCClientVerifier.swift */; };
+		05F0009E000000000000000B /* UpdateInstallError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009E000000000000000A /* UpdateInstallError.swift */; };
+		05F0009F000000000000000B /* UpdaterServiceConnecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009F000000000000000A /* UpdaterServiceConnecting.swift */; };
+		05F000A0000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A0000000000000000A /* XPCUpdateInstaller.swift */; };
+		05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A1000000000000000A /* UpdaterServiceLocator.swift */; };
+		05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A2000000000000000A /* XPCUpdaterClient.swift */; };
+		05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */; };
 		05F00072000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00072000000000000000A /* XPCClientVerifier.swift */; };
+		05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A4000000000000000A /* XPCUpdateInstaller.swift */; };
+		05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A5000000000000000A /* UpdaterServiceLocator.swift */; };
 		05F00074000000000000000B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00074000000000000000A /* main.swift */; };
 		05F00075000000000000000B /* UpdaterServiceListenerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */; };
 		05F0009D000000000000000B /* Updater.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 05F00073000000000000000A /* Updater.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -293,6 +301,14 @@
 		05F00070000000000000000A /* ProcessRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRelauncher.swift; sourceTree = "<group>"; };
 		05F00071000000000000000A /* XPCClientVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCClientVerifier.swift; sourceTree = "<group>"; };
 		05F00072000000000000000A /* XPCClientVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCClientVerifier.swift; sourceTree = "<group>"; };
+		05F0009E000000000000000A /* UpdateInstallError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallError.swift; sourceTree = "<group>"; };
+		05F0009F000000000000000A /* UpdaterServiceConnecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceConnecting.swift; sourceTree = "<group>"; };
+		05F000A0000000000000000A /* XPCUpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdateInstaller.swift; sourceTree = "<group>"; };
+		05F000A1000000000000000A /* UpdaterServiceLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceLocator.swift; sourceTree = "<group>"; };
+		05F000A2000000000000000A /* XPCUpdaterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdaterClient.swift; sourceTree = "<group>"; };
+		05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdaterServiceConnection.swift; sourceTree = "<group>"; };
+		05F000A4000000000000000A /* XPCUpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdateInstaller.swift; sourceTree = "<group>"; };
+		05F000A5000000000000000A /* UpdaterServiceLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceLocator.swift; sourceTree = "<group>"; };
 		05F00073000000000000000A /* Updater.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = Updater.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		05F00074000000000000000A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceListenerDelegate.swift; sourceTree = "<group>"; };
@@ -608,6 +624,12 @@
 				05F0006B000000000000000A /* RelaunchWaiter.swift */,
 				05F0006C000000000000000A /* ProcessRelauncher.swift */,
 				05F00071000000000000000A /* XPCClientVerifier.swift */,
+				05F0009E000000000000000A /* UpdateInstallError.swift */,
+				05F0009F000000000000000A /* UpdaterServiceConnecting.swift */,
+				05F000A0000000000000000A /* XPCUpdateInstaller.swift */,
+				05F000A1000000000000000A /* UpdaterServiceLocator.swift */,
+				05F000A2000000000000000A /* XPCUpdaterClient.swift */,
+				05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */,
 			);
 			path = XPC;
 			sourceTree = "<group>";
@@ -676,6 +698,8 @@
 				05F0006F000000000000000A /* RelaunchWaiter.swift */,
 				05F00070000000000000000A /* ProcessRelauncher.swift */,
 				05F00072000000000000000A /* XPCClientVerifier.swift */,
+				05F000A4000000000000000A /* XPCUpdateInstaller.swift */,
+				05F000A5000000000000000A /* UpdaterServiceLocator.swift */,
 			);
 			path = XPC;
 			sourceTree = "<group>";
@@ -913,6 +937,12 @@
 				05F0006B000000000000000B /* RelaunchWaiter.swift in Sources */,
 				05F0006C000000000000000B /* ProcessRelauncher.swift in Sources */,
 				05F00071000000000000000B /* XPCClientVerifier.swift in Sources */,
+				05F0009E000000000000000B /* UpdateInstallError.swift in Sources */,
+				05F0009F000000000000000B /* UpdaterServiceConnecting.swift in Sources */,
+				05F000A0000000000000000B /* XPCUpdateInstaller.swift in Sources */,
+				05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */,
+				05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */,
+				05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
@@ -979,6 +1009,8 @@
 				05F0006F000000000000000B /* RelaunchWaiter.swift in Sources */,
 				05F00070000000000000000B /* ProcessRelauncher.swift in Sources */,
 				05F00072000000000000000B /* XPCClientVerifier.swift in Sources */,
+				05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */,
+				05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);

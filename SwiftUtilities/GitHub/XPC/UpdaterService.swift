@@ -142,7 +142,7 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         inspector:      CodeSignatureInspecting,
         replacer:       AppReplacing,
         makeRelauncher: @Sendable ( Int32 ) -> ApplicationRelaunching,
-        reportProgress: @Sendable ( InstallProgress ) -> Void
+        reportProgress: @escaping @Sendable ( InstallProgress ) -> Void
     ) async -> UpdateInstallResult
     {
         do

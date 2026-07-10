@@ -981,7 +981,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M9.</span>XPC client &amp; hand-off</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -1004,10 +1004,36 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-11</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD (testable core first). The client is <strong>app-side only</strong>, so it wires into the framework + test targets, not the <code>Updater</code> service target &mdash; a much smaller pbxproj change than M8.</p>
+                <ul class="plain">
+                    <li><strong><code>XPCUpdateInstaller</code></strong> (conforms to <code>UpdateInstaller</code>) is the single in-app install path. It runs in the app, so it derives the <em>application's</em> own <code>CodeSigningIdentity</code> via an injected <code>CodeSignatureInspecting</code> (the root of trust &mdash; the counterpart to M8, where the service validates against this identity), builds an <code>UpdateInstallRequest</code>, forwards it over an injected <code>UpdaterServiceConnecting</code>, relays each decoded <code>InstallProgress</code> to the caller, and maps the terminal <code>UpdateInstallResult</code> to a return or a thrown <code>UpdateInstallError</code>. The <code>workingDirectory</code> argument is ignored (the service stages the update itself). A <code>#if canImport(Security)</code> convenience init wires the real inspector + connection.</li>
+                    <li><strong>Transport seam:</strong> <code>UpdaterServiceConnecting</code> (mirrors the <code>Fetcher</code> seam) isolates the live connection from the request-building/result-mapping, which are unit-tested with a stub. <code>XPCUpdaterServiceConnection</code> is the production transport: it opens an <code>NSXPCConnection(serviceName:)</code>, wires the bidirectional interfaces (<code>UpdaterServiceProtocol</code> remote, <code>UpdaterClientProtocol</code> exported via <code>XPCUpdaterClient</code> for progress), forwards the request, and bridges the reply-or-error to <code>async</code> via a lock-guarded, resume-once <code>SingleResumer</code>, invalidating the connection in a <code>defer</code>. Runtime-only (documented); the NSXPCConnection client APIs were verified against Apple docs (same set confirmed in M7/M8).</li>
+                    <li><strong>Service availability &amp; link fallback:</strong> <code>UpdaterServiceLocator</code> holds the service name (<code>com.xs-labs.SwiftUtilities.Updater</code>, pinned by a test to the target's bundle id) and detects the bundled service in the framework's <code>XPCServices</code> (best-effort <code>FileManager</code> check of versioned/unversioned paths). The M1/M2 routing seam <code>updateWindowMode(for:downloadURL:)</code> gained a <code>serviceAvailable:</code> parameter, so <code>.inApp</code> now also requires the bundled service; <code>present(...)</code> passes <code>UpdaterServiceLocator.isAvailable</code>. Under SwiftPM (no bundled service) a supported in-app request falls back to the link window &mdash; unit-tested.</li>
+                    <li><strong>Signature refinement:</strong> <code>UpdateInstaller.install</code>'s <code>progress</code> became <code>@escaping @Sendable</code> (was non-escaping), because the async client forwards it into the connection, which stores it. This is a source-compatible refinement (callers pass closures unchanged); it rippled to the <code>UpdateInstallation</code> (M6) and <code>UpdaterService.run</code> (M8) witnesses to keep the conformance matching. No behavior change; all prior tests pass unchanged.</li>
+                    <li><strong>Staging:</strong> the client is not yet reached from the AppKit flow &mdash; <code>showInAppUpdateWindow(...)</code> is still the M1 placeholder (opens the link window). M10 wires the window/view-model to drive the downloader + <code>XPCUpdateInstaller</code> and to terminate the app on success (which triggers the M8 relaunch). So the new <code>serviceAvailable</code> gate has no user-visible effect yet (intentional).</li>
+                    <li>Verified: <code>xcodebuild test</code> &rarr; <strong>164 tests / 29 suites pass</strong> (159 + 5 new); <code>xcodebuild build -scheme Updater</code> &rarr; BUILD SUCCEEDED; <code>swift build</code> OK. pbxproj: 6 framework files into the framework target, 2 test files into the test target; the <code>Updater</code> target is untouched.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 1 round. The fresh-context reviewer found no Critical/High/Medium and verified the continuation concurrency (resume-once, no leak/hang on refused/dropped connections), the <code>@escaping</code> ripple (safe, no regression), the app-derived-identity security, the routing/fallback, availability detection, and the pbxproj wiring. Three cheap Low/Info items were addressed; two Info items are intentional (staging + internal DI init). See below.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p>Round 1 (fresh-context sub-agent) &mdash; no Critical/High/Medium. Verified <code>SingleResumer</code> resumes at most once under its lock, both completion routes go through it (a dropped/refused connection surfaces an error rather than hanging), invalidation ordering leaks nothing on the normal/dropped paths; the <code>@escaping</code> ripple is necessary and source-compatible; the app derives its own identity and the client executes nothing from the service; routing falls to link when the service is absent; and the pbxproj wires M9 into the framework/test targets only (not <code>Updater</code>), no duplicate/dangling IDs.</p>
+                <ul class="plain">
+                    <li><strong>No task-cancellation / timeout in the connection</strong> &mdash; Low (Concurrency/robustness). A connected-but-silent service would leave the caller awaiting and never invalidate the connection; cancelling the task doesn't tear it down. Refused/dropped are handled. <strong>Addressed (documented)</strong> &mdash; the bundled service always replies; the no-timeout/non-cancellable contract is now documented on <code>installUpdate</code>. Full cancellation plumbing is runtime-only and left as a possible future improvement.</li>
+                    <li><strong><code>serviceUnavailable</code> doc promised a fallback that no longer applies at install time</strong> &mdash; Low (Docs). By the time <code>install</code> runs, routing has already committed to in-app, so it surfaces as an error, not a fallback. <strong>Fixed</strong> &mdash; reworded the doc; the case is a defensive edge (the <code>@objc</code> proxy cast essentially always succeeds).</li>
+                    <li><strong>Misaligned <code>=</code> in <code>XPCUpdateInstaller.init</code></strong> &mdash; Info (Style). <strong>Fixed</strong> &mdash; aligned all three assignments.</li>
+                    <li><strong>Client not yet consumed by the AppKit flow</strong> &mdash; Info (Staging). Intentional; M10 wires it. <strong>Deferred.</strong></li>
+                    <li><strong>DI initializer is <code>internal</code>-only</strong> &mdash; Info (API surface). Deliberate (the transport is a genuine impl detail / test seam), matching the M8 pattern. <strong>Deferred.</strong></li>
+                </ul>
+            </div>
+        </div>
         <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
     </div>
 

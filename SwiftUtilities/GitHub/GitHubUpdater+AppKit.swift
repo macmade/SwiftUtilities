@@ -127,25 +127,29 @@
 
         /// Determines how the update-available window should present a newer release.
         ///
-        /// Pure: maps the caller's ``UpdateBehavior`` and the release's downloadable
-        /// asset to the ``UpdateWindowMode`` to use. In-app installation requires a
-        /// downloadable asset in a supported ``UpdateArchiveFormat`` (`.zip` or
-        /// `.dmg`), so ``UpdateBehavior/inApp`` falls back to
-        /// ``UpdateWindowMode/link`` when there is no download URL or the asset is
-        /// not a supported archive. ``UpdateBehavior/link`` always maps to
-        /// ``UpdateWindowMode/link``. Performs no UI work.
+        /// Pure: maps the caller's ``UpdateBehavior``, the release's downloadable
+        /// asset, and whether the bundled updater service is available to the
+        /// ``UpdateWindowMode`` to use. In-app installation requires all three — the
+        /// caller opted into ``UpdateBehavior/inApp``, a downloadable asset in a
+        /// supported ``UpdateArchiveFormat`` (`.zip` or `.dmg`), and the bundled
+        /// service (absent from the SwiftPM distribution) — so it falls back to
+        /// ``UpdateWindowMode/link`` when any is missing. ``UpdateBehavior/link``
+        /// always maps to ``UpdateWindowMode/link``. Performs no UI work.
         ///
         /// - Parameters:
-        ///   - behavior:    The update-delivery behavior chosen by the caller.
-        ///   - downloadURL: The release's direct download URL, or `nil` when the
-        ///                  release has no downloadable asset.
+        ///   - behavior:         The update-delivery behavior chosen by the caller.
+        ///   - downloadURL:      The release's direct download URL, or `nil` when the
+        ///                       release has no downloadable asset.
+        ///   - serviceAvailable: Whether the framework-bundled updater service is
+        ///                       present (see ``UpdaterServiceLocator/isAvailable``).
         ///
         /// - Returns: The window mode to present.
-        internal static func updateWindowMode( for behavior: UpdateBehavior, downloadURL: URL? ) -> UpdateWindowMode
+        internal static func updateWindowMode( for behavior: UpdateBehavior, downloadURL: URL?, serviceAvailable: Bool ) -> UpdateWindowMode
         {
             guard behavior == .inApp,
                   let downloadURL,
-                  UpdateArchiveFormat( url: downloadURL ) != nil
+                  UpdateArchiveFormat( url: downloadURL ) != nil,
+                  serviceAvailable
             else
             {
                 return .link
@@ -212,7 +216,7 @@
 
                 case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
-                    switch GitHubUpdater.updateWindowMode( for: self.behavior, downloadURL: downloadURL )
+                    switch GitHubUpdater.updateWindowMode( for: self.behavior, downloadURL: downloadURL, serviceAvailable: UpdaterServiceLocator.isAvailable )
                     {
                         case .link:
 
