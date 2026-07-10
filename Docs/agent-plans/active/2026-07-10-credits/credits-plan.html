@@ -412,7 +412,7 @@
 <div class="milestone">
     <div class="milestone-head">
         <div><span class="num">Milestone 3</span><h3>Credit detail view</h3></div>
-        <span class="pill todo">Not started</span>
+        <span class="pill done">Completed</span>
     </div>
     <div class="field">
         <div class="label">Goal</div>
@@ -439,11 +439,78 @@
                 build with <code>xcodebuild</code>.</li>
         </ul>
     </div>
-    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
-    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
-    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Created <code>SwiftUtilities/Credits/CreditDetailView.swift</code>: a <code>public struct CreditDetailView: View</code>
+            gated with <code>#if canImport( SwiftUI )</code>, taking a <code>Credit</code> via <code>public init( _ credit: Credit )</code>.
+            The <code>body</code> is a leading-aligned <code>VStack</code> composed of four documented private subviews:</p>
+        <ul class="plain">
+            <li><strong>header</strong> — an <code>HStack( alignment: .firstTextBaseline )</code> with the project name
+                (<code>.title2</code>, bold), a trailing license <code>Pill</code>, and a <code>Spacer</code>; followed by
+                a <code>Divider</code>.</li>
+            <li><strong>information</strong> — the author (<code>.secondary</code>), the description, and the website
+                subview.</li>
+            <li><strong>website</strong> — a <code>@ViewBuilder</code> that renders a <code>Link</code> only when
+                <code>credit.website</code> is non-nil (its visible text is the URL string — data, not UI copy — so no
+                localized string is introduced here; dedicated strings remain scheduled for Milestone 5).</li>
+            <li><strong>license</strong> — a <code>ScrollView</code> of the full license text rendered
+                <code>.textSelection( .enabled )</code> in a monospaced <code>.callout</code> font, on the same distinct
+                background + rounded-border treatment as <code>UpdateAvailableView.releaseNotes</code>.</li>
+        </ul>
+        <p>Added two named <code>#Preview</code>s — "With website" and "Without website" — to exercise the optional link.
+            Registered the file in the <code>SwiftUtilities</code> target under the existing <code>Credits</code> group;
+            no <code>Package.swift</code> change needed.</p>
+        <p><strong>TDD note:</strong> as with <code>Pill</code>, this is a purely presentational view with no logic
+            branches beyond the optional-link <code>if let</code>, so there was no meaningful failing unit to write
+            first; verification is via compilation and the previews. Confirmed with <code>xcodebuild … build</code>
+            (<strong>BUILD SUCCEEDED</strong>).</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+        <p><strong>Review response (layout adjustments):</strong> Reworked the header into a leading
+            <code>VStack</code>: a title row with the project name on the leading edge, a <code>Spacer</code>, and the
+            license <code>Pill</code> on the trailing edge (default <code>HStack</code> center alignment vertically
+            centers the pill on the title); the author now sits directly below the title, above the separator. The
+            <code>information</code> subview accordingly holds just the description and the website link. The website
+            <code>Link</code> now uses a <code>Label( …, systemImage: "globe" )</code> so a globe icon leads the link
+            text. Rebuilt with <code>xcodebuild</code> (<strong>BUILD SUCCEEDED</strong>).</p>
+        <p><strong>Review response (link icon):</strong> Swapped the website link's leading icon from the globe to a
+            right-facing arrow (<code>systemImage: "arrow.right"</code>). Rebuilt with <code>xcodebuild</code>
+            (<strong>BUILD SUCCEEDED</strong>).</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer; build succeeded. Verified the pbxproj edits are
+            internally consistent with unique, correctly cross-referenced IDs and no collisions; confirmed all
+            conventions, correct SwiftUI layout (greedy scroll area absorbs remaining height and scrolls on overflow;
+            optional website link appears/disappears correctly; header holds gracefully with long names), and that no
+            hardcoded user-facing copy was introduced. No Critical/High/Medium findings. Lower-severity findings
+            (Deferred, no fix required):</p>
+        <ul class="plain">
+            <li><strong>Low — Scroll-area treatment duplicated:</strong> the background/border lines are now copied
+                verbatim from <code>UpdateAvailableView.releaseNotes</code>. The milestone explicitly said to "reuse the
+                treatment," so this is a judgment call, not a defect; a shared <code>ViewModifier</code> (e.g.
+                <code>scrollableTextArea()</code>) would satisfy both the plan and the DRY convention, but extracting it
+                would also touch the existing <code>UpdateAvailableView</code> (out of this milestone's scope).
+                <em>Deferred — flagged for the user to decide.</em></li>
+            <li><strong>Info — Long-name header layout:</strong> a very long title wraps to multiple lines with the pill
+                first-baseline-aligned to the first line; layout-correct and non-clipping, optionally could add
+                <code>.lineLimit(1)</code>/truncation. <em>Deferred.</em></li>
+            <li><strong>Info — Scroll-area sizing depends on a bounded ancestor height:</strong> correct as hosted (the
+                window/previews provide bounded height); no fixed min-height, which is fine. <em>Deferred.</em></li>
+        </ul>
+    </div>
+    <div class="field">
+        <div class="label">Review comments</div>
+        <ul class="plain">
+            <li>The license pill should be on the right side (trailing edge), aligned vertically (centered) with the
+                title.</li>
+            <li>The author name should be below the title, before the separator.</li>
+            <li>Add an icon next to the website link, on its left.</li>
+            <li>An arrow icon would be better than the globe for the website link.</li>
+            <li>Use a right-facing arrow for the link icon.</li>
+        </ul>
+    </div>
 </div>
 
 <!-- Milestone 4 -->
