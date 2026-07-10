@@ -708,7 +708,7 @@
 <div class="milestone">
     <div class="milestone-head">
         <div><span class="num">Milestone 6</span><h3>Documentation &amp; final sync</h3></div>
-        <span class="pill todo">Not started</span>
+        <span class="pill done">Completed</span>
     </div>
     <div class="field">
         <div class="label">Goal</div>
@@ -730,11 +730,53 @@
                 future initiative.</li>
         </ul>
     </div>
-    <div class="field"><div class="label">Status</div><span class="pill todo">Not started</span></div>
-    <div class="field"><div class="label">Completed</div><span class="placeholder">—</span></div>
-    <div class="field"><div class="label">Implementation notes</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Automated review</div><span class="placeholder">To be filled in during implementation.</span></div>
-    <div class="field"><div class="label">Review comments</div><span class="placeholder">Awaiting review.</span></div>
+    <div class="field"><div class="label">Status</div><span class="pill done">Completed</span></div>
+    <div class="field"><div class="label">Completed</div>2026-07-10</div>
+    <div class="field">
+        <div class="label">Implementation notes</div>
+        <p>Updated <code>README.md</code>: extended the intro summary to mention the licenses &amp; credits window and
+            the reusable capsule label, and added two new component sections in the existing style —
+            <strong>CreditsWindowController</strong> (describing the split-view window and its behavior, with a
+            <code>CreditsWindowController.show( credits: … )</code> example that also references <code>Credit</code> and
+            <code>CreditsView</code>) and <strong>Pill</strong> (with <code>Pill( "MIT" )</code> /
+            <code>Pill( "GPL-3.0", color: .orange )</code> examples). All four new public components are represented.</p>
+        <p><strong>Doc/style pass over all new files:</strong> confirmed no force-unwraps and no raw loops
+            (<code>ForEach</code> is idiomatic SwiftUI); <code>var</code> appears only where required (computed
+            <code>some View</code> bodies/subviews, the <code>@State</code> selection, and the computed <code>id</code>);
+            doc comments cover public and private members; <code>=</code> and parameter values are aligned.</p>
+        <p><strong>Final build/test parity:</strong> <code>xcodebuild … test</code> → <strong>TEST SUCCEEDED</strong>
+            (82 tests / 9 suites); <code>swift build</code> → <strong>Build complete</strong>; <code>swift test</code> →
+            <strong>82 tests passed</strong> (SPM parity).</p>
+        <p><strong>Follow-up idea (deferred, for a future initiative):</strong> a <code>Bundle</code>-based convenience
+            that loads <code>Credit</code> items from bundled resource files (analogous to <code>Bundle+About</code>),
+            so a consumer could ship license texts as resources instead of building the array in code. Explicitly out of
+            scope for this plan.</p>
+        <p><strong>Automated review loop:</strong> 1 round, converged with no Critical/High/Medium findings.</p>
+    </div>
+    <div class="field">
+        <div class="label">Automated review</div>
+        <p><strong>Round 1</strong> — independent fresh-context reviewer verified the README against the actual public
+            API: every code example matches the real signatures (<code>CreditsWindowController.show( credits: )</code>,
+            the <code>Credit</code> initializer labels/order with a valid <code>URL?</code> argument, the
+            <code>CreditsView</code> init, and both <code>Pill</code> calls), every prose claim (sorted alphabetically,
+            resizable, single-window re-fronting, optional website link, configurable pill) is supported by the
+            implementation, all four components are represented, and the heading level/placement/tone match the rest of
+            the document. No Critical/High/Medium findings; two Info notes only ("sorted alphabetically" is a fair
+            simplification of case-insensitive sorting; the word "public" in the Pill prose reads slightly oddly but is
+            factually correct). Both Deferred, no fix required.</p>
+    </div>
+    <div class="field">
+        <div class="label">Review comments</div>
+        <ul class="plain">
+            <li>Pay attention to the alignment.</li>
+            <li>When instantiating <code>Credit</code>, align the parameter values.
+                <br><em>Resolution:</em> On investigation, the parameter values were already aligned to a single column
+                in the README and in every source/test <code>Credit</code> instantiation (verified byte-level — README
+                values all open at column 26, padded with plain spaces, no tabs). An erroneous change I made to the
+                detail-view preview's license text was reverted at the user's direction; no further change was needed,
+                and the user confirmed it looks good.</li>
+        </ul>
+    </div>
 </div>
 
 <h2>Appendix</h2>

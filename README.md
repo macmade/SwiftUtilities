@@ -11,9 +11,10 @@ SwiftUtilities
 ### About
 
 Miscellaneous Swift utilities for macOS (15+) apps: a GitHub-releases update
-checker, a SwiftUI Markdown renderer, a generic About window, a window-hosting
-base class, a SwiftUI window accessor, a lightweight benchmarking helper, a
-simple error type, and `Sendable` escape hatches.
+checker, a SwiftUI Markdown renderer, a generic About window, a licenses &
+credits window, a reusable capsule label, a window-hosting base class, a SwiftUI
+window accessor, a lightweight benchmarking helper, a simple error type, and
+`Sendable` escape hatches.
 
 ### Installation
 
@@ -84,6 +85,47 @@ AboutWindowController.show(
     copyright:       Bundle.main.copyright,
     icon:            NSApp.applicationIconImage
 )
+```
+
+#### CreditsWindowController
+
+Shows a reusable Licenses & Credits window listing the third-party projects an
+application uses. The window is a two-pane split view: a sidebar of credited
+projects — sorted alphabetically — driving a detail pane that shows the selected
+project's author, description, an optional website link, and its full license
+text in a scrollable area. It opens at a sensible size and stays resizable and,
+like the About window, brings the existing window to the front instead of
+opening a second one.
+
+Each project is described by a `Credit` value. The whole window content is also
+available as the `CreditsView` SwiftUI view, for embedding it somewhere other
+than the managed window.
+
+```swift
+CreditsWindowController.show(
+    credits: [
+        Credit(
+            name:        "SwiftUtilities",
+            author:      "Jean-David Gadina",
+            description: "A collection of reusable Swift utilities.",
+            website:     URL( string: "https://github.com/macmade/SwiftUtilities" ),
+            licenseName: "MIT",
+            licenseText: "The MIT License (MIT) …"
+        )
+    ]
+)
+```
+
+#### Pill
+
+A small, public SwiftUI view rendering a short label inside a rounded capsule —
+used for the license badges in the Credits window, and reusable on its own. The
+tint color, font, and weight are all configurable and default to a compact,
+caption-scale look that reads well in both light and dark.
+
+```swift
+Pill( "MIT" )
+Pill( "GPL-3.0", color: .orange )
 ```
 
 #### HostingWindowController
