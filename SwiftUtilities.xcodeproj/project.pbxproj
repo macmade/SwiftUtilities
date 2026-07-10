@@ -27,6 +27,8 @@
 		05F00044000000000000000B /* CodeSignatureValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00044000000000000000A /* CodeSignatureValidator.swift */; };
 		05F00045000000000000000B /* CodeSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00045000000000000000A /* CodeSigningIdentity.swift */; };
 		05F00046000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */; };
+		05F0004A000000000000000B /* DownloadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004A000000000000000A /* DownloadProgress.swift */; };
+		05F0004B000000000000000B /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004B000000000000000A /* UpdateDownloader.swift */; };
 		05F00004000000000000000B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F00004000000000000000A /* Localizable.strings */; };
 		05F00006000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00006000000000000000A /* Localization.swift */; };
 		05F00007000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00007000000000000000A /* Localization.swift */; };
@@ -60,6 +62,10 @@
 		05F00041000000000000000B /* CodeSignatureInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00041000000000000000A /* CodeSignatureInspecting.swift */; };
 		05F00042000000000000000B /* CodeSignatureValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00042000000000000000A /* CodeSignatureValidator.swift */; };
 		05F00043000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00043000000000000000A /* SecurityCodeSignatureInspector.swift */; };
+		05F00047000000000000000B /* DownloadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00047000000000000000A /* DownloadProgress.swift */; };
+		05F00048000000000000000B /* UpdateDownloadError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00048000000000000000A /* UpdateDownloadError.swift */; };
+		05F00049000000000000000B /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00049000000000000000A /* UpdateDownloader.swift */; };
+		05F0004C000000000000000B /* UpdateDownloadStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004C000000000000000A /* UpdateDownloadStreamer.swift */; };
 		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
 		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
 		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
@@ -186,6 +192,12 @@
 		05F00044000000000000000A /* CodeSignatureValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeSignatureValidator.swift; sourceTree = "<group>"; };
 		05F00045000000000000000A /* CodeSigningIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeSigningIdentity.swift; sourceTree = "<group>"; };
 		05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityCodeSignatureInspector.swift; sourceTree = "<group>"; };
+		05F00047000000000000000A /* DownloadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgress.swift; sourceTree = "<group>"; };
+		05F00048000000000000000A /* UpdateDownloadError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloadError.swift; sourceTree = "<group>"; };
+		05F00049000000000000000A /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
+		05F0004C000000000000000A /* UpdateDownloadStreamer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloadStreamer.swift; sourceTree = "<group>"; };
+		05F0004A000000000000000A /* DownloadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgress.swift; sourceTree = "<group>"; };
+		05F0004B000000000000000A /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
 		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
 		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
@@ -426,6 +438,10 @@
 				05F00041000000000000000A /* CodeSignatureInspecting.swift */,
 				05F00042000000000000000A /* CodeSignatureValidator.swift */,
 				05F00043000000000000000A /* SecurityCodeSignatureInspector.swift */,
+				05F00047000000000000000A /* DownloadProgress.swift */,
+				05F00048000000000000000A /* UpdateDownloadError.swift */,
+				05F00049000000000000000A /* UpdateDownloader.swift */,
+				05F0004C000000000000000A /* UpdateDownloadStreamer.swift */,
 				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05F0001F000000000000000A /* UpdateAvailableView.swift */,
 				05F00020000000000000000A /* UpdateWindowController.swift */,
@@ -476,6 +492,8 @@
 				05F00044000000000000000A /* CodeSignatureValidator.swift */,
 				05F00045000000000000000A /* CodeSigningIdentity.swift */,
 				05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */,
+				05F0004A000000000000000A /* DownloadProgress.swift */,
+				05F0004B000000000000000A /* UpdateDownloader.swift */,
 			);
 			path = GitHub;
 			sourceTree = "<group>";
@@ -667,6 +685,10 @@
 				05F00041000000000000000B /* CodeSignatureInspecting.swift in Sources */,
 				05F00042000000000000000B /* CodeSignatureValidator.swift in Sources */,
 				05F00043000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */,
+				05F00047000000000000000B /* DownloadProgress.swift in Sources */,
+				05F00048000000000000000B /* UpdateDownloadError.swift in Sources */,
+				05F00049000000000000000B /* UpdateDownloader.swift in Sources */,
+				05F0004C000000000000000B /* UpdateDownloadStreamer.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
@@ -720,6 +742,8 @@
 				05F00044000000000000000B /* CodeSignatureValidator.swift in Sources */,
 				05F00045000000000000000B /* CodeSigningIdentity.swift in Sources */,
 				05F00046000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */,
+				05F0004A000000000000000B /* DownloadProgress.swift in Sources */,
+				05F0004B000000000000000B /* UpdateDownloader.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);

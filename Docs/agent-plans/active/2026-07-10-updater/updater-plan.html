@@ -588,7 +588,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M4.</span>Update downloader with progress</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -609,10 +609,45 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD. The real <code>URLSession</code> path was additionally runtime-verified with throwaway scratchpad scripts (a real download writing all bytes to a temp file with correct progress; and the delegate transport's success, error, and in-flight-cancellation paths).</p>
+                <ul class="plain">
+                    <li><strong>Types (in <code>SwiftUtilities/GitHub/</code>, Foundation-only so no <code>#if</code> gate):</strong> <code>DownloadProgress</code> (pure value type: <code>bytesReceived</code> + optional <code>totalBytes</code>, with a clamped <code>fractionCompleted</code> that is <code>nil</code> for unknown/non-positive totals); <code>UpdateDownloadError</code> (pure enum, <code>LocalizedError</code>: <code>.invalidResponse</code>, <code>.httpError(statusCode:)</code>); <code>UpdateDownloader</code> (the <code>Sendable</code> downloader); and <code>UpdateDownloadStreamer</code> (internal transport).</li>
+                    <li><strong>Seam:</strong> <code>UpdateDownloader</code> injects a <code>StreamOpener = @Sendable ( URLRequest ) async throws -&gt; ( AsyncThrowingStream&lt;Data, Error&gt;, URLResponse )</code> (mirroring the <code>Fetcher</code> seam). <code>init( open: )</code> is the test seam; <code>init( configuration: )</code> wires the production transport.</li>
+                    <li><strong>download( from:into:progress: ):</strong> checks the response is HTTP 2xx (else <code>.httpError</code> / <code>.invalidResponse</code>), writes chunks to a freshly created unique subdirectory of <code>into</code> keeping the asset's filename (so M5 can detect the archive format), reports <code>DownloadProgress</code> per chunk, and removes the subdirectory on <em>any</em> failure via a <code>succeeded</code> flag + <code>defer</code>. Returns the file URL on success (caller owns it). Progress is delivered via a callback (the &ldquo;callback&rdquo; option from the plan's &ldquo;stream / callback&rdquo;).</li>
+                    <li><strong>Transport:</strong> the production opener drives a <code>URLSessionDataDelegate</code> (<code>UpdateDownloadStreamer</code>) that delivers the body in natively sized <code>Data</code> chunks, avoiding per-byte iteration. It bridges the delegate callbacks to an <code>AsyncThrowingStream</code> + a <code>CheckedContinuation</code> for the response, guards all mutable state with an <code>NSLock</code>, and invalidates its private session on every terminal path.</li>
+                    <li><strong>Cancellation:</strong> cooperative &mdash; cancelling the task running <code>download</code> ends the stream and cleans up. A real cancellation ends the <code>AsyncThrowingStream</code> by returning <code>nil</code> (the loop exits normally), so a post-loop <code>Task.checkCancellation()</code> converts it to a thrown <code>CancellationError</code> with cleanup (see Automated review, Finding 1).</li>
+                    <li>Tests: <code>Test_DownloadProgress</code> (fraction math) and <code>Test_UpdateDownloader</code> (success + progress, empty body, filename fallbacks, HTTP error + cleanup, non-HTTP <code>invalidResponse</code>, mid-stream failure + cleanup, and a genuine task-cancellation test). The transport is exercised only via runtime verification (the unit tests inject stub openers), documented as such.</li>
+                    <li>Xcode project kept in sync (IDs <code>05F00047</code>&ndash;<code>05F0004C</code>). <code>Package.swift</code> is path-based, no change. Verified with <code>xcodebuild test</code>: <strong>117 tests pass</strong>.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 2 rounds. Round 1 found a real High-severity cancellation bug and prompted the transport rewrite; round 2 (concurrency-focused) traced every path of the new transport and reported no Critical/High/Medium remaining. During the rewrite a deadlock was found and fixed (see below).</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1</strong> (fresh-context, concurrency-focused) &mdash; confirmed the value types and file/HTTP/progress logic are correct; found the cancellation defect.</p>
+                <ul class="plain">
+                    <li><strong>Real task cancellation returned a partial file as success</strong> &mdash; High (concurrency/cleanup). <code>Task.checkCancellation()</code> was only inside the loop, but a cancelled <code>AsyncThrowingStream</code> ends the loop with <code>nil</code> rather than throwing, so a cancelled download fell through to <code>succeeded = true</code> and returned a partial file, leaking the temp dir. <strong>Fixed</strong> &mdash; added a post-loop <code>Task.checkCancellation()</code>.</li>
+                    <li><strong>Cancellation test did not exercise real cancellation</strong> &mdash; Medium (test correctness). The stub threw <code>CancellationError</code>, which is not how real cancellation behaves, so it masked Finding 1. <strong>Fixed</strong> &mdash; replaced with a test that cancels a real in-flight <code>Task</code> against a never-finishing stub stream.</li>
+                    <li><strong>Byte-by-byte <code>URLSession.AsyncBytes</code> iteration</strong> &mdash; Medium (performance) for tens-of-MB assets. <strong>Fixed</strong> &mdash; replaced with <code>UpdateDownloadStreamer</code>, a data-task delegate delivering native <code>Data</code> chunks behind the same seam.</li>
+                    <li><strong><code>filename(for:)</code> missed the bare-<code>/</code> case</strong> &mdash; Low. <strong>Fixed</strong> &mdash; falls back to <code>"download"</code> for empty or <code>"/"</code>; added tests.</li>
+                    <li><strong>Coverage gaps</strong> (invalid response, empty body, filename fallback) &mdash; Low/Info. <strong>Fixed</strong> &mdash; tests added.</li>
+                    <li><strong>Swallowed <code>handle.close()</code> error on success</strong> &mdash; Info. <strong>Deferred</strong> &mdash; the file is flushed before return; acceptable.</li>
+                </ul>
+                <p><strong>Deadlock found &amp; fixed during the transport rewrite:</strong> in <code>UpdateDownloadStreamer</code>, calling <code>finish()</code>/<code>yield()</code> while holding the <code>NSLock</code> could deadlock, because <code>finish()</code> can synchronously invoke the stream's <code>onTermination</code>, which also takes the (non-recursive) lock. Fixed by reading the continuation under the lock and calling <code>yield</code>/<code>finish</code>/<code>resume</code> outside it. Runtime-verified on success, error, and in-flight-cancellation paths.</p>
+                <p><strong>Round 2</strong> (fresh-context, concurrency-focused) &mdash; traced every lock/continuation/teardown path in the new transport and found no residual concurrency defect; no Critical/High/Medium remaining. Low/Info:</p>
+                <ul class="plain">
+                    <li><strong>Unbounded stream buffering (no backpressure)</strong> &mdash; Low. If disk lagged the network, chunks could accumulate. A bounded policy would drop data and corrupt the download, and disk outpaces the network in practice. <strong>Addressed</strong> &mdash; softened the memory-usage doc claim and documented the intentional-unbounded tradeoff in a comment. (True backpressure via task suspend/resume was judged unwarranted; open to revisit &mdash; see Review comments.)</li>
+                    <li><strong>Response wait is not cancellation-aware</strong> (cancel-before-first-byte relies on URLSession timeouts) &mdash; Low. <strong>Deferred</strong> &mdash; acceptable; no leak.</li>
+                    <li><strong>Transport has no automated test; filename <code>"/"</code> branch untested</strong> &mdash; Info. Transport is covered by runtime verification (inherent to the network-free seam design); the <code>"/"</code> branch test was <strong>added</strong>.</li>
+                </ul>
+            </div>
+        </div>
         <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
     </div>
 
