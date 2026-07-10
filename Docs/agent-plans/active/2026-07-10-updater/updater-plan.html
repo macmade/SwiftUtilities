@@ -326,22 +326,27 @@
     <p>
         The work is delivered as a set of small, independently testable building
         blocks (downloader, archive extractor, signature validator, on-disk
-        replacer, relaunch step), composed by two installer implementations behind a
-        shared protocol: an <strong>in-process installer</strong> for non-sandboxed
-        apps and an <strong>XPC-backed installer</strong> for sandboxed apps. Because
-        a SwiftPM library cannot embed or sign an XPC service into a consuming
-        app&rsquo;s bundle, the library ships the client logic, the shared XPC
-        protocol, and a reusable service handler plus a template <code>main</code>;
-        the consuming app adds, entitles, signs, and embeds the actual XPC service
-        target. The UI reuses the existing update window, extended with a view model
-        that drives download and install progress.
+        replacer, relaunch step). <strong>Revised after M1&ndash;M5:</strong> there is
+        a <strong>single</strong> in-app path, not separate in-process and XPC
+        installers. Because a sandboxed app cannot replace itself, the privileged work
+        always runs in a non-sandboxed executable, so in-app update routes through
+        <strong>one updater XPC service bundled inside
+        <code>SwiftUtilities.framework</code></strong> (the way Sparkle&nbsp;2 ships
+        its services), which performs extract &rarr; validate &rarr; replace &rarr;
+        relaunch off the sandbox &mdash; no consumer-built relaunch helper. Since a
+        SwiftPM library cannot carry a signed embedded service, <strong>in-app update
+        requires the Xcode framework + project</strong> and is compiled out of the
+        SwiftPM build; the <strong>SwiftPM package keeps the download-link
+        update</strong>, which remains available in every distribution. The UI reuses
+        the existing update window, extended with a view model that drives download
+        and install progress.
     </p>
 
     <h2 class="section-title">Questions &amp; answers</h2>
 
     <div class="qa">
         <p class="q">How far should this plan take sandboxed-app support, given a SwiftPM library can&rsquo;t embed/sign an XPC service into a consuming app?</p>
-        <p class="a">Full XPC path now. Define the XPC service protocol and ship a reusable service source/template the consuming app embeds and signs, plus documentation for wiring it in.</p>
+        <p class="a">Full XPC path now, as a <strong>single</strong> in-app mechanism for all apps (revised after M1&ndash;M5). The updater XPC service is <strong>bundled inside <code>SwiftUtilities.framework</code></strong> (Sparkle&nbsp;2-style), so the consumer just embeds the framework &mdash; there is no service target for them to build. Because SwiftPM cannot carry the bundled service, in-app update requires the Xcode framework; the SwiftPM package provides the download-link update only.</p>
     </div>
 
     <div class="qa">
@@ -370,11 +375,12 @@
         <li><strong>Follow the repo conventions.</strong> <code>public</code> by default in the library, one type per file organized into subfolders, <code>let</code> over <code>var</code>, no force-unwrap, early returns, localized strings via <code>Localization.string(...)</code>, SwiftUI views with previews, and the MIT license header on every new file.</li>
     </ul>
 
-    <p><strong>Sandbox reality &amp; scope</strong></p>
+    <p><strong>Sandbox reality &amp; distribution scope (revised)</strong></p>
     <ul class="plain">
-        <li>An XPC service that is itself sandboxed inherits the container restrictions and cannot write to <code>/Applications</code>. The sandboxed path therefore targets <strong>Developer-ID, sandboxed</strong> apps that embed a <em>non-sandboxed</em> (or differently entitled) XPC service to perform the privileged file operations and relaunch. This must be verified against Apple&rsquo;s documentation during Milestone&nbsp;7.</li>
-        <li><strong>Mac App Store apps are out of scope</strong> for in-app updates: they update through the App Store, and MAS-embedded XPC services must be sandboxed. This is documented, not worked around.</li>
-        <li>Replacing an app in a protected location (e.g. <code>/Applications</code>) may require additional authorization. This plan keeps the replacement in the helper; obtaining rights for protected directories is called out as a risk/consideration rather than fully solved, to be confirmed during implementation.</li>
+        <li><strong>Single path via a bundled service.</strong> A sandboxed app cannot replace itself, so the privileged work runs in a non-sandboxed executable &mdash; the updater XPC service. Rather than two installers, in-app update always routes through this one service, which is <strong>bundled and signed inside <code>SwiftUtilities.framework</code></strong> (verified against Apple&rsquo;s XPC docs and Sparkle&nbsp;2&rsquo;s approach in M8). The service is non-sandboxed / differently entitled so it can write to <code>/Applications</code> and relaunch.</li>
+        <li><strong>In-app update requires the Xcode framework; the SwiftPM package is link-only and carries no extra.</strong> A SwiftPM <code>.library</code> can only carry a resource bundle, not a signed nested executable/XPC service. So <em>all</em> in-app code &mdash; the M2&ndash;M6 building blocks (archive detection, signature validation, download, extraction, replacement, the install composition) <em>and</em> the orchestration &mdash; is compiled out of the SwiftPM build via <code>#if !SWIFT_PACKAGE</code>; the building blocks are not kept as general-purpose utilities. The <strong>SwiftPM package contains only what the download-link update requires</strong>, which stays available in every distribution. (Gating is deferred to the entry-point milestone; until then the in-app code compiles in both.)</li>
+        <li><strong>Mac App Store apps are out of scope</strong> for in-app updates: they update through the App Store, and MAS-embedded services must be sandboxed. Documented, not worked around.</li>
+        <li>Replacing an app in a protected location (e.g. <code>/Applications</code>) may require additional authorization. The replacement runs in the service; obtaining rights for protected directories is a risk/consideration to confirm during M8, not fully solved here.</li>
     </ul>
 
     <p><strong>Key existing files</strong></p>
@@ -713,43 +719,118 @@
     </div>
 
     <!-- ============ PHASE 3 ============ -->
-    <h3 class="phase-title">Phase 3 &mdash; In-process installer (non-sandboxed)</h3>
+    <h3 class="phase-title">Phase 3 &mdash; Install composition &amp; building blocks (Xcode framework)</h3>
+
+    <div class="note">
+        <strong>Architecture revised after M1&ndash;M5 (see M6 Review comments).</strong>
+        There is a <strong>single</strong> in-app update path, not separate
+        in-process (non-sandboxed) and XPC (sandboxed) installers. Because a
+        sandboxed app cannot replace itself, the privileged work always runs in a
+        non-sandboxed executable, so the in-app path is <strong>XPC-based for every
+        app</strong> and routes through <strong>one updater service bundled inside
+        <code>SwiftUtilities.framework</code></strong> (as Sparkle&nbsp;2 does). That
+        service performs extract &rarr; validate &rarr; replace &rarr; relaunch, so
+        there is no consumer-built relaunch helper. In-app update therefore
+        <strong>requires the Xcode framework + project</strong> and is gated out of
+        the SwiftPM build (<code>#if !SWIFT_PACKAGE</code>); the <strong>SwiftPM
+        package keeps the download-link update</strong> only. Phases&nbsp;3&ndash;4
+        build the install composition and the bundled service; the link path
+        (M1&ndash;M2) is unchanged and remains available everywhere.
+    </div>
 
     <!-- M6 -->
     <div class="milestone">
         <div class="milestone-head">
-            <h4><span class="num">M6.</span>Replacement, relaunch &amp; the in-process installer</h4>
-            <span class="status not-started">Not started</span>
+            <h4><span class="num">M6.</span>Install composition &amp; replacement building blocks</h4>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
-            <strong>Goal:</strong> Define the installer protocol and deliver the first
-            concrete implementation for non-sandboxed apps: verify the extracted app,
-            atomically replace the running app on disk, and relaunch it. This is the
-            first end-to-end in-app update path.
+            <strong>Goal:</strong> Deliver the in-app install composition and its
+            building blocks &mdash; validate the extracted app, atomically replace the
+            app on disk, and relaunch &mdash; that run inside the bundled updater
+            service (M8), refusing to proceed on validation failure. There is no
+            separate in-process installer and no consumer-built relaunch helper. The
+            in-app code compiles only in the Xcode framework build; the SwiftPM
+            package keeps the link path.
         </p>
 
         <div class="field">
             <span class="label">Tasks</span>
             <ul class="tasks">
-                <li>Define an <code>UpdateInstaller</code> protocol taking a downloaded archive plus the expected signing requirement and target app path, reporting install progress and a terminal result.</li>
-                <li>Add an <code>AppReplacer</code> building block: atomic on-disk swap of the running bundle (move-aside + move-in or <code>FileManager.replaceItemAt</code>), verified against Foundation documentation.</li>
-                <li>Add a relaunch step that waits for the current process to exit and re-opens the app (a detached process that watches the PID then <code>open</code>s the new bundle), then terminates the running app.</li>
-                <li>Implement <code>InProcessUpdateInstaller</code> composing M3 (validate) &rarr; M5 (extract) &rarr; replace &rarr; relaunch, refusing to proceed on validation failure.</li>
-                <li>Unit-test the composition/decision logic and error propagation with injected building blocks; document which steps require a real signed app / manual verification.</li>
-                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+                <li>Add the pure <code>InstallProgress</code> phases and the <code>UpdateInstaller</code> install-composition contract (over an already-downloaded archive + the target app path), reporting progress and a terminal result.</li>
+                <li>Add an <code>AppReplacer</code> building block: atomic <em>same-volume</em> on-disk swap via <code>FileManager.replaceItemAt</code> (staged in a <code>.itemReplacementDirectory</code>), verified against Foundation documentation.</li>
+                <li>Add the relaunch building block as reusable logic the bundled service runs (wait for the app's PID to exit, then reopen) &mdash; no consumer-embedded helper and no shell. The concrete surviving-process mechanism is finalized in M8 with the service lifecycle.</li>
+                <li>Compose extract (M5) &rarr; validate (M3, on the exact extracted bundle) &rarr; replace &rarr; relaunch, refusing to replace anything on validation failure.</li>
+                <li>Gate the in-app installer/entry so it is available only in the Xcode framework build (<code>#if !SWIFT_PACKAGE</code>); the SwiftPM package exposes only the link path.</li>
+                <li>Unit-test the composition/decision logic and error propagation with injected building blocks; document the steps that require the bundled service / a real signed app.</li>
+                <li>Keep the Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
-        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-10</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p><strong>Reworked</strong> for the single-path, Xcode-framework-only architecture (see Review comments for the discussion). The in-app install now runs inside the bundled updater service; there is no in-process installer and no consumer-built relaunch helper.</p>
+                <ul class="plain">
+                    <li><strong>Removed</strong> the consumer-embedded relaunch helper &mdash; <code>RelaunchHelper.swift</code> and <code>Relauncher.swift</code> (and their tests). Relaunch becomes a step performed by the bundled service; its concrete surviving-process mechanism is designed in M8.</li>
+                    <li><strong>Renamed</strong> <code>InProcessUpdateInstaller</code> &rarr; <code>UpdateInstallation</code> &mdash; the install composition (extract &rarr; validate &rarr; replace &rarr; relaunch) the service runs. It no longer has an &ldquo;in-process&rdquo; convenience init taking a helper URL; it takes injected building blocks only.</li>
+                    <li><strong>Kept</strong> the reusable building blocks: <code>InstallProgress</code>, <code>UpdateInstaller</code> (contract), <code>AppReplacing</code>/<code>AppReplacer</code> (atomic same-volume swap via <code>replaceItemAt</code>, returning the resulting URL), and <code>ApplicationRelaunching</code> (the relaunch-step protocol; concrete deferred to M8).</li>
+                    <li><strong>Deferred:</strong> the <code>#if !SWIFT_PACKAGE</code> split is a dedicated pass (by the entry-point milestone) that gates <em>all</em> in-app code out of the SwiftPM build &mdash; every M2&ndash;M6 building block plus the orchestration &mdash; so the package contains only the link path, no extra (per Review comments). The concrete relaunch lands with the service (M8).</li>
+                    <li>Verified with <code>xcodebuild test</code>: <strong>133 tests pass</strong> (the 4 removed helper tests are gone; the composition and real <code>AppReplacer</code> tests remain). The composition logic is unchanged from the reviewed version, so no fresh automated-review round was run for the deletion/rename.</li>
+                </ul>
+                <p class="note"><strong>Prior-design detail below (two-installer + consumer relaunch helper) is SUPERSEDED &mdash; retained only as history.</strong></p>
+                <p>Implemented with TDD. <code>FileManager.replaceItemAt</code> semantics and the item-replacement-directory pattern were verified against the Foundation SDK headers/docs; the relaunch watcher and the atomic replace were runtime-verified.</p>
+                <ul class="plain">
+                    <li><strong>Building blocks (protocol + concrete, per the guiding principle; in <code>SwiftUtilities/GitHub/</code>, Foundation-only, un-gated except a Security-backed convenience init):</strong> <code>InstallProgress</code> (pure enum: extracting/validating/replacing/relaunching); <code>UpdateInstaller</code> (the shared install contract); <code>AppReplacing</code> + <code>AppReplacer</code> (on-disk swap); <code>ApplicationRelaunching</code> + <code>Relauncher</code> (relaunch helper); and <code>InProcessUpdateInstaller</code>.</li>
+                    <li><strong>Ordering (security-first):</strong> the installer runs <strong>extract &rarr; validate the extracted <code>.app</code> &rarr; replace &rarr; relaunch</strong>. The plan lists &ldquo;validate &rarr; extract,&rdquo; but a signature can only be validated on an already-extracted bundle, and validating the exact bundle about to be moved is what the M3 review required (closing the TOCTOU). Replacement is refused (the function throws before touching the target) unless validation succeeds, so an unsigned or mismatched download is never written to disk.</li>
+                    <li><strong>Validation</strong> is delegated to an injected <code>CodeSignatureValidator</code>, which derives the requirement from the <em>running</em> process (root of trust) &mdash; so the plan's &ldquo;expected signing requirement&rdquo; is encapsulated rather than passed as a spoofable string.</li>
+                    <li><strong>Replacement</strong> uses <code>FileManager.replaceItemAt</code> (arg order verified: original then new; default <code>options: []</code>). Extraction is staged in a <code>.itemReplacementDirectory</code> on the same volume as the target, so the swap is an atomic rename (see Automated review, Finding 1). It returns the resulting URL, which the installer relaunches.</li>
+                    <li><strong>Relaunch (compiled helper, revised after review &mdash; see Review comments):</strong> the library ships <code>RelaunchHelper</code> (reusable <code>run(arguments:)</code> that polls the parent PID with <code>kill</code>, bounded to 10&nbsp;min, then relaunches via <code>Process</code> &rarr; <code>/usr/bin/open -- &lt;path&gt;</code>, no shell) plus a documented 3-line template <code>main</code>. The consumer compiles/signs/embeds the helper; <code>Relauncher( helperURL: )</code> spawns it with the PID and app path as argv, and <strong>requires</strong> it &mdash; it throws (no fallback) if the helper is missing. The relauncher only <em>schedules</em> the relaunch; the caller terminates the app to trigger it. Full embedding docs land in M11 with the XPC service.</li>
+                    <li>Tests: <code>Test_InProcessUpdateInstaller</code> (composition order, refusal-on-validation-failure with nothing replaced, extraction failure, replacement failure with no relaunch, and that the relaunched URL is the replacer's returned URL) via injected stubs; <code>Test_AppReplacer</code> exercises the real <code>replaceItemAt</code> on real bundles; <code>Test_RelaunchHelper</code> covers argument validation; <code>Test_Relauncher</code> spawns a stand-in helper and asserts the argv, and asserts it throws when the helper is missing. <code>RelaunchHelper.run</code>'s full poll-then-open path is runtime-verified (act-after-exit and give-up-at-bound).</li>
+                    <li>Xcode project kept in sync (IDs <code>05F00051</code>&ndash;<code>05F0005C</code>). <code>Package.swift</code> is path-based, no change. Verified with <code>xcodebuild test</code>: <strong>137 tests pass</strong>.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 2 rounds (security-focused). Round 1 confirmed there is no path that installs or relaunches an unvalidated app and raised one Medium (atomicity); round 2 verified the fixes and found no Critical/High/Medium remaining.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1</strong> (fresh-context, security-focused) &mdash; verified: the extract&rarr;validate&rarr;replace&rarr;relaunch order is airtight (no unvalidated install/relaunch path); <code>replaceItemAt</code> arg order and <code>options: []</code> correct per the header; the relaunch helper is injection-safe with absolute tool paths; <code>Sendable</code> and Security gating correct; pbxproj in sync.</p>
+                <ul class="plain">
+                    <li><strong>Working directory not guaranteed same-volume as the target</strong> &mdash; Medium (correctness/atomicity). Staging in the system temp dir undermines the &ldquo;atomic swap&rdquo; goal (cross-volume fallback copy). <strong>Fixed</strong> &mdash; stage extraction in a <code>.itemReplacementDirectory</code> appropriate for the target (same volume), falling back to the passed directory only if that fails.</li>
+                    <li><strong>Resulting URL from <code>replaceItemAt</code> discarded</strong> &mdash; Low. <strong>Fixed</strong> &mdash; <code>replaceApplication</code> now returns the resulting URL and the installer relaunches it.</li>
+                    <li><strong>Scheduled relaunch could poll forever if the app never quits</strong> &mdash; Low. <strong>Fixed</strong> &mdash; bounded the helper loop (10&nbsp;min), exiting without relaunching past the bound.</li>
+                    <li><strong>PID-reuse race in the watcher</strong> &mdash; Low/Info. <strong>Documented</strong> (rare; macOS does not recycle PIDs aggressively).</li>
+                    <li><strong><code>Relauncher</code> has no test; no work-dir-cleanup test</strong> &mdash; Low/Info. <strong>Documented</strong> as intentionally runtime-verified; cleanup is covered indirectly.</li>
+                </ul>
+                <p><strong>Round 2</strong> (fresh-context) &mdash; verified all three fixes: the same-volume staging is correct with sound fallback and no item-replacement-directory leak on failure paths; the resulting-URL return type is consistent across protocol/concrete/call-site/stub; the bounded shell script is correct (positional args, give-up path does not relaunch, injection-safe). Security core intact. No Critical/High/Medium remaining. One Info (the composition test didn't independently prove the resulting-URL threading) was <strong>addressed</strong> by having the stub return a distinct sentinel URL and asserting the relaunch uses it.</p>
+                <p><strong>Round 3</strong> (fresh-context, after the relaunch-helper rework requested in review) &mdash; verified the compiled helper is safe and correct: no shell anywhere (argv arrays only, no injection surface), the helper is genuinely required (throws cleanly when absent, no fallback/crash), <code>RelaunchHelper.run</code>'s poll/bound/give-up logic is correct, and the installer composition is unchanged. No Critical/High/Medium. Low/Info addressed: added a <code>--</code> option terminator to the <code>open</code> invocation (defense-in-depth), documented the PID-reuse edge and that the give-up path returns success.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li><strong>Q:</strong> Is AppleScript the correct way to do this (the relaunch)? &mdash; <em>Answered:</em> the relaunch does not use AppleScript (it uses a <code>/bin/sh</code> PID-watch + <code>open</code>); AppleScript is not the correct approach (Automation/TCC fragility, no benefit over the shell loop).</li>
+                    <li><strong>Change requested:</strong> use a compiled relaunch <strong>helper</strong> (a separate executable) instead of the <code>/bin/sh</code> script &mdash; &ldquo;relaunch helper is the way to go.&rdquo; <em>Decisions:</em> build it <strong>now, in M6</strong>; <strong>require the helper</strong> (no shell fallback &mdash; relaunch spawns only the embedded compiled helper and fails cleanly if missing).</li>
+                    <li><strong>Response:</strong> replaced the shell relaunch with a compiled helper. The library now ships <code>RelaunchHelper</code> (reusable wait-for-PID-then-relaunch logic) and a documented 3-line template <code>main</code>; the consumer compiles/signs/embeds the helper executable, and <code>Relauncher( helperURL: )</code> spawns it (PID + app path as argv, no shell), throwing if it is missing. <code>InProcessUpdateInstaller</code>'s Security-backed convenience init now takes the embedded helper's URL. Full embedding docs land in M11 with the XPC service.</li>
+                    <li><strong>Follow-up:</strong> &ldquo;I don't see the relaunch helper in the targets.&rdquo; &mdash; the current design ships only the <code>RelaunchHelper</code> logic + a template <code>main</code>, with no actual helper executable target in the project (by design, the consumer builds it). Deciding whether to add a real helper executable target to the project.</li>
+                    <li><strong>Q:</strong> For sandboxed apps, does the update go through an XPC service? (Clarifying the architecture / where relaunch belongs relative to the XPC work.) &mdash; <em>Answered:</em> yes; the sandboxed path hands off to an embedded XPC service that performs extract/validate/replace/relaunch.</li>
+                    <li><strong>Direction (architecture):</strong> &ldquo;There should be a single way. If a relaunch helper is needed, it should be available/bundled in the framework or XPC services.&rdquo; &rarr; unify on one update path rather than separate in-process (non-sandboxed) and XPC (sandboxed) paths, and do not require the consumer to build the relaunch helper &mdash; the relaunch executable must ship bundled in the framework or as part of the XPC service. This supersedes M6's in-process installer + consumer-built relaunch helper and reshapes M6&ndash;M9; the plan needs revising before further code changes.</li>
+                    <li><strong>Q:</strong> What's the issue with the Swift package (re: bundling the helper/XPC service)? &mdash; <em>Answered:</em> a SwiftPM <code>.library</code> can only carry a resource bundle (<code>Bundle.module</code>, e.g. the <code>.strings</code>); it cannot embed/sign a nested auxiliary executable or XPC service into the consuming app, and SPM does not assemble the app bundle. A <code>.framework</code> (Xcode) is a bundle that can carry a nested, signed XPC service (as Sparkle&nbsp;2 does).</li>
+                    <li><strong>Decision (distribution):</strong> keep the <strong>download-link</strong> update option available in the SwiftPM package (works everywhere); <strong>in-app updates require the Xcode framework + project</strong> (where the XPC service can be bundled). So the SwiftPM build ships link-only; the in-app path is Xcode-framework-only, a single XPC-based flow whose bundled service performs extract/validate/replace/relaunch.</li>
+                    <li><strong>Q:</strong> Is the package-vs-Xcode split already implemented, or is it for a next milestone? &mdash; <em>Answered:</em> not implemented yet; currently all of M1&ndash;M6 (link path + every in-app building block) compiles in both distributions. Deferred to the entry-point milestone.</li>
+                    <li><strong>Decision (split scope):</strong> deferring the split is fine, but when done, the <strong>SwiftPM package must contain only what the link update requires &mdash; no extra</strong>. So <em>all</em> in-app code (the M2&ndash;M6 building blocks and orchestration, not just the entry point) is gated out of the SwiftPM build via <code>#if !SWIFT_PACKAGE</code>; the building blocks are <strong>not</strong> kept in the package as general-purpose utilities. Package = link-only.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- ============ PHASE 4 ============ -->
-    <h3 class="phase-title">Phase 4 &mdash; XPC-backed installer (sandboxed)</h3>
+    <h3 class="phase-title">Phase 4 &mdash; Bundled updater XPC service (Xcode framework)</h3>
 
     <!-- M7 -->
     <div class="milestone">
@@ -760,9 +841,10 @@
 
         <p>
             <strong>Goal:</strong> Define the contract between the app (client) and the
-            embedded XPC service: the operations, the parameters (archive path,
-            expected requirement, target path, PID), and the progress/result messages.
-            Shipped in the library so both sides share one definition.
+            framework-bundled updater XPC service: the operations, the parameters
+            (archive path, expected requirement, target path, and the app's PID for
+            relaunch), and the progress/result messages. Shipped in the framework so
+            both sides share one definition.
         </p>
 
         <div class="field">
@@ -786,25 +868,28 @@
     <!-- M8 -->
     <div class="milestone">
         <div class="milestone-head">
-            <h4><span class="num">M8.</span>Reusable service handler &amp; embedding template</h4>
+            <h4><span class="num">M8.</span>Bundled updater XPC service</h4>
             <span class="status not-started">Not started</span>
         </div>
 
         <p>
-            <strong>Goal:</strong> Provide the privileged side as reusable library
-            code plus a thin template the consuming app compiles into its XPC service
-            target. The handler performs verify &rarr; extract &rarr; replace &rarr;
-            relaunch (reusing M3/M5/M6 building blocks) off the sandbox.
+            <strong>Goal:</strong> Build the updater as an XPC service <strong>target
+            in <code>SwiftUtilities.xcodeproj</code>, embedded and signed inside
+            <code>SwiftUtilities.framework</code></strong> (so a consumer that embeds
+            the framework gets it &mdash; no target for them to build). The service
+            runs the M6 install composition (validate &rarr; extract &rarr; replace
+            &rarr; relaunch) off the sandbox and handles relaunch survival.
         </p>
 
         <div class="field">
             <span class="label">Tasks</span>
             <ul class="tasks">
-                <li>Add an <code>UpdateServiceHandler</code> in the library that implements the M7 protocol by composing the shared building blocks (validate, extract, replace, relaunch).</li>
-                <li>Provide a documented template <code>main.swift</code> (and listener setup) the app copies into its XPC service target, wired to <code>UpdateServiceHandler</code>.</li>
-                <li>Verify the connection-listener and exported-object setup against Apple&rsquo;s official documentation.</li>
-                <li>Unit-test the handler&rsquo;s composition and error handling with injected building blocks (no live connection required).</li>
-                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+                <li>Add the updater XPC service target to <code>SwiftUtilities.xcodeproj</code> and embed it inside the framework bundle (<code>XPCServices</code>), verified against Apple&rsquo;s XPC documentation and the way Sparkle&nbsp;2 ships its services in the framework.</li>
+                <li>Implement the service&rsquo;s exported object using the M7 protocol, composing the M6 building blocks (extract, validate, replace, relaunch) over the downloaded archive, running off the sandbox.</li>
+                <li>Solve relaunch survival: ensure a process outlives the app&rsquo;s termination to reopen it (the service or a process it spawns), verified against Apple&rsquo;s documentation &mdash; not tied to the client XPC connection.</li>
+                <li>Verify the listener / exported-object setup and the entitlement/sandbox model (a Developer-ID app&rsquo;s non-sandboxed service performing privileged file ops) against Apple&rsquo;s official documentation.</li>
+                <li>Unit-test the service&rsquo;s composition and error handling with injected building blocks (no live connection required).</li>
+                <li>Keep the Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
             </ul>
         </div>
 
@@ -818,25 +903,27 @@
     <!-- M9 -->
     <div class="milestone">
         <div class="milestone-head">
-            <h4><span class="num">M9.</span>XPC client installer &amp; installer selection</h4>
+            <h4><span class="num">M9.</span>XPC client &amp; hand-off</h4>
             <span class="status not-started">Not started</span>
         </div>
 
         <p>
-            <strong>Goal:</strong> Add the client-side <code>XPCUpdateInstaller</code>
-            that talks to the embedded service, and the logic that automatically picks
-            the right installer &mdash; XPC when the app is sandboxed and the service is
-            available, in-process otherwise, and the link fallback when neither can run.
+            <strong>Goal:</strong> Add the client that hands the update off to the
+            bundled service: connect to the embedded service, forward the request
+            (archive, expected requirement, target path, PID), stream progress back,
+            and surface the terminal result. This is the single in-app path; when the
+            service is unavailable (e.g. the SwiftPM build), the flow falls back to the
+            link path.
         </p>
 
         <div class="field">
             <span class="label">Tasks</span>
             <ul class="tasks">
-                <li>Implement <code>XPCUpdateInstaller</code> conforming to <code>UpdateInstaller</code>: connect to the embedded service by name, forward the request, stream progress back, and surface the terminal result and connection errors.</li>
-                <li>Add installer selection: detect sandboxing and service availability, choosing XPC vs in-process, and gracefully falling back to the link path when in-app update cannot proceed.</li>
-                <li>Verify sandbox detection and service-connection APIs against Apple&rsquo;s documentation.</li>
-                <li>Unit-test the selection logic with injected environment probes; test fallback behavior.</li>
-                <li>Keep the package and Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
+                <li>Implement the client <code>XPCUpdateInstaller</code> conforming to <code>UpdateInstaller</code>: connect to the framework-bundled service, forward the request, stream progress back, and surface the terminal result and connection errors.</li>
+                <li>Detect service availability; when in-app update cannot run (no bundled service, e.g. under SwiftPM), fall back gracefully to the link path. There is no in-process installer to select between &mdash; the in-app path is XPC-only.</li>
+                <li>Verify the service-connection APIs against Apple&rsquo;s documentation.</li>
+                <li>Unit-test the client&rsquo;s routing and link-fallback with injected probes.</li>
+                <li>Keep the Xcode project in sync; build and test via <code>xcodebuild</code>.</li>
             </ul>
         </div>
 
@@ -895,18 +982,19 @@
         </div>
 
         <p>
-            <strong>Goal:</strong> Document how a consumer enables in-app updates and,
-            for sandboxed apps, how to embed, entitle, and sign the XPC service. Make
-            the constraints and the MAS out-of-scope note explicit so integrators
-            aren&rsquo;t surprised.
+            <strong>Goal:</strong> Document how a consumer enables in-app updates by
+            embedding <code>SwiftUtilities.framework</code> (which carries the bundled
+            updater service), and make the distribution constraints explicit: in-app
+            update requires the Xcode framework; the SwiftPM package is link-only; Mac
+            App Store apps are out of scope.
         </p>
 
         <div class="field">
             <span class="label">Tasks</span>
             <ul class="tasks">
-                <li>Update <code>README.md</code> with an in-app updates section: enabling the behavior, the non-sandboxed path, and the sandboxed path.</li>
-                <li>Document embedding the XPC service: adding the target, required entitlements (non-sandboxed / differently entitled service), signing, the <code>Contents/XPCServices</code> placement, and the service name the client expects.</li>
-                <li>State clearly that Mac App Store apps are out of scope and continue to use the link/App Store path.</li>
+                <li>Update <code>README.md</code> with an in-app updates section: the two update options (download-link, available everywhere; in-app, Xcode-framework only), and how the bundled updater service travels inside the embedded framework so there is nothing extra for the consumer to build.</li>
+                <li>Document the consumer&rsquo;s embed + re-sign step for the framework and its nested service (entitlements, the <code>XPCServices</code> placement inside the framework, signing with the app&rsquo;s identity), and the service name the client expects.</li>
+                <li>State clearly that the <strong>SwiftPM package provides only the download-link update</strong> (SPM cannot carry the bundled service), and that <strong>Mac App Store apps are out of scope</strong> and continue to use the link / App Store path.</li>
                 <li>Verify the doc comments across all new public types are complete (the repo documents public and private members) &mdash; optionally via the <code>xs:doc</code> workflow.</li>
                 <li>Final pass keeping <code>Package.swift</code> and <code>SwiftUtilities.xcodeproj</code> in sync; full build + test run via <code>xcodebuild</code>.</li>
             </ul>
@@ -921,24 +1009,24 @@
 
     <h2 class="section-title">Appendix</h2>
 
-    <p><strong>End-to-end flow (in-app mode)</strong></p>
+    <p><strong>End-to-end flow (in-app mode &mdash; Xcode framework only; revised)</strong></p>
     <div class="diagram">GitHubUpdater.performUpdateCheck()
     &rarr; .updateAvailable( ..., downloadURL )
 
 present( result, behavior: .inApp )
-    &rarr; asset is .zip / .dmg ?  &mdash; no &rarr; fall back to link path
-                             &mdash; yes &darr;
+    &rarr; asset is .zip / .dmg AND bundled service available ?
+          &mdash; no  &rarr; fall back to link path (SwiftPM build always lands here)
+          &mdash; yes &darr;
 
 UpdateWindow  ──▶  view model
-    Download  &rarr;  UpdateDownloader        (app process, progress)
-              &rarr;  select installer:
-                     sandboxed + service?  &rarr;  XPCUpdateInstaller  ──▶  embedded XPC service
-                     else                  &rarr;  InProcessUpdateInstaller
+    Download  &rarr;  UpdateDownloader           (app process, progress)
+              &rarr;  XPCUpdateInstaller (client) ──▶  bundled updater XPC service
+                                                       (inside SwiftUtilities.framework)
 
-installer:  validate signature  (M3, gate)
-         &rarr; extract archive     (M5)
-         &rarr; replace app on disk (M6 AppReplacer)
-         &rarr; relaunch            (wait for PID, open new bundle)</div>
+service:  extract archive    (M5)
+       &rarr; validate signature (M3, gate &mdash; on the extracted bundle)
+       &rarr; replace app        (M6 AppReplacer, atomic same-volume)
+       &rarr; relaunch           (surviving process: wait for app PID, open new bundle)</div>
 
     <p><strong>Component map</strong></p>
     <table class="map">
@@ -948,17 +1036,17 @@ installer:  validate signature  (M3, gate)
         <tbody>
             <tr><td><code>UpdateBehavior</code></td><td>M1</td><td>App</td><td>Link vs in-app opt-in.</td></tr>
             <tr><td><code>UpdateArchiveFormat</code></td><td>M2</td><td>App</td><td>Detect zip/dmg; gate in-app eligibility.</td></tr>
-            <tr><td><code>CodeSignatureValidator</code></td><td>M3</td><td>App / helper</td><td>Security gate before replacement.</td></tr>
+            <tr><td><code>CodeSignatureValidator</code></td><td>M3</td><td>Service</td><td>Security gate before replacement.</td></tr>
             <tr><td><code>UpdateDownloader</code></td><td>M4</td><td>App</td><td>Download asset with progress.</td></tr>
-            <tr><td><code>ArchiveExtractor</code></td><td>M5</td><td>App / helper</td><td>Unpack archive, find <code>.app</code>.</td></tr>
-            <tr><td><code>UpdateInstaller</code> (protocol)</td><td>M6</td><td>App</td><td>Common install contract.</td></tr>
-            <tr><td><code>AppReplacer</code> + relaunch</td><td>M6</td><td>App / helper</td><td>Atomic swap + relaunch.</td></tr>
-            <tr><td><code>InProcessUpdateInstaller</code></td><td>M6</td><td>App (non-sandboxed)</td><td>Full install in-process.</td></tr>
+            <tr><td><code>ArchiveExtractor</code></td><td>M5</td><td>Service</td><td>Unpack archive, find <code>.app</code>.</td></tr>
+            <tr><td><code>UpdateInstaller</code> (protocol)</td><td>M6</td><td>App/Service</td><td>Common install contract.</td></tr>
+            <tr><td><code>AppReplacer</code> + relaunch step</td><td>M6</td><td>Service</td><td>Atomic same-volume swap + relaunch.</td></tr>
+            <tr><td>Install composition</td><td>M6</td><td>Service</td><td>extract&rarr;validate&rarr;replace&rarr;relaunch (run by the service).</td></tr>
             <tr><td>XPC protocol &amp; messages</td><td>M7</td><td>Shared</td><td>Client&harr;service contract.</td></tr>
-            <tr><td><code>UpdateServiceHandler</code> + template</td><td>M8</td><td>XPC service</td><td>Privileged install off the sandbox.</td></tr>
-            <tr><td><code>XPCUpdateInstaller</code> + selection</td><td>M9</td><td>App (sandboxed)</td><td>Drive service; choose installer.</td></tr>
+            <tr><td>Bundled updater XPC service</td><td>M8</td><td>XPC service (in framework)</td><td>Privileged install off the sandbox.</td></tr>
+            <tr><td><code>XPCUpdateInstaller</code> (client) + link fallback</td><td>M9</td><td>App</td><td>Hand off to the service; else link path.</td></tr>
             <tr><td>Update view model + view</td><td>M10</td><td>App</td><td>Progress UI in the existing window.</td></tr>
-            <tr><td>Docs / integration guide</td><td>M11</td><td>&mdash;</td><td>Enable + embed + sign guidance.</td></tr>
+            <tr><td>Docs / integration guide</td><td>M11</td><td>&mdash;</td><td>Enable + embed framework (bundled service).</td></tr>
         </tbody>
     </table>
 
@@ -966,8 +1054,11 @@ installer:  validate signature  (M3, gate)
         Reused, unchanged building blocks: <code>GitHubUpdater</code> (check logic),
         <code>UpdateCheckResult</code>, <code>HostingWindowController</code>,
         <code>MarkdownView</code>, and <code>Localization</code>. The
-        platform-agnostic model layer is intentionally left untouched; all new
-        download / install / relaunch code stays under <code>#if canImport( AppKit )</code>.
+        platform-agnostic model layer stays untouched; the link update works
+        everywhere, while the in-app install / replace / relaunch code is
+        Xcode-framework-only (compiled out of the SwiftPM build via
+        <code>#if !SWIFT_PACKAGE</code>) and, at runtime, runs inside the bundled
+        updater service.
     </p>
 
 </div>
