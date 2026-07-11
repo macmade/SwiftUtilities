@@ -97,6 +97,8 @@
             }
         }
 
+        #if !SWIFT_PACKAGE
+
         /// Shows the in-app update window, reusing the existing one if open.
         ///
         /// Presents ``UpdateAvailableView``, driven by an ``InAppUpdateViewModel`` that
@@ -104,6 +106,9 @@
         /// a supported archive, it falls back to
         /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
         /// so a newer release always stays reachable.
+        ///
+        /// In-app updates require the Xcode framework (which bundles the updater
+        /// service), so this is absent from the SwiftPM build.
         ///
         /// - Parameters:
         ///   - applicationName: The display name of the application.
@@ -166,6 +171,8 @@
                 }
             }
         }
+
+        #endif
     }
 
 #endif

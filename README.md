@@ -53,6 +53,54 @@ updater?.checkForUpdates()             // reports every outcome
 updater?.checkForUpdatesInBackground() // only when an update is available
 ```
 
+##### In-app updates
+
+By default, choosing to update opens the release's download page in the browser
+(*link* mode, available in every distribution). On the Xcode framework
+distribution, the updater can instead download, verify, install, and relaunch
+the new version in place. Opt in at construction:
+
+```swift
+let updater = GitHubUpdater(
+    owner:      "macmade",
+    repository: "SwiftUtilities",
+    behavior:   .inApp
+)
+```
+
+The in-app path runs through an XPC service bundled inside
+`SwiftUtilities.framework` (at `Versions/A/XPCServices/Updater.xpc`), the way
+Sparkle 2 ships its services. Because a sandboxed app cannot replace itself, the
+service runs *off the sandbox*: the update window downloads the release asset,
+then the service validates the download's code signature against the running
+application's identity (same signing identifier and Team ID), replaces the
+application on disk, and relaunches it. If any step fails — or the release asset
+is not a supported archive (`.zip` or `.dmg`) — the window falls back to the link
+behavior, so the release always stays reachable.
+
+**In-app updates require the Xcode framework.** A Swift Package Manager
+`.library` cannot embed and sign a nested XPC service, so under SwiftPM only the
+link update is available: the bundled service is absent, and `behavior: .inApp`
+transparently falls back to the link window at runtime. Ship
+`SwiftUtilities.framework` (the Xcode project's product) to offer in-app updates.
+
+**Embedding and re-signing.** When you embed `SwiftUtilities.framework` in your
+app, its `XPCServices/Updater.xpc` travels with it — there is nothing extra for
+you to build. You must, however, **re-sign the framework and its nested service
+with your own identity** as part of signing your app:
+
+- The service authenticates its client *by team*: it refuses any connection from
+  a process not signed by the **same Apple Developer Team ID** as the service.
+  If the nested service keeps its original signature, your app and the service
+  will belong to different teams and the connection will be refused — re-signing
+  everything with your identity makes the teams match.
+- The service is **non-sandboxed** (it carries no App Sandbox entitlement) so it
+  can write to `/Applications` and relaunch; sign it with the **hardened
+  runtime**, as for any Developer ID distribution.
+- The client connects to the service by its bundle identifier,
+  `com.xs-labs.SwiftUtilities.Updater`; keep that identifier on the nested
+  service when re-signing.
+
 #### MarkdownView
 
 Renders a Markdown string as native SwiftUI views: headings, paragraphs,

@@ -1122,7 +1122,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M11.</span>Documentation &amp; integration guide</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -1144,11 +1144,42 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
-        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-11</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <ul class="plain">
+                    <li><strong>README:</strong> added an &ldquo;In-app updates&rdquo; subsection under the <code>GitHubUpdater</code> component &mdash; the opt-in (<code>behavior: .inApp</code>), how the bundled XPC service (at <code>SwiftUtilities.framework/Versions/A/XPCServices/Updater.xpc</code>) downloads/validates/replaces/relaunches off the sandbox, the <strong>embed + re-sign</strong> requirements (re-sign the framework <em>and</em> its nested service with the consumer's identity so the client's same-Team-ID check passes; non-sandboxed + hardened runtime; the service name <code>com.xs-labs.SwiftUtilities.Updater</code>), and the distribution constraint that in-app requires the Xcode framework while the SwiftPM package is link-only. The Mac App Store paragraph was removed at the user's request (see Review comments).</li>
+                    <li><strong>SwiftPM link-only gating (the deferred M6 decision, done here):</strong> the M6 decision that the SwiftPM package contain only the link update was deferred to an &ldquo;entry-point milestone&rdquo; that never materialized; the user chose to implement it in M11. Rather than wrap ~40 files in <code>#if</code>, <code>Package.swift</code> now <code>exclude:</code>s the in-app source/test folders (<code>Download</code>, <code>Archive</code>, <code>CodeSigning</code>, <code>Install</code>, <code>Relaunch</code>, <code>XPC</code>, and the in-app UI), and the few link-path files that reference in-app types (<code>UpdateAvailableView</code>, <code>UpdateWindowController</code>, <code>GitHubUpdater+AppKit</code>, and the <code>updateWindowMode</code> tests) gate those references behind <code>#if !SWIFT_PACKAGE</code>. The Xcode project is unchanged (it compiles everything, since <code>SWIFT_PACKAGE</code> is only defined by SPM), so the framework and <code>Updater</code> service target still build the full in-app path.</li>
+                    <li><strong>Doc comments (task 4):</strong> scanned every <code>public</code>/<code>open</code> declaration under <code>Updater/</code>; the only flagged items were <code>public extension</code> wrappers (whose members are documented) and a pre-existing <code>OptionSet.rawValue</code> from M1. No gaps in the new public types.</li>
+                    <li><strong>Verification (task 5):</strong> <code>swift build</code> (SPM library, link-only) OK; <code>swift test</code> &rarr; <strong>84 tests / 10 suites</strong> (link-only) pass; <code>xcodebuild test -scheme SwiftUtilities</code> &rarr; <strong>169 tests / 30 suites</strong> (full) pass; <code>xcodebuild build -scheme Updater</code> &rarr; BUILD SUCCEEDED. Package and Xcode project in sync.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 2 fresh-context reviews (docs accuracy, then the gating). Neither found any Critical/High/Medium. The docs review verified every technical claim in the README against the code. The gating review confirmed no link-path regression, exact <code>exclude</code> paths, non-inverted conditions, and complete coverage; three Low/Info doc-hygiene items from <code>#if</code> placement were addressed. See below.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1 &mdash; documentation accuracy</strong> (fresh-context). All technical claims in the README verified correct against the code: the service bundle id, the <code>Versions/A/XPCServices</code> embedding, non-sandboxed + hardened runtime, the identity-validation and same-Team-ID client checks, the opt-in API, the supported archives, and the SwiftPM link-only behavior. No inaccurate or misleading claims; two Info notes (the failable-init snippet matches the example above it; the Sparkle&nbsp;2 analogy is fair) &mdash; no fix needed.</p>
+                <p><strong>Round 2 &mdash; SwiftPM gating</strong> (fresh-context). No Critical/High/Medium. Verified: every in-app reference in a non-excluded file is inside <code>#if !SWIFT_PACKAGE</code>; the SPM link path still renders header + notes + actions with the correct default Download button; conditions are not inverted (in-app stays live under Xcode); the two <code>UpdateAvailableView</code> inits are consistent; and the <code>exclude</code> paths exactly match the on-disk folders. Findings (all Low/Info):</p>
+                <ul class="plain">
+                    <li><strong>Orphaned doc above <code>updateWindowMode</code></strong> &mdash; Low. The <code>#if</code> sat between the doc and the <code>func</code>, orphaning the doc (which links gated symbols) under SPM. <strong>Fixed</strong> &mdash; moved <code>#if</code> above the doc.</li>
+                    <li><strong>Shared init doc described a <code>model:</code> param absent from the SPM init</strong> &mdash; Low. <strong>Fixed</strong> &mdash; each init now has its own doc inside its <code>#if</code>/<code>#else</code> branch.</li>
+                    <li><strong><code>UpdateAvailableView</code> type doc references the in-app model from an ungated context</strong> &mdash; Info. Defensible (the type exists in both distributions and the doc describes its full behavior). <strong>Deferred.</strong></li>
+                    <li><strong><code>UpdateBehavior.inApp</code> stays public under SPM and degrades to link</strong> &mdash; Info (confirmed intentional; graceful degradation, no breaking API difference). <strong>Fixed (documented)</strong> &mdash; added a note on the case that it falls back to the link window in the SwiftPM distribution.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li><strong>Feedback:</strong> &ldquo;Do not mention the Mac App Store.&rdquo; <em>Applied:</em> removed the &ldquo;Mac App Store apps are out of scope&rdquo; paragraph from the README in-app-updates section. (This overrides the milestone task that asked to state the MAS exclusion; the docs now simply describe the download-link and in-app options without referencing the App Store.)</li>
+                    <li><strong>Q:</strong> Shouldn't we gate the <code>UpdateBehavior.inApp</code> enum case out of the SwiftPM build too? &mdash; <em>Answered:</em> laid out the trade-off. Gating the case is more consistent with &ldquo;no extra&rdquo; and fails fast (a SwiftPM consumer couldn't even write <code>.inApp</code>), but it makes the two distributions present a <em>different</em> public API &mdash; <code>behavior: .inApp</code> would fail to compile under SwiftPM, so a consumer building both ways would need their own <code>#if</code>. Keeping it (one API, graceful degradation, documented) is what the gating reviewer endorsed. Recommended keeping it but offered to gate. <em>Decision (user chose to keep it):</em> <code>UpdateBehavior.inApp</code> stays exposed in both distributions, degrading to the link window under SwiftPM (documented on the case) &mdash; one portable public API, no change needed.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <h2 class="section-title">Appendix</h2>

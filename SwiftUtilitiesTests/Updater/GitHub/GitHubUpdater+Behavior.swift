@@ -30,6 +30,10 @@
 
     struct Test_GitHubUpdaterBehavior
     {
+        // `updateWindowMode` is the in-app routing seam, gated out of the SwiftPM
+        // build; these tests only run in the Xcode framework build.
+        #if !SWIFT_PACKAGE
+
         @Test
         func linkBehaviorSelectsLinkModeRegardlessOfDownload() async throws
         {
@@ -78,6 +82,8 @@
             // in-app request must still fall back to the link window.
             #expect( GitHubUpdater.updateWindowMode( for: .inApp, downloadURL: url, serviceAvailable: false ) == .link )
         }
+
+        #endif
 
         @Test
         func behaviorDefaultsToLinkAtConstruction() async throws

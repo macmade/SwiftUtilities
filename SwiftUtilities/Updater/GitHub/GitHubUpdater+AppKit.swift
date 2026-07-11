@@ -57,13 +57,17 @@
             public static let all: MessageOptions = [ .upToDate, .updateAvailable, .error ]
         }
 
+        #if !SWIFT_PACKAGE
+
         /// How the update-available window should present a newer release.
         ///
-        /// This is the value-level decision made by ``updateWindowMode(for:downloadURL:)``:
-        /// given the caller's ``UpdateBehavior`` and whether the release has a
-        /// downloadable asset, it selects the link window or the in-app update
-        /// window, without performing any UI work. It is the test seam for the
-        /// behavior-to-window routing.
+        /// This is the value-level decision made by
+        /// ``updateWindowMode(for:downloadURL:serviceAvailable:)``: given the
+        /// caller's ``UpdateBehavior`` and whether the release has a downloadable
+        /// asset, it selects the link window or the in-app update window, without
+        /// performing any UI work. It is the test seam for the behavior-to-window
+        /// routing. In-app updates require the Xcode framework, so this is absent
+        /// from the SwiftPM build.
         internal enum UpdateWindowMode: Equatable, Sendable
         {
             /// Present the link-based window, whose **Download** action opens the
@@ -74,6 +78,8 @@
             /// installs the update in place.
             case inApp
         }
+
+        #endif
 
         /// The alert to present for an update-check outcome.
         ///
@@ -125,6 +131,8 @@
             }
         }
 
+        #if !SWIFT_PACKAGE
+
         /// Determines how the update-available window should present a newer release.
         ///
         /// Pure: maps the caller's ``UpdateBehavior``, the release's downloadable
@@ -157,6 +165,8 @@
 
             return .inApp
         }
+
+        #endif
 
         /// Checks for updates, reporting the outcome to the user.
         ///
@@ -216,6 +226,8 @@
 
                 case .updateAvailable( let application, let version, let update, let url, let notes, let downloadURL ):
 
+                    #if !SWIFT_PACKAGE
+
                     switch GitHubUpdater.updateWindowMode( for: self.behavior, downloadURL: downloadURL, serviceAvailable: UpdaterServiceLocator.isAvailable )
                     {
                         case .link:
@@ -226,6 +238,12 @@
 
                             self.showInAppUpdateWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
                     }
+
+                    #else
+
+                    self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+
+                    #endif
 
                 case .error( let message ):
 
@@ -289,6 +307,8 @@
             )
         }
 
+        #if !SWIFT_PACKAGE
+
         /// Opens the window offering to download and install an available update in place.
         ///
         /// This is the entry point for the in-app update flow, selected by
@@ -297,7 +317,8 @@
         /// the bundled updater service is available. The window downloads, installs,
         /// and relaunches in place. Should the download URL be missing (it never is
         /// on this path, since the mode requires it), it falls back to the link
-        /// window.
+        /// window. In-app updates require the Xcode framework, so this is absent from
+        /// the SwiftPM build.
         ///
         /// - Parameters:
         ///   - application: The display name of the application.
@@ -327,6 +348,8 @@
                 releaseURL:      url
             )
         }
+
+        #endif
     }
 
 #endif

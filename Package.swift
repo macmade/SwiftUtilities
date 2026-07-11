@@ -44,6 +44,20 @@ let package = Package(
                 .product( name: "Markdown", package: "swift-markdown" ),
             ],
             path: "SwiftUtilities",
+            // In-app updates require the Xcode framework, which can embed and sign
+            // the nested updater XPC service; a SwiftPM library cannot. So the
+            // package provides only the download-link update: all in-app code is
+            // excluded here, and the few link-path files that reference it gate
+            // those references behind `#if !SWIFT_PACKAGE`.
+            exclude: [
+                "Updater/Download",
+                "Updater/Archive",
+                "Updater/CodeSigning",
+                "Updater/Install",
+                "Updater/Relaunch",
+                "Updater/XPC",
+                "Updater/UI/InAppUpdateViewModel.swift",
+            ],
             resources: [
                 .process( "Utilities/en.lproj" ),
             ]
@@ -51,7 +65,16 @@ let package = Package(
         .testTarget(
             name: "SwiftUtilitiesTests",
             dependencies: [ "SwiftUtilities" ],
-            path: "SwiftUtilitiesTests"
+            path: "SwiftUtilitiesTests",
+            exclude: [
+                "Updater/Download",
+                "Updater/Archive",
+                "Updater/CodeSigning",
+                "Updater/Install",
+                "Updater/Relaunch",
+                "Updater/XPC",
+                "Updater/UI",
+            ]
         ),
     ]
 )

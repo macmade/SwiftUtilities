@@ -59,8 +59,15 @@
         /// keyboard default.
         private let downloadURL: URL?
 
+        #if !SWIFT_PACKAGE
+
         /// The in-app update view model, or `nil` for the link window.
+        ///
+        /// In-app updates require the Xcode framework, so this is absent from the
+        /// SwiftPM build, where the view is always the link window.
         private let model: InAppUpdateViewModel?
+
+        #endif
 
         /// Invoked when the user chooses to download the update (link mode only).
         private let onDownload: () -> Void
@@ -70,6 +77,8 @@
 
         /// Invoked when the user dismisses the window.
         private let onLater: () -> Void
+
+        #if !SWIFT_PACKAGE
 
         /// Creates the update-available content view.
         ///
@@ -108,11 +117,42 @@
             self.onLater         = onLater
         }
 
-        /// The current flow state, or ``InAppUpdateViewModel/State/idle`` in link mode.
-        private var state: InAppUpdateViewModel.State
+        #else
+
+        /// Creates the update-available content view.
+        ///
+        /// - Parameters:
+        ///   - applicationName: The display name of the application.
+        ///   - currentVersion:  The current version of the application.
+        ///   - updateVersion:   The version of the available update.
+        ///   - notes:           The release's Markdown notes.
+        ///   - downloadURL:     The direct download URL, or `nil` when the release
+        ///                      has no downloadable asset.
+        ///   - onDownload:      Invoked when the user chooses to download.
+        ///   - onViewOnGitHub:  Invoked when the user chooses to view the release.
+        ///   - onLater:         Invoked when the user dismisses the window.
+        public init(
+            applicationName: String,
+            currentVersion:  String,
+            updateVersion:   String,
+            notes:           String,
+            downloadURL:     URL?,
+            onDownload:      @escaping () -> Void,
+            onViewOnGitHub:  @escaping () -> Void,
+            onLater:         @escaping () -> Void
+        )
         {
-            self.model?.state ?? .idle
+            self.applicationName = applicationName
+            self.currentVersion  = currentVersion
+            self.updateVersion   = updateVersion
+            self.notes           = notes
+            self.downloadURL     = downloadURL
+            self.onDownload      = onDownload
+            self.onViewOnGitHub  = onViewOnGitHub
+            self.onLater         = onLater
         }
+
+        #endif
 
         /// The view's body.
         public var body: some View
@@ -121,7 +161,9 @@
             {
                 self.header
 
-                switch self.state
+                #if !SWIFT_PACKAGE
+
+                switch self.model?.state ?? .idle
                 {
                     case .idle:
 
@@ -145,6 +187,13 @@
                         self.failure( message: message )
                         self.actions
                 }
+
+                #else
+
+                self.releaseNotes
+                self.actions
+
+                #endif
             }
             .padding( 20 )
             .frame( minWidth: 480, minHeight: 360 )
@@ -176,6 +225,8 @@
             .background( Color.primary.opacity( 0.05 ), in: RoundedRectangle( cornerRadius: 8 ) )
             .overlay( RoundedRectangle( cornerRadius: 8 ).stroke( Color.primary.opacity( 0.12 ) ) )
         }
+
+        #if !SWIFT_PACKAGE
 
         /// A titled progress bar filling the notes area; determinate when a fraction
         /// is known.
@@ -226,6 +277,8 @@
             .frame( maxWidth: .infinity, maxHeight: .infinity )
         }
 
+        #endif
+
         /// The trailing row of actions, shown while idle and on failure.
         ///
         /// Later sits on the leading edge; View on GitHub and the download action
@@ -256,6 +309,8 @@
         {
             if self.showsDownload
             {
+                #if !SWIFT_PACKAGE
+
                 if let model = self.model
                 {
                     Button( Localization.string( "GitHubUpdater.window.button.install" ) )
@@ -269,20 +324,37 @@
                     Button( Localization.string( "GitHubUpdater.window.button.download" ), action: self.onDownload )
                         .keyboardShortcut( .defaultAction )
                 }
+
+                #else
+
+                Button( Localization.string( "GitHubUpdater.window.button.download" ), action: self.onDownload )
+                    .keyboardShortcut( .defaultAction )
+
+                #endif
             }
         }
 
         /// Whether the download action is shown: only while idle and with an asset.
         private var showsDownload: Bool
         {
-            if case .idle = self.state, self.downloadURL != nil
+            #if !SWIFT_PACKAGE
+
+            if case .idle = self.model?.state ?? .idle, self.downloadURL != nil
             {
                 return true
             }
 
             return false
+
+            #else
+
+            return self.downloadURL != nil
+
+            #endif
         }
     }
+
+    #if !SWIFT_PACKAGE
 
     /// A downloader that does nothing, for previews.
     private struct PreviewDownloader: UpdateDownloading
@@ -319,6 +391,8 @@
         )
     }
 
+    #endif
+
     private let previewNotes =
     """
     ## What's New
@@ -340,6 +414,8 @@
             onLater:         {}
         )
     }
+
+    #if !SWIFT_PACKAGE
 
     #Preview( "In-App" )
     {
@@ -385,5 +461,7 @@
             onLater:         {}
         )
     }
+
+    #endif
 
 #endif

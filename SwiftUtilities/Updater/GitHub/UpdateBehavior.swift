@@ -57,5 +57,9 @@ public enum UpdateBehavior: Sendable, Equatable
     /// possible — for example when the release has no downloadable asset — the
     /// updater falls back to the ``link`` behavior so the update stays
     /// reachable.
+    ///
+    /// In-app installation requires the framework-bundled updater service, which
+    /// only the Xcode framework can carry. In the SwiftPM distribution this case
+    /// is accepted but always falls back to the ``link`` behavior.
     case inApp
 }
