@@ -96,6 +96,9 @@
 		05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A1000000000000000A /* UpdaterServiceLocator.swift */; };
 		05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A2000000000000000A /* XPCUpdaterClient.swift */; };
 		05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */; };
+		05F000A6000000000000000B /* UpdateDownloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A6000000000000000A /* UpdateDownloading.swift */; };
+		05F000A7000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A7000000000000000A /* InAppUpdateViewModel.swift */; };
+		05F000AB000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000AB000000000000000A /* InAppUpdateViewModel.swift */; };
 		05F00072000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00072000000000000000A /* XPCClientVerifier.swift */; };
 		05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A4000000000000000A /* XPCUpdateInstaller.swift */; };
 		05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A5000000000000000A /* UpdaterServiceLocator.swift */; };
@@ -309,6 +312,9 @@
 		05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdaterServiceConnection.swift; sourceTree = "<group>"; };
 		05F000A4000000000000000A /* XPCUpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdateInstaller.swift; sourceTree = "<group>"; };
 		05F000A5000000000000000A /* UpdaterServiceLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceLocator.swift; sourceTree = "<group>"; };
+		05F000A6000000000000000A /* UpdateDownloading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloading.swift; sourceTree = "<group>"; };
+		05F000A7000000000000000A /* InAppUpdateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppUpdateViewModel.swift; sourceTree = "<group>"; };
+		05F000AB000000000000000A /* InAppUpdateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppUpdateViewModel.swift; sourceTree = "<group>"; };
 		05F00073000000000000000A /* Updater.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = Updater.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		05F00074000000000000000A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceListenerDelegate.swift; sourceTree = "<group>"; };
@@ -404,7 +410,7 @@
 			isa = PBXGroup;
 			children = (
 				05F00034000000000000000A /* Credits */,
-				05F00014000000000000000A /* GitHub */,
+				05F00014000000000000000A /* Updater */,
 				05F00015000000000000000A /* Markdown */,
 				05F00016000000000000000A /* Utilities */,
 			);
@@ -425,7 +431,7 @@
 				B30B0C7655D31455310CA29C /* About */,
 				05F00032000000000000000A /* Components */,
 				05F00036000000000000000A /* Credits */,
-				05F00011000000000000000A /* GitHub */,
+				05F00011000000000000000A /* Updater */,
 				05F00012000000000000000A /* Markdown */,
 				05F00013000000000000000A /* Utilities */,
 				F76ED22C2C0BE7CFED28589D /* Windows */,
@@ -576,62 +582,144 @@
 			path = Submodules/xcconfig;
 			sourceTree = "<group>";
 		};
-		05F00011000000000000000A /* GitHub */ = {
+		05F00011000000000000000A /* Updater */ = {
+			isa = PBXGroup;
+			children = (
+				05F000B0000000000000000A /* GitHub */,
+				05F000B1000000000000000A /* Download */,
+				05F000B2000000000000000A /* Archive */,
+				05F000B3000000000000000A /* CodeSigning */,
+				05F000B4000000000000000A /* Install */,
+				05F000B5000000000000000A /* Relaunch */,
+				05F00066000000000000000A /* XPC */,
+				05F000B9000000000000000A /* UI */,
+			);
+			path = Updater;
+			sourceTree = "<group>";
+		};
+		05F000B0000000000000000A /* GitHub */ = {
 			isa = PBXGroup;
 			children = (
 				05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */,
 				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
+				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05F0003B000000000000000A /* UpdateBehavior.swift */,
+			);
+			path = GitHub;
+			sourceTree = "<group>";
+		};
+		05F000B1000000000000000A /* Download */ = {
+			isa = PBXGroup;
+			children = (
+				05F00047000000000000000A /* DownloadProgress.swift */,
+				05F00048000000000000000A /* UpdateDownloadError.swift */,
+				05F00049000000000000000A /* UpdateDownloader.swift */,
+				05F0004C000000000000000A /* UpdateDownloadStreamer.swift */,
+				05F000A6000000000000000A /* UpdateDownloading.swift */,
+			);
+			path = Download;
+			sourceTree = "<group>";
+		};
+		05F000B2000000000000000A /* Archive */ = {
+			isa = PBXGroup;
+			children = (
 				05F0003D000000000000000A /* UpdateArchiveFormat.swift */,
+				05F0004E000000000000000A /* ArchiveExtracting.swift */,
+				05F0004D000000000000000A /* ArchiveExtractionError.swift */,
+				05F0004F000000000000000A /* ArchiveExtractor.swift */,
+			);
+			path = Archive;
+			sourceTree = "<group>";
+		};
+		05F000B3000000000000000A /* CodeSigning */ = {
+			isa = PBXGroup;
+			children = (
 				05F0003F000000000000000A /* CodeSigningIdentity.swift */,
 				05F00040000000000000000A /* CodeSignatureError.swift */,
 				05F00041000000000000000A /* CodeSignatureInspecting.swift */,
 				05F00042000000000000000A /* CodeSignatureValidator.swift */,
 				05F00043000000000000000A /* SecurityCodeSignatureInspector.swift */,
-				05F00047000000000000000A /* DownloadProgress.swift */,
-				05F00048000000000000000A /* UpdateDownloadError.swift */,
-				05F00049000000000000000A /* UpdateDownloader.swift */,
-				05F0004C000000000000000A /* UpdateDownloadStreamer.swift */,
-				05F0004D000000000000000A /* ArchiveExtractionError.swift */,
-				05F0004E000000000000000A /* ArchiveExtracting.swift */,
-				05F0004F000000000000000A /* ArchiveExtractor.swift */,
+			);
+			path = CodeSigning;
+			sourceTree = "<group>";
+		};
+		05F000B4000000000000000A /* Install */ = {
+			isa = PBXGroup;
+			children = (
 				05F00051000000000000000A /* InstallProgress.swift */,
 				05F00052000000000000000A /* UpdateInstaller.swift */,
+				05F00057000000000000000A /* UpdateInstallation.swift */,
 				05F00053000000000000000A /* AppReplacing.swift */,
 				05F00054000000000000000A /* AppReplacer.swift */,
+				05F00068000000000000000A /* ExpectedIdentityInspector.swift */,
+				05F0009E000000000000000A /* UpdateInstallError.swift */,
+			);
+			path = Install;
+			sourceTree = "<group>";
+		};
+		05F000B5000000000000000A /* Relaunch */ = {
+			isa = PBXGroup;
+			children = (
 				05F00055000000000000000A /* ApplicationRelaunching.swift */,
-				05F00057000000000000000A /* UpdateInstallation.swift */,
-				05F00001000000000000000A /* UpdateCheckResult.swift */,
+				05F0006A000000000000000A /* RelaunchError.swift */,
+				05F0006B000000000000000A /* RelaunchWaiter.swift */,
+				05F0006C000000000000000A /* ProcessRelauncher.swift */,
+			);
+			path = Relaunch;
+			sourceTree = "<group>";
+		};
+		05F000B9000000000000000A /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				05F000A7000000000000000A /* InAppUpdateViewModel.swift */,
 				05F0001F000000000000000A /* UpdateAvailableView.swift */,
 				05F00020000000000000000A /* UpdateWindowController.swift */,
-				05F00066000000000000000A /* XPC */,
 			);
-			path = GitHub;
+			path = UI;
 			sourceTree = "<group>";
 		};
 		05F00066000000000000000A /* XPC */ = {
 			isa = PBXGroup;
 			children = (
+				05F000B6000000000000000A /* Contract */,
+				05F000B7000000000000000A /* Service */,
+				05F000B8000000000000000A /* Client */,
+			);
+			path = XPC;
+			sourceTree = "<group>";
+		};
+		05F000B6000000000000000A /* Contract */ = {
+			isa = PBXGroup;
+			children = (
 				05F0005D000000000000000A /* XPCMessage.swift */,
 				05F0005E000000000000000A /* UpdateInstallRequest.swift */,
 				05F0005F000000000000000A /* UpdateInstallResult.swift */,
+				05F00062000000000000000A /* InstallProgress+XPC.swift */,
 				05F00060000000000000000A /* UpdaterServiceProtocol.swift */,
 				05F00061000000000000000A /* UpdaterClientProtocol.swift */,
-				05F00062000000000000000A /* InstallProgress+XPC.swift */,
-				05F00068000000000000000A /* ExpectedIdentityInspector.swift */,
-				05F00069000000000000000A /* UpdaterService.swift */,
-				05F0006A000000000000000A /* RelaunchError.swift */,
-				05F0006B000000000000000A /* RelaunchWaiter.swift */,
-				05F0006C000000000000000A /* ProcessRelauncher.swift */,
-				05F00071000000000000000A /* XPCClientVerifier.swift */,
-				05F0009E000000000000000A /* UpdateInstallError.swift */,
-				05F0009F000000000000000A /* UpdaterServiceConnecting.swift */,
-				05F000A0000000000000000A /* XPCUpdateInstaller.swift */,
-				05F000A1000000000000000A /* UpdaterServiceLocator.swift */,
-				05F000A2000000000000000A /* XPCUpdaterClient.swift */,
-				05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */,
 			);
-			path = XPC;
+			path = Contract;
+			sourceTree = "<group>";
+		};
+		05F000B7000000000000000A /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				05F00069000000000000000A /* UpdaterService.swift */,
+				05F00071000000000000000A /* XPCClientVerifier.swift */,
+			);
+			path = Service;
+			sourceTree = "<group>";
+		};
+		05F000B8000000000000000A /* Client */ = {
+			isa = PBXGroup;
+			children = (
+				05F000A0000000000000000A /* XPCUpdateInstaller.swift */,
+				05F0009F000000000000000A /* UpdaterServiceConnecting.swift */,
+				05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */,
+				05F000A2000000000000000A /* XPCUpdaterClient.swift */,
+				05F000A1000000000000000A /* UpdaterServiceLocator.swift */,
+			);
+			path = Client;
 			sourceTree = "<group>";
 		};
 		05F00012000000000000000A /* Markdown */ = {
@@ -667,41 +755,122 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
-		05F00014000000000000000A /* GitHub */ = {
+		05F00014000000000000000A /* Updater */ = {
+			isa = PBXGroup;
+			children = (
+				05F000BA000000000000000A /* GitHub */,
+				05F000BB000000000000000A /* Download */,
+				05F000BC000000000000000A /* Archive */,
+				05F000BD000000000000000A /* CodeSigning */,
+				05F000BE000000000000000A /* Install */,
+				05F000BF000000000000000A /* Relaunch */,
+				05F00067000000000000000A /* XPC */,
+				05F000C3000000000000000A /* UI */,
+			);
+			path = Updater;
+			sourceTree = "<group>";
+		};
+		05F000BA000000000000000A /* GitHub */ = {
 			isa = PBXGroup;
 			children = (
 				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
 				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */,
-				05F0003E000000000000000A /* UpdateArchiveFormat.swift */,
-				05F00044000000000000000A /* CodeSignatureValidator.swift */,
-				05F00045000000000000000A /* CodeSigningIdentity.swift */,
-				05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */,
-				05F0004A000000000000000A /* DownloadProgress.swift */,
-				05F0004B000000000000000A /* UpdateDownloader.swift */,
-				05F00050000000000000000A /* ArchiveExtractor.swift */,
-				05F00058000000000000000A /* UpdateInstallation.swift */,
-				05F00059000000000000000A /* AppReplacer.swift */,
-				05F00067000000000000000A /* XPC */,
 			);
 			path = GitHub;
+			sourceTree = "<group>";
+		};
+		05F000BB000000000000000A /* Download */ = {
+			isa = PBXGroup;
+			children = (
+				05F0004A000000000000000A /* DownloadProgress.swift */,
+				05F0004B000000000000000A /* UpdateDownloader.swift */,
+			);
+			path = Download;
+			sourceTree = "<group>";
+		};
+		05F000BC000000000000000A /* Archive */ = {
+			isa = PBXGroup;
+			children = (
+				05F0003E000000000000000A /* UpdateArchiveFormat.swift */,
+				05F00050000000000000000A /* ArchiveExtractor.swift */,
+			);
+			path = Archive;
+			sourceTree = "<group>";
+		};
+		05F000BD000000000000000A /* CodeSigning */ = {
+			isa = PBXGroup;
+			children = (
+				05F00045000000000000000A /* CodeSigningIdentity.swift */,
+				05F00044000000000000000A /* CodeSignatureValidator.swift */,
+				05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */,
+			);
+			path = CodeSigning;
+			sourceTree = "<group>";
+		};
+		05F000BE000000000000000A /* Install */ = {
+			isa = PBXGroup;
+			children = (
+				05F00059000000000000000A /* AppReplacer.swift */,
+				05F00058000000000000000A /* UpdateInstallation.swift */,
+				05F0006D000000000000000A /* ExpectedIdentityInspector.swift */,
+			);
+			path = Install;
+			sourceTree = "<group>";
+		};
+		05F000BF000000000000000A /* Relaunch */ = {
+			isa = PBXGroup;
+			children = (
+				05F0006F000000000000000A /* RelaunchWaiter.swift */,
+				05F00070000000000000000A /* ProcessRelauncher.swift */,
+			);
+			path = Relaunch;
+			sourceTree = "<group>";
+		};
+		05F000C3000000000000000A /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				05F000AB000000000000000A /* InAppUpdateViewModel.swift */,
+			);
+			path = UI;
 			sourceTree = "<group>";
 		};
 		05F00067000000000000000A /* XPC */ = {
 			isa = PBXGroup;
 			children = (
+				05F000C0000000000000000A /* Contract */,
+				05F000C1000000000000000A /* Service */,
+				05F000C2000000000000000A /* Client */,
+			);
+			path = XPC;
+			sourceTree = "<group>";
+		};
+		05F000C0000000000000000A /* Contract */ = {
+			isa = PBXGroup;
+			children = (
 				05F00063000000000000000A /* XPCMessage.swift */,
 				05F00064000000000000000A /* UpdateInstallRequest.swift */,
 				05F00065000000000000000A /* UpdateInstallResult.swift */,
-				05F0006D000000000000000A /* ExpectedIdentityInspector.swift */,
+			);
+			path = Contract;
+			sourceTree = "<group>";
+		};
+		05F000C1000000000000000A /* Service */ = {
+			isa = PBXGroup;
+			children = (
 				05F0006E000000000000000A /* UpdaterService.swift */,
-				05F0006F000000000000000A /* RelaunchWaiter.swift */,
-				05F00070000000000000000A /* ProcessRelauncher.swift */,
 				05F00072000000000000000A /* XPCClientVerifier.swift */,
+			);
+			path = Service;
+			sourceTree = "<group>";
+		};
+		05F000C2000000000000000A /* Client */ = {
+			isa = PBXGroup;
+			children = (
 				05F000A4000000000000000A /* XPCUpdateInstaller.swift */,
 				05F000A5000000000000000A /* UpdaterServiceLocator.swift */,
 			);
-			path = XPC;
+			path = Client;
 			sourceTree = "<group>";
 		};
 		05F00015000000000000000A /* Markdown */ = {
@@ -943,6 +1112,8 @@
 				05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */,
 				05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */,
 				05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */,
+				05F000A6000000000000000B /* UpdateDownloading.swift in Sources */,
+				05F000A7000000000000000B /* InAppUpdateViewModel.swift in Sources */,
 				05F00001000000000000000B /* UpdateCheckResult.swift in Sources */,
 				05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */,
 				05F00020000000000000000B /* UpdateWindowController.swift in Sources */,
@@ -1011,6 +1182,7 @@
 				05F00072000000000000000B /* XPCClientVerifier.swift in Sources */,
 				05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */,
 				05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */,
+				05F000AB000000000000000B /* InAppUpdateViewModel.swift in Sources */,
 				05F00007000000000000000B /* Localization.swift in Sources */,
 				05398CC42DEECA57005904EC /* UnsafeSendable.swift in Sources */,
 			);

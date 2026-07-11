@@ -96,6 +96,76 @@
                 }
             }
         }
+
+        /// Shows the in-app update window, reusing the existing one if open.
+        ///
+        /// Presents ``UpdateAvailableView``, driven by an ``InAppUpdateViewModel`` that
+        /// downloads, installs, and relaunches in place. If the release asset is not
+        /// a supported archive, it falls back to
+        /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
+        /// so a newer release always stays reachable.
+        ///
+        /// - Parameters:
+        ///   - applicationName: The display name of the application.
+        ///   - currentVersion:  The current version of the application.
+        ///   - updateVersion:   The version of the available update.
+        ///   - notes:           The release's Markdown notes.
+        ///   - downloadURL:     The direct download URL of the release's asset.
+        ///   - releaseURL:      The URL of the release page on GitHub.
+        public static func showInApp(
+            applicationName: String,
+            currentVersion:  String,
+            updateVersion:   String,
+            notes:           String,
+            downloadURL:     URL,
+            releaseURL:      URL
+        )
+        {
+            guard let model = InAppUpdateViewModel( downloadURL: downloadURL )
+            else
+            {
+                UpdateWindowController.show(
+                    applicationName: applicationName,
+                    currentVersion:  currentVersion,
+                    updateVersion:   updateVersion,
+                    notes:           notes,
+                    downloadURL:     downloadURL,
+                    releaseURL:      releaseURL
+                )
+
+                return
+            }
+
+            HostingWindowController.show( using: UpdateWindowController.init )
+            {
+                controller in
+
+                let view = UpdateAvailableView(
+                    applicationName: applicationName,
+                    currentVersion:  currentVersion,
+                    updateVersion:   updateVersion,
+                    notes:           notes,
+                    downloadURL:     downloadURL,
+                    model:           model,
+                    onDownload:      {},
+                    onViewOnGitHub:
+                    {
+                        NSWorkspace.shared.open( releaseURL )
+                    },
+                    onLater:
+                    {
+                        [ weak controller ] in controller?.close()
+                    }
+                )
+
+                controller.present( rootView: view, sizing: .fixed( UpdateWindowController.contentSize ) )
+                {
+                    window in
+
+                    window.title = Localization.string( "GitHubUpdater.window.title" )
+                }
+            }
+        }
     }
 
 #endif

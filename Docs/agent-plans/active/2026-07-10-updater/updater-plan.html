@@ -1044,7 +1044,7 @@
     <div class="milestone">
         <div class="milestone-head">
             <h4><span class="num">M10.</span>In-app update UI in the existing window</h4>
-            <span class="status not-started">Not started</span>
+            <span class="status completed">Completed</span>
         </div>
 
         <p>
@@ -1067,11 +1067,52 @@
             </ul>
         </div>
 
-        <div class="field"><span class="label">Status</span> <span class="value">Not started</span></div>
-        <div class="field placeholder"><span class="label">Completed</span> <span class="value">&mdash;</span></div>
-        <div class="field placeholder"><span class="label">Implementation notes</span> <span class="value">To be filled in as work progresses.</span></div>
-        <div class="field placeholder"><span class="label">Automated review</span> <span class="value">Findings from the automated review loop go here.</span></div>
-        <div class="field placeholder"><span class="label">Review comments</span> <span class="value">Human review feedback goes here.</span></div>
+        <div class="field"><span class="label">Status</span> <span class="value">Completed</span></div>
+        <div class="field"><span class="label">Completed</span> <span class="value">2026-07-11</span></div>
+        <div class="field">
+            <span class="label">Implementation notes</span>
+            <div class="value">
+                <p>Implemented with TDD for the testable core (the view model). The in-app flow now runs from the existing update window; the actual UI rendering and the real download&rarr;install&rarr;relaunch are runtime-only (need a real signed app + service) and documented as such.</p>
+                <ul class="plain">
+                    <li><strong><code>InAppUpdateViewModel</code></strong> (<code>@MainActor @Observable</code>) &mdash; the state machine <code>idle &rarr; downloading(fraction) &rarr; installing &rarr; relaunching &rarr; failed(message)</code>. <code>start()</code> downloads the asset (injected <code>UpdateDownloading</code>), installs it (injected <code>UpdateInstaller</code>, i.e. the M9 <code>XPCUpdateInstaller</code>), then on success calls an injected <code>terminate</code> (production <code>NSApplication.shared.terminate</code>) so the app quits and the M8 service's detached waiter reopens the new version. Progress callbacks arrive on background threads and are applied on the main actor through a monotonic <code>advance(to:)</code> that rejects backward transitions, so a late download-progress callback can never overwrite a later phase (and a failure always wins). A <code>#if canImport(Security)</code> convenience <code>init?</code> wires the real downloader + installer and terminate.</li>
+                    <li><strong><code>UpdateDownloading</code></strong> protocol + <code>extension UpdateDownloader: UpdateDownloading {}</code> &mdash; the download seam so the view model is unit-testable without the network.</li>
+                    <li><strong>UI (revised after human feedback &mdash; see Review comments):</strong> the in-app states are rendered by <strong>extending <code>UpdateAvailableView</code> itself</strong> (as the plan asked), not by separate views. It takes an optional <code>InAppUpdateViewModel</code>: with none it is the link window, byte-for-byte as before; with a model it shows the release notes + a <strong>Download &amp; Install</strong> action while idle, a progress bar + status text (replacing the notes) while downloading/installing/relaunching, and a readable error with a reachable release page on failure. Previews cover link / idle / downloading / failed. The earlier <code>InAppUpdateView</code>, <code>InAppUpdateStatusView</code>, <code>InAppUpdateWindowController</code>, and the <code>downloadTitle</code> parameter were all removed as duplication.</li>
+                    <li><strong>Window:</strong> a single <code>UpdateWindowController.showInApp(...)</code> presents the in-app window (no second controller class), falling back to <code>show(...)</code> (the link window) when the asset is not a supported archive. <code>GitHubUpdater.showInAppUpdateWindow</code> now drives it (was a placeholder that opened the link window).</li>
+                    <li>New localized strings in <code>en.lproj</code> (<code>button.install</code>, <code>status.downloading</code>/<code>installing</code>/<code>relaunching</code>, <code>error.title</code>); all user-facing text goes through <code>Localization.string(...)</code>.</li>
+                    <li>Tests: <code>Test_InAppUpdateViewModel</code> covers success&rarr;relaunch+terminate, the archive hand-off (downloaded URL/format/target reach the installer), download failure (no install, no terminate), install failure (no terminate), and the initial idle state.</li>
+                    <li>Verified: <code>xcodebuild test</code> &rarr; <strong>169 tests / 30 suites pass</strong> (164 + 5 new); <code>xcodebuild build -scheme Updater</code> &rarr; BUILD SUCCEEDED; <code>swift build</code> OK. pbxproj: the M10 files are in the framework + test targets only, not the <code>Updater</code> target.</li>
+                </ul>
+                <p><strong>Automated review loop:</strong> 2 rounds (the second because the UI was materially reworked after the first, per user feedback). Neither found any Critical/High/Medium. Round&nbsp;1 (pre-consolidation) verified the state machine, concurrency, localization, and wiring; round&nbsp;2 (the consolidated single-view design) confirmed no link-path regression, sound keyboard-default logic, valid layout, and clean pbxproj, and found one Low (a stale doc link) which was fixed. Low/Info items are recorded below for the user.</p>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Automated review</span>
+            <div class="value">
+                <p><strong>Round 1</strong> (fresh-context, pre-consolidation) &mdash; no Critical/High/Medium. Verified: failure always wins and <code>terminate</code> is reachable only on the success branch; the monotonic guard drops stale progress; <code>@MainActor</code> serialization makes <code>advance</code> race-free; injected deps are <code>Sendable</code>; localization complete; one type per file with previews; pbxproj not in the Updater target. Low/Info (accepted / for the user):</p>
+                <ul class="plain">
+                    <li><strong>No cancel affordance during active phases; closing the window does not stop the flow</strong> &mdash; Low (UX). The install commits once started. <strong>Deferred</strong> &mdash; recorded for the user; could disable the close button or add a real cancel (the downloader supports it).</li>
+                    <li><strong>Stuck <code>.relaunching</code> if termination is vetoed</strong> &mdash; Low. If <code>applicationShouldTerminate</code> returns <code>.terminateCancel</code>, the window sits on &ldquo;Relaunching&hellip;&rdquo; (the new app is already on disk). Inherent to the self-terminate design. <strong>Deferred.</strong></li>
+                    <li><strong>Download fraction may cosmetically regress; one <code>Task</code> per progress callback</strong> &mdash; Low (concurrency/efficiency). Same-rank <code>.downloading</code> values and unordered main-actor hops can momentarily jump the bar back; the phase-level guard is still correct. <strong>Deferred.</strong></li>
+                    <li><strong>Redundant archive-format re-check</strong> and <strong>internal DI init</strong> &mdash; Info. Defensive / deliberate encapsulation. <strong>Deferred.</strong></li>
+                </ul>
+                <p><strong>Round 2</strong> (fresh-context, the consolidated single-view design) &mdash; no Critical/High/Medium. Verified no link-path regression (<code>model == nil</code> is identical to before), exactly one keyboard <code>.defaultAction</code> in every state that shows actions, the <code>@ViewBuilder</code> switch layout is valid, the gate change to <code>#if canImport(AppKit)</code> is required, previews compile, strings resolve, and the pbxproj has no duplicate/dangling IDs. One Low:</p>
+                <ul class="plain">
+                    <li><strong>Stale DocC link to the deleted <code>InAppUpdateView</code></strong> in <code>UpdateWindowController.showInApp</code> &mdash; Low (docs). <strong>Fixed</strong> &mdash; repointed to <code>UpdateAvailableView</code>.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="field">
+            <span class="label">Review comments</span>
+            <div class="value">
+                <ul class="plain">
+                    <li><strong>Q:</strong> Why are there separate window controllers (<code>UpdateWindowController</code> and <code>InAppUpdateWindowController</code>)? &mdash; <em>Answered:</em> they mirror the existing controller pattern and keep each window's presentation in its own file, but both are thin <code>HostingWindowController</code> subclasses differing only in their <code>show(...)</code> method, so it is largely duplicative. Offered to consolidate into a single controller (a second <code>show</code> method, e.g. <code>UpdateWindowController.showInApp(...)</code>) rather than a second subclass.</li>
+                    <li><strong>Decision (user chose consolidation):</strong> removed <code>InAppUpdateWindowController</code> and added <code>UpdateWindowController.showInApp(...)</code>. Both entry points now present through the same <code>UpdateWindowController</code> singleton (link and in-app are mutually exclusive per the routing), so the duplicate subclass is gone and the in-app fallback to the link window is a same-class call.</li>
+                    <li><strong>Feedback:</strong> &ldquo;Why is there two update-available views? Stop duplicating stuff &mdash; keep it simple. You don't need to duplicate whole views just to change a button or a text.&rdquo; <em>Applied:</em> removed the separate <code>InAppUpdateView</code> and <code>InAppUpdateStatusView</code>, and <strong>extended <code>UpdateAvailableView</code> itself</strong> to render the in-app states (as the plan originally asked). It now takes an optional <code>InAppUpdateViewModel</code>: with no model it is the link window (unchanged); with a model it shows the release notes and a &ldquo;Download &amp; Install&rdquo; action while idle, a progress bar and status text while downloading/installing/relaunching, and a readable error with a reachable release page on failure &mdash; all in the one view. The <code>downloadTitle</code> parameter added earlier is gone (the button label follows from whether a model is present).</li>
+                    <li><strong>Q:</strong> Explain the three Low/Info review points. &mdash; <em>Answered</em> in the conversation (no-cancel-during-active; stuck &ldquo;Relaunching&hellip;&rdquo; if termination is vetoed; cosmetic progress-bar regression + one <code>Task</code> per progress callback).</li>
+                    <li><strong>Feedback (reorganization):</strong> &ldquo;There's now too much stuff in the <code>GitHub</code> folder, and the <code>GitHub</code> name doesn't carry the meaning. Time to reorganize.&rdquo; The updater subsystem outgrew the <code>GitHub/</code> folder &mdash; most of it (download, archive, code-signing, install, relaunch, XPC service/client, UI) is not GitHub-specific. <em>Applied (user chose the proposed structure):</em> moved all 45 source + 23 test files from <code>GitHub/</code> into a concern-based tree under <code>Updater/</code> &mdash; <code>GitHub</code> (the release check), <code>Download</code>, <code>Archive</code>, <code>CodeSigning</code>, <code>Install</code>, <code>Relaunch</code>, <code>XPC/{Contract,Service,Client}</code>, and <code>UI</code> &mdash; mirrored in <code>SwiftUtilitiesTests/</code>. Files were <code>git mv</code>'d (history preserved as renames) and the Xcode project's group hierarchy was rewired to match; the build phases reference files by ID, so the <code>Updater</code> service target keeps compiling the same sources. Verified: <code>swift build</code>, <code>xcodebuild test</code> (169 tests), and <code>xcodebuild build -scheme Updater</code> all pass.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- ============ PHASE 6 ============ -->

@@ -33,3 +33,18 @@
 
 /* Button dismissing the update-available window without downloading. */
 "GitHubUpdater.window.button.later" = "Later";
+
+/* Button downloading and installing the update in place, in the in-app update window. */
+"GitHubUpdater.window.button.install" = "Download & Install";
+
+/* Status shown while the in-app update is downloading. */
+"GitHubUpdater.window.status.downloading" = "Downloading update…";
+
+/* Status shown while the in-app update is installing. */
+"GitHubUpdater.window.status.installing" = "Installing update…";
+
+/* Status shown while the application is relaunching into the new version. */
+"GitHubUpdater.window.status.relaunching" = "Relaunching…";
+
+/* Title shown in the in-app update window when the update fails. */
+"GitHubUpdater.window.error.title" = "The update could not be installed.";

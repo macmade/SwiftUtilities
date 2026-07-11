@@ -291,14 +291,13 @@
 
         /// Opens the window offering to download and install an available update in place.
         ///
-        /// This is the entry point for the in-app update flow, selected when the
-        /// caller opts into ``UpdateBehavior/inApp`` and the release has a
-        /// downloadable asset.
-        ///
-        /// - Note: The in-app download and installation experience is delivered in a
-        ///   later milestone. Until it lands, this presents the same link-based
-        ///   window as ``showUpdateAvailableWindow(application:version:update:url:notes:downloadURL:)``
-        ///   so an available update stays reachable.
+        /// This is the entry point for the in-app update flow, selected by
+        /// ``updateWindowMode(for:downloadURL:serviceAvailable:)`` when the caller
+        /// opts into ``UpdateBehavior/inApp``, the release has a supported asset, and
+        /// the bundled updater service is available. The window downloads, installs,
+        /// and relaunches in place. Should the download URL be missing (it never is
+        /// on this path, since the mode requires it), it falls back to the link
+        /// window.
         ///
         /// - Parameters:
         ///   - application: The display name of the application.
@@ -311,7 +310,22 @@
         @MainActor
         private func showInAppUpdateWindow( application: String, version: String, update: String, url: URL, notes: String, downloadURL: URL? )
         {
-            self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: downloadURL )
+            guard let downloadURL
+            else
+            {
+                self.showUpdateAvailableWindow( application: application, version: version, update: update, url: url, notes: notes, downloadURL: nil )
+
+                return
+            }
+
+            UpdateWindowController.showInApp(
+                applicationName: application,
+                currentVersion:  version,
+                updateVersion:   update,
+                notes:           notes,
+                downloadURL:     downloadURL,
+                releaseURL:      url
+            )
         }
     }
 
