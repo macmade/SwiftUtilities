@@ -92,28 +92,95 @@
             }
         }
 
-        private func makeModel( downloader: StubDownloader, installer: StubInstaller, format: UpdateArchiveFormat = .zip, target: URL = URL( fileURLWithPath: "/Applications/App.app" ), terminate: @escaping @MainActor () -> Void ) -> InAppUpdateViewModel
+        private final class Flag: @unchecked Sendable
+        {
+            private( set ) var value = false
+
+            func set()
+            {
+                self.value = true
+            }
+        }
+
+        private func makeModel( downloader: StubDownloader, installer: StubInstaller, format: UpdateArchiveFormat = .zip, target: URL = URL( fileURLWithPath: "/Applications/App.app" ), stageRelaunch: @escaping @Sendable () -> Void = {}, scheduleRelaunch: @escaping @Sendable () async throws -> Void = {}, state: InAppUpdateViewModel.State = .idle, terminate: @escaping @MainActor () -> Void ) -> InAppUpdateViewModel
         {
             InAppUpdateViewModel(
-                downloader:  downloader,
-                installer:   installer,
-                downloadURL: URL( fileURLWithPath: "/tmp/App.zip" ),
-                format:      format,
-                target:      target,
-                terminate:   terminate
+                downloader:       downloader,
+                installer:        installer,
+                downloadURL:      URL( fileURLWithPath: "/tmp/App.zip" ),
+                format:           format,
+                target:           target,
+                stageRelaunch:    stageRelaunch,
+                scheduleRelaunch: scheduleRelaunch,
+                terminate:        terminate,
+                state:            state
             )
         }
 
         @Test
-        func runsToRelaunchAndTerminatesOnSuccess() async
+        func stopsAtInstalledWithoutTerminatingOnSuccess() async
         {
             let terminator = Terminator()
             let model      = self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller() ) { terminator.record() }
 
             await model.start()
 
-            #expect( model.state == .relaunching )
+            // The flow stops at `.installed` and waits for the user to relaunch; it
+            // must not terminate the application on its own.
+            #expect( model.state == .installed )
+            #expect( terminator.count == 0 )
+        }
+
+        @Test
+        func relaunchTerminatesAndRecoversWhenTerminationIsRefused() async
+        {
+            let terminator = Terminator()
+            let model      = self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller() ) { terminator.record() }
+
+            await model.start()
+            await model.relaunch()
+
+            // The stubbed terminate returns without quitting, standing in for a
+            // refused quit; the model must call terminate and then recover to
+            // `.installed` so the user is not stranded on a buttonless "Relaunching…".
             #expect( terminator.count == 1 )
+            #expect( model.state == .installed )
+        }
+
+        @Test
+        func isBusyIsTrueOnlyDuringActivePhases()
+        {
+            func model( _ state: InAppUpdateViewModel.State ) -> InAppUpdateViewModel
+            {
+                self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller(), state: state ) {}
+            }
+
+            #expect( model( .idle ).isBusy                        == false )
+            #expect( model( .downloading( fraction: nil ) ).isBusy == true )
+            #expect( model( .installing ).isBusy                   == true )
+            #expect( model( .installed ).isBusy                    == false )
+            #expect( model( .relaunching ).isBusy                  == true )
+            #expect( model( .failed( message: "x" ) ).isBusy       == false )
+        }
+
+        @Test
+        func relaunchFailsAndDoesNotTerminateWhenSchedulingFails() async
+        {
+            let terminator = Terminator()
+            let model      = self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller(), scheduleRelaunch: { throw StubError() } ) { terminator.record() }
+
+            await model.start()
+            await model.relaunch()
+
+            guard case .failed = model.state
+            else
+            {
+                Issue.record( "Expected a failed state when relaunch scheduling fails." )
+
+                return
+            }
+
+            #expect( terminator.count == 0 )
         }
 
         @Test
@@ -168,6 +235,18 @@
             }
 
             #expect( terminator.count == 0 )
+        }
+
+        @Test
+        func startStagesTheRelaunchHelperBeforeInstalling() async
+        {
+            let staged = Flag()
+            let model  = self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller(), stageRelaunch: { staged.set() } ) {}
+
+            await model.start()
+
+            #expect( staged.value )
+            #expect( model.state == .installed )
         }
 
         @Test

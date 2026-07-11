@@ -24,26 +24,23 @@
 
 import Foundation
 
-/// Relaunches the application from a detached process that outlives the update.
+/// Stages and spawns the relaunch helper that outlives the update.
 ///
-/// This is the concrete relaunch step the updater service runs. The service (and
-/// the application) are both about to go away, so the wait-and-reopen cannot happen
-/// inside them. Instead ``relaunch(_:)`` spawns a **detached** copy of the service's
-/// own executable, re-invoked in relaunch mode (see ``arguments(for:)``); the
-/// service's `main` recognizes those arguments and runs a ``RelaunchWaiter`` instead
-/// of the XPC listener. When the service exits, that child is reparented to `launchd`
-/// and keeps running until the application has quit, then reopens it — no shell and
-/// no consumer-built helper, just the service binary in a second mode.
+/// The relaunch — wait for the application to quit, then reopen it — must run from a
+/// process that survives both the application and the updater service. Because an
+/// install replaces the application bundle (which contains the service), the helper
+/// is **staged** as a whole-bundle copy outside the app before the install
+/// (``stageRelaunchBundle(forApplicationAt:from:)``), and the app **spawns** that
+/// staged copy on the user's request (``spawnStagedRelaunch(forApplicationAt:waitingFor:spawn:)``).
+/// The spawned copy re-invokes the service executable in relaunch mode (see
+/// ``arguments(for:)``): the service's `main` recognizes those arguments and runs a
+/// ``RelaunchWaiter`` instead of the XPC listener, detached via `setsid` so it
+/// outlives its parent.
 ///
-/// The spawn is injected, so what gets launched is unit-testable without actually
-/// starting a process. The `processIdentifier` (the application's PID) is captured
-/// at construction, matching the ``UpdateInstallRequest`` the service is handling.
-///
-/// > Note: The exact surviving-process guarantee (reparenting, and whether a new
-/// > session via `setsid` is required so the child is not torn down with the
-/// > service's job) can only be confirmed at runtime with a signed, embedded
-/// > service; it is documented here and verified there.
-public struct ProcessRelauncher: ApplicationRelaunching
+/// This is a namespace of static helpers — there is no per-relaunch instance state —
+/// and the spawn is injectable, so the staging and argument logic are unit-testable
+/// without starting a process.
+public enum ProcessRelauncher
 {
     /// A relaunch request encoded into, or decoded from, process arguments.
     public struct Invocation: Equatable, Sendable
@@ -68,49 +65,6 @@ public struct ProcessRelauncher: ApplicationRelaunching
 
     /// The flag marking a relaunch-mode invocation of the service executable.
     public static let waitArgument = "--updater-relaunch-wait"
-
-    /// The application process to wait for before reopening.
-    private let processIdentifier: Int32
-
-    /// The executable to re-invoke in relaunch mode (the service's own binary).
-    private let executableURL: URL
-
-    /// Spawns the detached relaunch process.
-    private let spawn: @Sendable ( URL, [ String ] ) throws -> Void
-
-    /// Creates a relauncher.
-    ///
-    /// - Parameters:
-    ///   - processIdentifier: The application's process identifier, from the request.
-    ///   - executableURL:     The executable to re-invoke in relaunch mode. Defaults
-    ///                        to the running executable (the service binary).
-    ///   - spawn:             Spawns the detached process. Defaults to
-    ///                        ``ProcessRelauncher/spawnDetached(_:_:)``.
-    public init(
-        processIdentifier: Int32,
-        executableURL:     URL                                          = ProcessRelauncher.runningExecutableURL,
-        spawn:             @escaping @Sendable ( URL, [ String ] ) throws -> Void = ProcessRelauncher.spawnDetached
-    )
-    {
-        self.processIdentifier = processIdentifier
-        self.executableURL     = executableURL
-        self.spawn             = spawn
-    }
-
-    /// Schedules the relaunch by spawning the detached waiter process.
-    ///
-    /// Returns as soon as the process is launched; the actual wait-and-reopen
-    /// happens in the detached child after the application quits.
-    ///
-    /// - Parameter application: A file URL to the installed application bundle.
-    ///
-    /// - Throws: An error if the detached process cannot be spawned.
-    public func relaunch( _ application: URL ) throws
-    {
-        let invocation = Invocation( processIdentifier: self.processIdentifier, application: application )
-
-        try self.spawn( self.executableURL, ProcessRelauncher.arguments( for: invocation ) )
-    }
 
     /// Builds the process arguments (excluding `argv[0]`) for a relaunch invocation.
     ///
@@ -144,15 +98,160 @@ public struct ProcessRelauncher: ApplicationRelaunching
         return Invocation( processIdentifier: processIdentifier, application: URL( fileURLWithPath: commandLineArguments[ 3 ] ) )
     }
 
-    /// A file URL to the running executable, used as the relaunch binary.
-    public static var runningExecutableURL: URL
+    /// A file URL to the running service bundle, used as the staging source.
+    public static var runningBundleURL: URL
     {
-        if let url = Bundle.main.executableURL
+        Bundle.main.bundleURL
+    }
+
+    /// The directory under which relaunch bundles are staged.
+    ///
+    /// A single root under the user's temporary directory, holding one keyed
+    /// subdirectory per target application.
+    private static var stagingRootURL: URL
+    {
+        FileManager.default.temporaryDirectory.appendingPathComponent( "com.xs-labs.SwiftUtilities.Updater", isDirectory: true )
+    }
+
+    /// The stable location the relaunch **bundle** is staged to for a target.
+    ///
+    /// The whole service bundle is staged — not just its executable — because an XPC
+    /// service's code signature covers the bundle (its `Info.plist`, resources, and
+    /// `_CodeSignature`); a lone executable copied out fails validation and the
+    /// hardened runtime kills it on launch. The path is derived deterministically
+    /// from the application's location, so the install step (which stages the copy)
+    /// and the later relaunch step (which spawns from it) — potentially different
+    /// service processes — agree on it without sharing any state. Keying by the
+    /// target keeps concurrent updates of different applications from colliding.
+    ///
+    /// - Parameter application: The application bundle that will be reopened.
+    ///
+    /// - Returns: The location the relaunch bundle is staged to.
+    public static func stagedBundleURL( forApplicationAt application: URL ) -> URL
+    {
+        let key = ProcessRelauncher.stableKey( for: application.standardizedFileURL.path )
+
+        return ProcessRelauncher.stagingRootURL.appendingPathComponent( key, isDirectory: true ).appendingPathComponent( "relaunch.xpc", isDirectory: true )
+    }
+
+    /// The executable inside the staged relaunch bundle, if it is present.
+    ///
+    /// Resolves the staged bundle's executable through its `Info.plist`
+    /// (`CFBundleExecutable`), so it does not depend on the executable's name.
+    ///
+    /// - Parameter application: The application whose staged bundle to inspect.
+    ///
+    /// - Returns: The staged executable's URL, or `nil` if nothing valid is staged.
+    public static func stagedRelaunchExecutableURL( forApplicationAt application: URL ) -> URL?
+    {
+        let bundleURL = ProcessRelauncher.stagedBundleURL( forApplicationAt: application )
+
+        guard let executableURL = Bundle( url: bundleURL )?.executableURL,
+              FileManager.default.isExecutableFile( atPath: executableURL.path )
+        else
         {
-            return url
+            return nil
         }
 
-        return URL( fileURLWithPath: CommandLine.arguments.first ?? "" )
+        return executableURL
+    }
+
+    /// Stages a copy of the whole service bundle outside the application bundle.
+    ///
+    /// Called during install, **before** the application is replaced, while the
+    /// service bundle is still on disk. It copies that bundle to the stable staged
+    /// location for the target (see ``stagedBundleURL(forApplicationAt:)``),
+    /// replacing any previous copy, so the relaunch can later run from a location the
+    /// update cannot remove — the way Sparkle runs its updater from a cache copy. The
+    /// whole bundle is copied so its code signature stays valid.
+    ///
+    /// - Parameters:
+    ///   - application: The application bundle that will be reopened.
+    ///   - bundleURL:   The service bundle to stage. Defaults to the running bundle.
+    ///
+    /// - Returns: The staged bundle's location.
+    ///
+    /// - Throws: An error if the copy cannot be made.
+    @discardableResult
+    public static func stageRelaunchBundle( forApplicationAt application: URL, from bundleURL: URL = ProcessRelauncher.runningBundleURL ) throws -> URL
+    {
+        let destination = ProcessRelauncher.stagedBundleURL( forApplicationAt: application )
+        let directory   = destination.deletingLastPathComponent()
+        let manager     = FileManager.default
+
+        try? manager.removeItem( at: directory )
+        try manager.createDirectory( at: directory, withIntermediateDirectories: true )
+        try manager.copyItem( at: bundleURL, to: destination )
+
+        return destination
+    }
+
+    /// Removes the staged relaunch bundle for a target application, if present.
+    ///
+    /// Called after the relaunch has reopened the application, to keep the staging
+    /// area from accumulating copies. Removing the running relaunch binary is safe:
+    /// the process keeps executing from the open file after it is unlinked.
+    ///
+    /// - Parameter application: The application whose staged bundle to remove.
+    public static func removeStagedRelaunchBundle( forApplicationAt application: URL )
+    {
+        let directory = ProcessRelauncher.stagedBundleURL( forApplicationAt: application ).deletingLastPathComponent()
+
+        try? FileManager.default.removeItem( at: directory )
+    }
+
+    /// Spawns the previously staged relaunch helper, detached, for a target.
+    ///
+    /// This is the **client-side** relaunch: the application itself spawns the staged
+    /// helper (see ``stageRelaunchBundle(forApplicationAt:from:)``) and then
+    /// terminates, rather than asking the updater service to do it. The service
+    /// cannot be used here — having just replaced its own containing application
+    /// bundle on disk, the hardened runtime kills it as soon as it executes further
+    /// code. The staged helper runs from a copy outside the bundle, so it is
+    /// unaffected.
+    ///
+    /// - Parameters:
+    ///   - application:       The application bundle to reopen once it exits.
+    ///   - processIdentifier: The application's process identifier, to wait on.
+    ///   - spawn:             Spawns the detached process. Defaults to
+    ///                        ``spawnDetached(_:_:)``.
+    ///
+    /// - Throws: ``RelaunchError/relaunchHelperUnavailable`` if no staged helper is
+    ///   present, or the underlying error if it cannot be spawned.
+    public static func spawnStagedRelaunch(
+        forApplicationAt application: URL,
+        waitingFor processIdentifier: Int32,
+        spawn:                        @escaping @Sendable ( URL, [ String ] ) throws -> Void = ProcessRelauncher.spawnDetached
+    ) throws
+    {
+        guard let executable = ProcessRelauncher.stagedRelaunchExecutableURL( forApplicationAt: application )
+        else
+        {
+            throw RelaunchError.relaunchHelperUnavailable
+        }
+
+        let invocation = Invocation( processIdentifier: processIdentifier, application: application )
+
+        try spawn( executable, ProcessRelauncher.arguments( for: invocation ) )
+    }
+
+    /// A stable, process-independent key for a string (FNV-1a, 64-bit).
+    ///
+    /// `String.hashValue` is randomly seeded per process, so it cannot be used to
+    /// build a path two different processes must agree on. This is a plain FNV-1a
+    /// hash, whose value depends only on the input.
+    ///
+    /// - Parameter string: The string to hash.
+    ///
+    /// - Returns: The hash as a hexadecimal string.
+    private static func stableKey( for string: String ) -> String
+    {
+        let hash = string.utf8.reduce( UInt64( 0xcbf2_9ce4_8422_2325 ) )
+        {
+            ( $0 ^ UInt64( $1 ) ) &* 0x0000_0100_0000_01b3
+        }
+
+        return String( hash, radix: 16 )
     }
 
     /// Spawns a detached copy of the executable with the given arguments.

@@ -40,20 +40,119 @@ struct Test_ProcessRelauncher
         }
     }
 
-    @Test
-    func relaunchSpawnsTheExecutableInRelaunchMode() throws
+    /// Builds a minimal `.xpc`-style bundle with an executable, for staging tests.
+    ///
+    /// - Parameter name: The executable's name (and `CFBundleExecutable`).
+    ///
+    /// - Returns: A file URL to the created bundle.
+    private func makeFakeBundle( executable name: String ) throws -> URL
     {
-        let recorder   = SpawnRecorder()
-        let executable = URL( fileURLWithPath: "/path/to/Updater.xpc/Contents/MacOS/Updater" )
-        let relauncher = ProcessRelauncher( processIdentifier: 777, executableURL: executable )
+        let manager = FileManager.default
+        let bundle  = manager.temporaryDirectory.appendingPathComponent( "\( name )-\( UUID().uuidString ).xpc", isDirectory: true )
+        let macOS   = bundle.appendingPathComponent( "Contents/MacOS", isDirectory: true )
+
+        try manager.createDirectory( at: macOS, withIntermediateDirectories: true )
+
+        let executable = macOS.appendingPathComponent( name )
+
+        try Data( "binary".utf8 ).write( to: executable )
+        try manager.setAttributes( [ .posixPermissions: 0o755 ], ofItemAtPath: executable.path )
+
+        let info = [ "CFBundleExecutable": name, "CFBundleIdentifier": "com.example.\( name )" ]
+        let data = try PropertyListSerialization.data( fromPropertyList: info, format: .xml, options: 0 )
+
+        try data.write( to: bundle.appendingPathComponent( "Contents/Info.plist" ) )
+
+        return bundle
+    }
+
+    @Test
+    func stagedBundleURLIsStableAndKeyedByTarget()
+    {
+        let appA = URL( fileURLWithPath: "/Applications/A.app" )
+        let appB = URL( fileURLWithPath: "/Applications/B.app" )
+
+        #expect( ProcessRelauncher.stagedBundleURL( forApplicationAt: appA ) == ProcessRelauncher.stagedBundleURL( forApplicationAt: appA ) )
+        #expect( ProcessRelauncher.stagedBundleURL( forApplicationAt: appA ) != ProcessRelauncher.stagedBundleURL( forApplicationAt: appB ) )
+    }
+
+    @Test
+    func stageRelaunchBundleCopiesTheWholeBundleToTheStagedLocation() throws
+    {
+        let target = URL( fileURLWithPath: "/Applications/StageCopyTest.app" )
+        let source = try self.makeFakeBundle( executable: "Fake" )
+
+        defer
+        {
+            try? FileManager.default.removeItem( at: source )
+            ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: target )
+        }
+
+        let staged = try ProcessRelauncher.stageRelaunchBundle( forApplicationAt: target, from: source )
+
+        #expect( staged == ProcessRelauncher.stagedBundleURL( forApplicationAt: target ) )
+        #expect( FileManager.default.fileExists( atPath: staged.appendingPathComponent( "Contents/MacOS/Fake" ).path ) )
+        #expect( FileManager.default.fileExists( atPath: staged.appendingPathComponent( "Contents/Info.plist" ).path ) )
+    }
+
+    @Test
+    func spawnStagedRelaunchSpawnsTheStagedHelperInRelaunchMode() throws
+    {
+        let target = URL( fileURLWithPath: "/Applications/SpawnStagedTest.app" )
+        let source = try self.makeFakeBundle( executable: "Fake" )
+
+        try ProcessRelauncher.stageRelaunchBundle( forApplicationAt: target, from: source )
+
+        defer
+        {
+            try? FileManager.default.removeItem( at: source )
+            ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: target )
+        }
+
+        let recorder = SpawnRecorder()
+
+        try ProcessRelauncher.spawnStagedRelaunch( forApplicationAt: target, waitingFor: 4242 )
         {
             try recorder.spawn( $0, $1 )
         }
 
-        try relauncher.relaunch( URL( fileURLWithPath: "/Applications/App.app" ) )
+        let expected = try #require( ProcessRelauncher.stagedRelaunchExecutableURL( forApplicationAt: target ) )
 
-        #expect( recorder.executable == executable )
-        #expect( recorder.arguments  == [ ProcessRelauncher.waitArgument, "777", "/Applications/App.app" ] )
+        #expect( recorder.executable?.path == expected.path )
+        #expect( recorder.arguments        == [ ProcessRelauncher.waitArgument, "4242", target.path ] )
+    }
+
+    @Test
+    func spawnStagedRelaunchThrowsWhenNothingIsStaged() throws
+    {
+        let target = URL( fileURLWithPath: "/Applications/SpawnStagedMissingTest.app" )
+
+        ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: target )
+
+        #expect( throws: RelaunchError.relaunchHelperUnavailable )
+        {
+            try ProcessRelauncher.spawnStagedRelaunch( forApplicationAt: target, waitingFor: 1 ) { _, _ in }
+        }
+    }
+
+    @Test
+    func removeStagedRelaunchBundleClearsTheStagedCopy() throws
+    {
+        let target = URL( fileURLWithPath: "/Applications/StageRemoveTest.app" )
+        let source = try self.makeFakeBundle( executable: "Fake" )
+
+        defer
+        {
+            try? FileManager.default.removeItem( at: source )
+        }
+
+        let staged = try ProcessRelauncher.stageRelaunchBundle( forApplicationAt: target, from: source )
+
+        #expect( FileManager.default.fileExists( atPath: staged.path ) )
+
+        ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: target )
+
+        #expect( FileManager.default.fileExists( atPath: staged.path ) == false )
     }
 
     @Test

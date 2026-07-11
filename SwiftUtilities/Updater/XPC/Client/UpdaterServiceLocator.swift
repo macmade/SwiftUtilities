@@ -24,13 +24,19 @@
 
 import Foundation
 
-/// Locates the framework-bundled updater XPC service and reports its availability.
+/// Locates the host application's bundled updater XPC service and reports its
+/// availability.
 ///
 /// In-app update is the single XPC-based path, and it only works when the updater
-/// service is embedded in the framework. That is the case for the Xcode framework
-/// distribution, but **not** for the SwiftPM package (which cannot carry a nested
-/// signed service) — there the service is absent and the flow must fall back to the
-/// link path. ``isAvailable`` is the runtime signal driving that decision.
+/// service is embedded in the **application** at `Contents/XPCServices/Updater.xpc`:
+/// that is the only location `launchd` registers an app's on-demand XPC service, so
+/// it is the only place `NSXPCConnection(serviceName:)` can resolve it. An XPC
+/// service nested inside an embedded framework is *not* registered, so the service
+/// cannot simply ride along inside `SwiftUtilities.framework` — the app must copy it
+/// into its own `Contents/XPCServices` (see the README). Where the service is absent
+/// — notably the SwiftPM package, which cannot carry a nested signed service — the
+/// flow must fall back to the link path. ``isAvailable`` is the runtime signal
+/// driving that decision.
 public enum UpdaterServiceLocator
 {
     /// The bundle identifier of the updater XPC service.
@@ -41,8 +47,9 @@ public enum UpdaterServiceLocator
 
     /// Whether the bundled updater service is present and can be reached.
     ///
-    /// `true` only when the service bundle is found inside the framework (see
-    /// ``serviceURL``); the caller should fall back to the link path otherwise.
+    /// `true` only when the service bundle is found in the application's
+    /// `Contents/XPCServices` (see ``serviceURL``); the caller should fall back to
+    /// the link path otherwise.
     public static var isAvailable: Bool
     {
         UpdaterServiceLocator.serviceURL != nil
@@ -50,21 +57,14 @@ public enum UpdaterServiceLocator
 
     /// The location of the bundled updater service, if present.
     ///
-    /// The service is embedded in the framework's `XPCServices` directory. Because a
-    /// framework is a versioned bundle, this checks the versioned location and the
-    /// unversioned bundle root, returning the first that exists.
+    /// The service must be embedded in the host application's `Contents/XPCServices`
+    /// directory — the location `launchd` scans to register the app's on-demand XPC
+    /// services. This checks for it there, relative to the main bundle, and returns
+    /// its URL only if it exists.
     public static var serviceURL: URL?
     {
-        let bundle    = Bundle( for: UpdaterService.self )
-        let component = "XPCServices/Updater.xpc"
+        let url = Bundle.main.bundleURL.appendingPathComponent( "Contents/XPCServices/Updater.xpc" )
 
-        let candidates =
-        [
-            bundle.bundleURL.appendingPathComponent( "Versions/Current/\( component )" ),
-            bundle.bundleURL.appendingPathComponent( "Contents/\( component )" ),
-            bundle.bundleURL.appendingPathComponent( component ),
-        ]
-
-        return candidates.first { FileManager.default.fileExists( atPath: $0.path ) }
+        return FileManager.default.fileExists( atPath: url.path ) ? url : nil
     }
 }

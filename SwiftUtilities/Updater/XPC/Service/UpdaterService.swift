@@ -30,7 +30,7 @@ import Foundation
 /// It runs off the sandbox, inside the framework-bundled updater service, so it can
 /// perform the privileged file operations the app cannot. For each request it
 /// composes the M3/M5/M6 building blocks into the security-first
-/// extract → validate → replace → relaunch install (via ``UpdateInstallation``),
+/// extract → validate → replace install (via ``UpdateInstallation``),
 /// validating the extracted application against the identity carried in the request
 /// through an ``ExpectedIdentityInspector`` (the service's own identity is not the
 /// application's, so it cannot be derived here). Progress is streamed back through
@@ -40,7 +40,12 @@ import Foundation
 /// Every dependency is injected, so the composition and its decode/report/reply
 /// behavior are unit-testable with stubs, without a live connection or a signed
 /// application. The listener supplies the production dependencies (the real archive
-/// extractor, Security-backed inspector, on-disk replacer, and process relauncher).
+/// extractor, Security-backed inspector, and on-disk replacer).
+///
+/// The service performs only the install. The relaunch is driven by the app itself
+/// (it stages and spawns the helper): a service that has just replaced its own
+/// containing bundle is killed by the hardened runtime as soon as it runs further
+/// code, so it cannot be relied on afterward.
 public final class UpdaterService: NSObject, UpdaterServiceProtocol
 {
     /// Unpacks the archive and locates the application.
@@ -52,9 +57,6 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     /// Replaces the application on disk.
     private let replacer: AppReplacing
 
-    /// Builds the relaunch step for a request's process identifier.
-    private let makeRelauncher: @Sendable ( Int32 ) -> ApplicationRelaunching
-
     /// Streams each install phase back to the app.
     private let reportProgress: @Sendable ( InstallProgress ) -> Void
 
@@ -64,22 +66,17 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     ///   - extractor:      Unpacks the archive and locates the application.
     ///   - inspector:      Performs the real code-signature verification.
     ///   - replacer:       Replaces the application on disk.
-    ///   - makeRelauncher: Builds the relaunch step for the request's process
-    ///                     identifier (so the relauncher can wait for that process
-    ///                     to exit before reopening).
     ///   - reportProgress: Streams each ``InstallProgress`` phase back to the app.
     public init(
         extractor:      ArchiveExtracting,
         inspector:      CodeSignatureInspecting,
         replacer:       AppReplacing,
-        makeRelauncher: @escaping @Sendable ( Int32 ) -> ApplicationRelaunching,
         reportProgress: @escaping @Sendable ( InstallProgress ) -> Void
     )
     {
         self.extractor      = extractor
         self.inspector      = inspector
         self.replacer       = replacer
-        self.makeRelauncher = makeRelauncher
         self.reportProgress = reportProgress
 
         super.init()
@@ -100,7 +97,6 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         let extractor      = self.extractor
         let inspector      = self.inspector
         let replacer       = self.replacer
-        let makeRelauncher = self.makeRelauncher
         let reportProgress = self.reportProgress
 
         Task
@@ -110,7 +106,6 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
                 extractor:      extractor,
                 inspector:      inspector,
                 replacer:       replacer,
-                makeRelauncher: makeRelauncher,
                 reportProgress: reportProgress
             )
 
@@ -132,7 +127,6 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     ///   - extractor:      Unpacks the archive and locates the application.
     ///   - inspector:      Performs the real code-signature verification.
     ///   - replacer:       Replaces the application on disk.
-    ///   - makeRelauncher: Builds the relaunch step for the request's PID.
     ///   - reportProgress: Streams each phase back to the app.
     ///
     /// - Returns: The terminal ``UpdateInstallResult``.
@@ -141,7 +135,6 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         extractor:      ArchiveExtracting,
         inspector:      CodeSignatureInspecting,
         replacer:       AppReplacing,
-        makeRelauncher: @Sendable ( Int32 ) -> ApplicationRelaunching,
         reportProgress: @escaping @Sendable ( InstallProgress ) -> Void
     ) async -> UpdateInstallResult
     {
@@ -149,8 +142,7 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         {
             let decoded      = try UpdateInstallRequest.decoded( from: request )
             let validator    = CodeSignatureValidator( inspector: ExpectedIdentityInspector( expected: decoded.identity, base: inspector ) )
-            let relauncher   = makeRelauncher( decoded.processIdentifier )
-            let installation = UpdateInstallation( extractor: extractor, validator: validator, replacer: replacer, relauncher: relauncher )
+            let installation = UpdateInstallation( extractor: extractor, validator: validator, replacer: replacer )
 
             try await installation.install( archive: decoded.archiveURL, format: decoded.format, replacing: decoded.targetURL, progress: reportProgress )
 

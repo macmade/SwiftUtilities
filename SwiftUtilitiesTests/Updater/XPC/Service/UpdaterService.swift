@@ -103,30 +103,6 @@ struct Test_UpdaterService
         }
     }
 
-    private final class StubRelauncher: ApplicationRelaunching, @unchecked Sendable
-    {
-        private( set ) var relaunched: URL?
-
-        func relaunch( _ application: URL ) throws
-        {
-            self.relaunched = application
-        }
-    }
-
-    private final class RelauncherFactory: @unchecked Sendable
-    {
-        let relauncher = StubRelauncher()
-
-        private( set ) var requestedProcessIdentifier: Int32?
-
-        func make( _ processIdentifier: Int32 ) -> ApplicationRelaunching
-        {
-            self.requestedProcessIdentifier = processIdentifier
-
-            return self.relauncher
-        }
-    }
-
     private final class ProgressCollector: @unchecked Sendable
     {
         private( set ) var values: [ InstallProgress ] = []
@@ -158,7 +134,6 @@ struct Test_UpdaterService
         let extractor = StubExtractor( result: candidate )
         let inspector = StubInspector()
         let replacer  = StubReplacer( installed: installed )
-        let factory   = RelauncherFactory()
         let progress  = ProgressCollector()
 
         let result = await UpdaterService.run(
@@ -166,22 +141,19 @@ struct Test_UpdaterService
             extractor:      extractor,
             inspector:      inspector,
             replacer:       replacer,
-            makeRelauncher: { factory.make( $0 ) },
             reportProgress: { progress.record( $0 ) }
         )
 
         #expect( result == .success )
-        #expect( progress.values == [ .extracting, .validating, .replacing, .relaunching ] )
+        #expect( progress.values == [ .extracting, .validating, .replacing ] )
 
         // The candidate is validated against the requirement rebuilt from the
         // request's identity — not the service's own identity.
         #expect( inspector.verifiedURL         == candidate )
         #expect( inspector.verifiedRequirement == Test_UpdaterService.identity.requirement )
 
-        #expect( replacer.target                    == URL( fileURLWithPath: "/Applications/App.app" ) )
-        #expect( replacer.replacement               == candidate )
-        #expect( factory.requestedProcessIdentifier == 4242 )
-        #expect( factory.relauncher.relaunched      == installed )
+        #expect( replacer.target      == URL( fileURLWithPath: "/Applications/App.app" ) )
+        #expect( replacer.replacement == candidate )
     }
 
     @Test
@@ -190,7 +162,6 @@ struct Test_UpdaterService
         let extractor = StubExtractor( result: URL( fileURLWithPath: "/tmp/New.app" ) )
         let inspector = StubInspector( verificationFails: true )
         let replacer  = StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) )
-        let factory   = RelauncherFactory()
         let progress  = ProgressCollector()
 
         let result = await UpdaterService.run(
@@ -198,13 +169,11 @@ struct Test_UpdaterService
             extractor:      extractor,
             inspector:      inspector,
             replacer:       replacer,
-            makeRelauncher: { factory.make( $0 ) },
             reportProgress: { progress.record( $0 ) }
         )
 
         #expect( result == .failure( from: StubError() ) )
         #expect( replacer.target == nil )
-        #expect( factory.relauncher.relaunched == nil )
         #expect( progress.values == [ .extracting, .validating ] )
     }
 
@@ -214,7 +183,6 @@ struct Test_UpdaterService
         let extractor = StubExtractor( result: URL( fileURLWithPath: "/tmp/New.app" ), error: StubError() )
         let inspector = StubInspector()
         let replacer  = StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) )
-        let factory   = RelauncherFactory()
         let progress  = ProgressCollector()
 
         let result = await UpdaterService.run(
@@ -222,7 +190,6 @@ struct Test_UpdaterService
             extractor:      extractor,
             inspector:      inspector,
             replacer:       replacer,
-            makeRelauncher: { factory.make( $0 ) },
             reportProgress: { progress.record( $0 ) }
         )
 
@@ -235,14 +202,11 @@ struct Test_UpdaterService
     @Test
     func runReportsFailureWhenTheRequestCannotBeDecoded() async
     {
-        let factory = RelauncherFactory()
-
         let result = await UpdaterService.run(
             request:        Data( "not a request".utf8 ),
             extractor:      StubExtractor( result: URL( fileURLWithPath: "/tmp/New.app" ) ),
             inspector:      StubInspector(),
             replacer:       StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) ),
-            makeRelauncher: { factory.make( $0 ) },
             reportProgress: { _ in }
         )
 
@@ -253,8 +217,6 @@ struct Test_UpdaterService
 
             return
         }
-
-        #expect( factory.requestedProcessIdentifier == nil )
     }
 
     @Test
@@ -265,7 +227,6 @@ struct Test_UpdaterService
             extractor:      StubExtractor( result: candidate ),
             inspector:      StubInspector(),
             replacer:       StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) ),
-            makeRelauncher: { _ in StubRelauncher() },
             reportProgress: { _ in }
         )
 

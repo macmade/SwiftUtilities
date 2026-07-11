@@ -24,21 +24,22 @@
 
 import Foundation
 
-/// The in-app install composition: extract → validate → replace → relaunch.
+/// The in-app install composition: extract → validate → replace.
 ///
 /// This runs inside the bundled updater XPC service (off the sandbox), not in the
-/// app, so it can perform the privileged file operations and relaunch. It composes
-/// the building blocks in a security-first order: **extract** the archive,
-/// **validate** the extracted application's code signature against the running
-/// application, **replace** the application on disk, then **relaunch**. Validation
-/// runs on the exact bundle about to be installed, and replacement is refused
-/// unless validation succeeds, so an unsigned or mismatched download is never
-/// written into place.
+/// app, so it can perform the privileged file operations. It composes the building
+/// blocks in a security-first order: **extract** the archive, **validate** the
+/// extracted application's code signature against the running application, then
+/// **replace** the application on disk. Validation runs on the exact bundle about to
+/// be installed, and replacement is refused unless validation succeeds, so an
+/// unsigned or mismatched download is never written into place.
+///
+/// The relaunch is a **separate** step, triggered only when the user asks to
+/// relaunch (see the service's relaunch operation), so installing an update does not
+/// commit the application to reopening.
 ///
 /// Every step is an injected building block, so the composition and its
-/// refuse-on-failure decision logic are unit-testable with stubs. The concrete
-/// relaunch (the process that must outlive the app to reopen it) is supplied by
-/// the service in a later milestone.
+/// refuse-on-failure decision logic are unit-testable with stubs.
 public struct UpdateInstallation: UpdateInstaller
 {
     /// Unpacks the archive and locates the application.
@@ -50,22 +51,17 @@ public struct UpdateInstallation: UpdateInstaller
     /// Replaces the application on disk.
     private let replacer: AppReplacing
 
-    /// Relaunches the application after the current process exits.
-    private let relauncher: ApplicationRelaunching
-
     /// Creates an installation from its building blocks.
     ///
     /// - Parameters:
-    ///   - extractor:  Unpacks the archive and locates the application.
-    ///   - validator:  Validates the extracted application's code signature.
-    ///   - replacer:   Replaces the application on disk.
-    ///   - relauncher: Relaunches the application.
-    public init( extractor: ArchiveExtracting, validator: CodeSignatureValidator, replacer: AppReplacing, relauncher: ApplicationRelaunching )
+    ///   - extractor: Unpacks the archive and locates the application.
+    ///   - validator: Validates the extracted application's code signature.
+    ///   - replacer:  Replaces the application on disk.
+    public init( extractor: ArchiveExtracting, validator: CodeSignatureValidator, replacer: AppReplacing )
     {
-        self.extractor  = extractor
-        self.validator  = validator
-        self.replacer   = replacer
-        self.relauncher = relauncher
+        self.extractor = extractor
+        self.validator = validator
+        self.replacer  = replacer
     }
 
     /// Installs a downloaded update.
@@ -102,11 +98,7 @@ public struct UpdateInstallation: UpdateInstaller
 
         progress( .replacing )
 
-        let installed = try self.replacer.replaceApplication( at: target, with: candidate )
-
-        progress( .relaunching )
-
-        try self.relauncher.relaunch( installed )
+        _ = try self.replacer.replaceApplication( at: target, with: candidate )
     }
 
     /// Creates the directory the update is unpacked into.

@@ -31,7 +31,7 @@ struct Test_XPCMessage
     @Test
     func installProgressPhasesRoundTripThroughData() throws
     {
-        try [ InstallProgress.extracting, .validating, .replacing, .relaunching ].forEach
+        try [ InstallProgress.extracting, .validating, .replacing ].forEach
         {
             phase in
 

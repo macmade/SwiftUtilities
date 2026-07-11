@@ -34,6 +34,12 @@ public enum RelaunchError: Error, Equatable, Sendable
     /// The relaunch invocation was missing or malformed.
     case invalidInvocation
 
+    /// No staged relaunch helper was available to spawn.
+    ///
+    /// The helper is staged before the update replaces the application; this is
+    /// raised if that staged copy is missing when the relaunch is requested.
+    case relaunchHelperUnavailable
+
     /// The detached relaunch process could not be started.
     ///
     /// - Parameter code: The `posix_spawn` error code.
@@ -54,6 +60,10 @@ extension RelaunchError: LocalizedError
             case .invalidInvocation:
 
                 return "The relaunch could not be started because its arguments were invalid."
+
+            case .relaunchHelperUnavailable:
+
+                return "The relaunch helper is not available."
 
             case .relaunchProcessFailed( let code ):
 

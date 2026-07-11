@@ -46,5 +46,11 @@
 /* Status shown while the application is relaunching into the new version. */
 "GitHubUpdater.window.status.relaunching" = "Relaunching…";
 
+/* Message shown when the update has been installed and is ready to relaunch. */
+"GitHubUpdater.window.status.installed" = "The update has been installed and is ready to use.";
+
+/* Button relaunching the application into the newly installed version. */
+"GitHubUpdater.window.button.relaunch" = "Relaunch";
+
 /* Title shown in the in-app update window when the update fails. */
 "GitHubUpdater.window.error.title" = "The update could not be installed.";

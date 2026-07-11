@@ -24,6 +24,7 @@
 
 #if canImport( AppKit )
 
+    import AppKit
     import SwiftUI
 
     /// The content of the update-available window, for both update modes.
@@ -178,6 +179,10 @@
 
                         self.progress( title: Localization.string( "GitHubUpdater.window.status.installing" ), fraction: nil )
 
+                    case .installed:
+
+                        self.installed
+
                     case .relaunching:
 
                         self.progress( title: Localization.string( "GitHubUpdater.window.status.relaunching" ), fraction: nil )
@@ -199,18 +204,34 @@
             .frame( minWidth: 480, minHeight: 360 )
         }
 
-        /// The header showing the application name and version summary.
+        /// The header: the application icon beside the name and version summary.
         private var header: some View
         {
-            VStack( alignment: .leading, spacing: 4 )
+            HStack( spacing: 12 )
             {
-                Text( String( format: Localization.string( "GitHubUpdater.window.heading" ), self.applicationName, self.updateVersion ) )
-                    .font( .title2 )
-                    .bold()
+                self.applicationIcon( size: 40 )
 
-                Text( String( format: Localization.string( "GitHubUpdater.window.subtitle" ), self.currentVersion ) )
-                    .foregroundStyle( .secondary )
+                VStack( alignment: .leading, spacing: 4 )
+                {
+                    Text( String( format: Localization.string( "GitHubUpdater.window.heading" ), self.applicationName, self.updateVersion ) )
+                        .font( .title2 )
+                        .bold()
+
+                    Text( String( format: Localization.string( "GitHubUpdater.window.subtitle" ), self.currentVersion ) )
+                        .foregroundStyle( .secondary )
+                }
             }
+        }
+
+        /// The running application's icon, at the given size.
+        ///
+        /// - Parameter size: The icon's width and height.
+        private func applicationIcon( size: CGFloat ) -> some View
+        {
+            Image( nsImage: NSApplication.shared.applicationIconImage ?? NSImage() )
+                .resizable()
+                .aspectRatio( contentMode: .fit )
+                .frame( width: size, height: size )
         }
 
         /// The scrollable release notes, on a distinct text-area background.
@@ -228,30 +249,35 @@
 
         #if !SWIFT_PACKAGE
 
-        /// A titled progress bar filling the notes area; determinate when a fraction
-        /// is known.
+        /// A titled progress bar filling the notes area, with the application icon
+        /// above it; determinate when a fraction is known.
         ///
         /// - Parameters:
         ///   - title:    The status text shown above the bar.
         ///   - fraction: The fraction complete, or `nil` for an indeterminate bar.
         private func progress( title: String, fraction: Double? ) -> some View
         {
-            VStack( spacing: 10 )
+            VStack( spacing: 16 )
             {
-                Text( title )
-                    .font( .headline )
+                self.applicationIcon( size: 128 )
 
-                if let fraction
+                VStack( spacing: 10 )
                 {
-                    ProgressView( value: fraction )
+                    Text( title )
+                        .font( .headline )
+
+                    if let fraction
+                    {
+                        ProgressView( value: fraction )
+                    }
+                    else
+                    {
+                        ProgressView()
+                            .progressViewStyle( .linear )
+                    }
                 }
-                else
-                {
-                    ProgressView()
-                        .progressViewStyle( .linear )
-                }
+                .frame( maxWidth: 320 )
             }
-            .frame( maxWidth: 320 )
             .frame( maxWidth: .infinity, maxHeight: .infinity )
         }
 
@@ -275,6 +301,47 @@
             }
             .frame( maxWidth: 360 )
             .frame( maxWidth: .infinity, maxHeight: .infinity )
+        }
+
+        /// The "update installed — relaunch?" prompt shown after a successful install.
+        ///
+        /// The update is already on disk; **Relaunch** quits the application so the
+        /// bundled service reopens the new version, while **Later** dismisses the
+        /// window and keeps the running version until the next launch.
+        private var installed: some View
+        {
+            VStack( spacing: 16 )
+            {
+                VStack( spacing: 12 )
+                {
+                    self.applicationIcon( size: 128 )
+
+                    Text( Localization.string( "GitHubUpdater.window.status.installed" ) )
+                        .font( .headline )
+                        .multilineTextAlignment( .center )
+                }
+                .frame( maxWidth: 360 )
+                .frame( maxWidth: .infinity, maxHeight: .infinity )
+
+                self.relaunchActions
+            }
+        }
+
+        /// The trailing actions for the installed state: Later and Relaunch.
+        private var relaunchActions: some View
+        {
+            HStack
+            {
+                Button( Localization.string( "GitHubUpdater.window.button.later" ), action: self.onLater )
+
+                Spacer()
+
+                Button( Localization.string( "GitHubUpdater.window.button.relaunch" ) )
+                {
+                    Task { await self.model?.relaunch() }
+                }
+                .keyboardShortcut( .defaultAction )
+            }
         }
 
         #endif
@@ -381,13 +448,14 @@
     private func previewModel( state: InAppUpdateViewModel.State ) -> InAppUpdateViewModel
     {
         InAppUpdateViewModel(
-            downloader:  PreviewDownloader(),
-            installer:   PreviewInstaller(),
-            downloadURL: URL( fileURLWithPath: "/tmp/App.zip" ),
-            format:      .zip,
-            target:      URL( fileURLWithPath: "/Applications/App.app" ),
-            terminate:   {},
-            state:       state
+            downloader:       PreviewDownloader(),
+            installer:        PreviewInstaller(),
+            downloadURL:      URL( fileURLWithPath: "/tmp/App.zip" ),
+            format:           .zip,
+            target:           URL( fileURLWithPath: "/Applications/App.app" ),
+            scheduleRelaunch: {},
+            terminate:        {},
+            state:            state
         )
     }
 
@@ -441,6 +509,21 @@
             notes:           previewNotes,
             downloadURL:     URL( string: "https://example.com/app.zip" ),
             model:           previewModel( state: .downloading( fraction: 0.4 ) ),
+            onDownload:      {},
+            onViewOnGitHub:  {},
+            onLater:         {}
+        )
+    }
+
+    #Preview( "Installed" )
+    {
+        UpdateAvailableView(
+            applicationName: "Application",
+            currentVersion:  "1.0.0",
+            updateVersion:   "1.1.0",
+            notes:           previewNotes,
+            downloadURL:     URL( string: "https://example.com/app.zip" ),
+            model:           previewModel( state: .installed ),
             onDownload:      {},
             onViewOnGitHub:  {},
             onLater:         {}

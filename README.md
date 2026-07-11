@@ -68,38 +68,49 @@ let updater = GitHubUpdater(
 )
 ```
 
-The in-app path runs through an XPC service bundled inside
-`SwiftUtilities.framework` (at `Versions/A/XPCServices/Updater.xpc`), the way
-Sparkle 2 ships its services. Because a sandboxed app cannot replace itself, the
-service runs *off the sandbox*: the update window downloads the release asset,
-then the service validates the download's code signature against the running
-application's identity (same signing identifier and Team ID), replaces the
-application on disk, and relaunches it. If any step fails — or the release asset
-is not a supported archive (`.zip` or `.dmg`) — the window falls back to the link
+The in-app path runs through a small XPC service, `Updater.xpc`, that performs
+the privileged file work the application itself cannot. Because a sandboxed app
+cannot replace itself, the service runs *off the sandbox*: the update window
+downloads the release asset, then the service validates the download's code
+signature against the running application's identity (same signing identifier and
+Team ID) and replaces the application on disk. The relaunch is a separate,
+user-confirmed step driven by the app itself — the service cannot do it, having
+just replaced its own containing bundle — so when the user chooses to relaunch,
+the app reopens into the new version. If any step fails, or the release asset is
+not a supported archive (`.zip` or `.dmg`), the window falls back to the link
 behavior, so the release always stays reachable.
 
-**In-app updates require the Xcode framework.** A Swift Package Manager
+**In-app updates require the Xcode project's products.** A Swift Package Manager
 `.library` cannot embed and sign a nested XPC service, so under SwiftPM only the
-link update is available: the bundled service is absent, and `behavior: .inApp`
-transparently falls back to the link window at runtime. Ship
-`SwiftUtilities.framework` (the Xcode project's product) to offer in-app updates.
+link update is available: the service is absent, and `behavior: .inApp`
+transparently falls back to the link window at runtime. Use the Xcode project's
+`SwiftUtilities.framework` and `Updater.xpc` products to offer in-app updates.
 
-**Embedding and re-signing.** When you embed `SwiftUtilities.framework` in your
-app, its `XPCServices/Updater.xpc` travels with it — there is nothing extra for
-you to build. You must, however, **re-sign the framework and its nested service
-with your own identity** as part of signing your app:
+**Embedding the service.** The service must live at
+`YourApp.app/Contents/XPCServices/Updater.xpc`. That is the only location
+`launchd` registers an application's on-demand XPC service, and therefore the only
+place `NSXPCConnection(serviceName:)` can resolve it — a service left nested inside
+an embedded framework is **not** registered and will not be found. In your app
+target:
+
+1. Embed `SwiftUtilities.framework` as usual (*Frameworks, Libraries, and
+   Embedded Content* → *Embed & Sign*).
+2. Add a **Copy Files** build phase, set its destination to **XPC Services**, and
+   add `Updater.xpc` to it. Xcode copies the service into `Contents/XPCServices`
+   and re-signs it with your identity as part of signing the app.
+
+**Signing requirements.** Both the app and the service must be signed with *your*
+identity, because:
 
 - The service authenticates its client *by team*: it refuses any connection from
   a process not signed by the **same Apple Developer Team ID** as the service.
-  If the nested service keeps its original signature, your app and the service
-  will belong to different teams and the connection will be refused — re-signing
-  everything with your identity makes the teams match.
+  Signing both with your identity makes the teams match — the *Embed & Sign* and
+  *Copy Files* phases above do this for you.
 - The service is **non-sandboxed** (it carries no App Sandbox entitlement) so it
   can write to `/Applications` and relaunch; sign it with the **hardened
   runtime**, as for any Developer ID distribution.
 - The client connects to the service by its bundle identifier,
-  `com.xs-labs.SwiftUtilities.Updater`; keep that identifier on the nested
-  service when re-signing.
+  `com.xs-labs.SwiftUtilities.Updater`; keep that identifier on the service.
 
 #### MarkdownView
 

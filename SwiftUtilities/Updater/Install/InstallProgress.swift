@@ -41,7 +41,4 @@ public enum InstallProgress: Sendable, Equatable, Codable
 
     /// The validated application is being written into place.
     case replacing
-
-    /// The application is being relaunched.
-    case relaunching
 }

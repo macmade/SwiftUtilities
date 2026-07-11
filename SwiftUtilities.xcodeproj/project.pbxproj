@@ -76,7 +76,6 @@
 		05F00052000000000000000B /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00052000000000000000A /* UpdateInstaller.swift */; };
 		05F00053000000000000000B /* AppReplacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00053000000000000000A /* AppReplacing.swift */; };
 		05F00054000000000000000B /* AppReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00054000000000000000A /* AppReplacer.swift */; };
-		05F00055000000000000000B /* ApplicationRelaunching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00055000000000000000A /* ApplicationRelaunching.swift */; };
 		05F00057000000000000000B /* UpdateInstallation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00057000000000000000A /* UpdateInstallation.swift */; };
 		05F0005D000000000000000B /* XPCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005D000000000000000A /* XPCMessage.swift */; };
 		05F0005E000000000000000B /* UpdateInstallRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005E000000000000000A /* UpdateInstallRequest.swift */; };
@@ -104,7 +103,6 @@
 		05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A5000000000000000A /* UpdaterServiceLocator.swift */; };
 		05F00074000000000000000B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00074000000000000000A /* main.swift */; };
 		05F00075000000000000000B /* UpdaterServiceListenerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */; };
-		05F0009D000000000000000B /* Updater.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 05F00073000000000000000A /* Updater.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		05F00081000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003D000000000000000A /* UpdateArchiveFormat.swift */; };
 		05F00082000000000000000B /* CodeSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003F000000000000000A /* CodeSigningIdentity.swift */; };
 		05F00083000000000000000B /* CodeSignatureError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00040000000000000000A /* CodeSignatureError.swift */; };
@@ -118,7 +116,6 @@
 		05F0008B000000000000000B /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00052000000000000000A /* UpdateInstaller.swift */; };
 		05F0008C000000000000000B /* AppReplacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00053000000000000000A /* AppReplacing.swift */; };
 		05F0008D000000000000000B /* AppReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00054000000000000000A /* AppReplacer.swift */; };
-		05F0008E000000000000000B /* ApplicationRelaunching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00055000000000000000A /* ApplicationRelaunching.swift */; };
 		05F0008F000000000000000B /* UpdateInstallation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00057000000000000000A /* UpdateInstallation.swift */; };
 		05F00090000000000000000B /* XPCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005D000000000000000A /* XPCMessage.swift */; };
 		05F00091000000000000000B /* UpdateInstallRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005E000000000000000A /* UpdateInstallRequest.swift */; };
@@ -285,7 +282,6 @@
 		05F00052000000000000000A /* UpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstaller.swift; sourceTree = "<group>"; };
 		05F00053000000000000000A /* AppReplacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacing.swift; sourceTree = "<group>"; };
 		05F00054000000000000000A /* AppReplacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacer.swift; sourceTree = "<group>"; };
-		05F00055000000000000000A /* ApplicationRelaunching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelaunching.swift; sourceTree = "<group>"; };
 		05F00057000000000000000A /* UpdateInstallation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallation.swift; sourceTree = "<group>"; };
 		05F0005D000000000000000A /* XPCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCMessage.swift; sourceTree = "<group>"; };
 		05F0005E000000000000000A /* UpdateInstallRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallRequest.swift; sourceTree = "<group>"; };
@@ -334,20 +330,6 @@
 		AA01ACC0000000000000B001 /* WindowResolvingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResolvingView.swift; sourceTree = "<group>"; };
 		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		05F0007E000000000000000A /* Embed XPC Services */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
-			files = (
-				05F0009D000000000000000B /* Updater.xpc in Embed XPC Services */,
-			);
-			name = "Embed XPC Services";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		05C5277F2DD8E36300843626 /* Frameworks */ = {
@@ -660,7 +642,6 @@
 		05F000B5000000000000000A /* Relaunch */ = {
 			isa = PBXGroup;
 			children = (
-				05F00055000000000000000A /* ApplicationRelaunching.swift */,
 				05F0006A000000000000000A /* RelaunchError.swift */,
 				05F0006B000000000000000A /* RelaunchWaiter.swift */,
 				05F0006C000000000000000A /* ProcessRelauncher.swift */,
@@ -955,7 +936,6 @@
 				05C5277E2DD8E36300843626 /* Sources */,
 				05C5277F2DD8E36300843626 /* Frameworks */,
 				05C527802DD8E36300843626 /* Resources */,
-				05F0007E000000000000000A /* Embed XPC Services */,
 			);
 			buildRules = (
 			);
@@ -1092,7 +1072,6 @@
 				05F00052000000000000000B /* UpdateInstaller.swift in Sources */,
 				05F00053000000000000000B /* AppReplacing.swift in Sources */,
 				05F00054000000000000000B /* AppReplacer.swift in Sources */,
-				05F00055000000000000000B /* ApplicationRelaunching.swift in Sources */,
 				05F00057000000000000000B /* UpdateInstallation.swift in Sources */,
 				05F0005D000000000000000B /* XPCMessage.swift in Sources */,
 				05F0005E000000000000000B /* UpdateInstallRequest.swift in Sources */,
@@ -1207,7 +1186,6 @@
 				05F0008B000000000000000B /* UpdateInstaller.swift in Sources */,
 				05F0008C000000000000000B /* AppReplacing.swift in Sources */,
 				05F0008D000000000000000B /* AppReplacer.swift in Sources */,
-				05F0008E000000000000000B /* ApplicationRelaunching.swift in Sources */,
 				05F0008F000000000000000B /* UpdateInstallation.swift in Sources */,
 				05F00090000000000000000B /* XPCMessage.swift in Sources */,
 				05F00091000000000000000B /* UpdateInstallRequest.swift in Sources */,

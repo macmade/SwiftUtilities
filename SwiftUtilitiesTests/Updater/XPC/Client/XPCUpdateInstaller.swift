@@ -95,7 +95,7 @@ struct Test_XPCUpdateInstaller
     @Test
     func forwardsRequestAndReportsSuccess() async throws
     {
-        let connector = StubConnector( resultData: try UpdateInstallResult.success.encoded(), progressPhases: [ .extracting, .validating, .replacing, .relaunching ] )
+        let connector = StubConnector( resultData: try UpdateInstallResult.success.encoded(), progressPhases: [ .extracting, .validating, .replacing ] )
         let collector = ProgressCollector()
         let installer = XPCUpdateInstaller( inspector: StubInspector(), connector: connector, processIdentifier: 4242 )
 
@@ -108,7 +108,7 @@ struct Test_XPCUpdateInstaller
         #expect( request.identity          == Test_XPCUpdateInstaller.identity )
         #expect( request.format            == .zip )
         #expect( request.processIdentifier == 4242 )
-        #expect( collector.values          == [ .extracting, .validating, .replacing, .relaunching ] )
+        #expect( collector.values          == [ .extracting, .validating, .replacing ] )
     }
 
     @Test

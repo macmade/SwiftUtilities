@@ -34,6 +34,10 @@ import Foundation
 if let invocation = ProcessRelauncher.invocation( from: CommandLine.arguments )
 {
     try? RelaunchWaiter().waitForExitThenOpen( processIdentifier: invocation.processIdentifier, application: invocation.application )
+
+    // This process runs from the staged copy of the service bundle; remove it now
+    // that the application has been reopened. Unlinking the running binary is safe.
+    ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: invocation.application )
 }
 else
 {

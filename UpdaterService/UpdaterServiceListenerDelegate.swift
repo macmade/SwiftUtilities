@@ -60,7 +60,6 @@ final class UpdaterServiceListenerDelegate: NSObject, NSXPCListenerDelegate
             extractor:      ArchiveExtractor(),
             inspector:      SecurityCodeSignatureInspector(),
             replacer:       AppReplacer(),
-            makeRelauncher: { ProcessRelauncher( processIdentifier: $0 ) },
             reportProgress: UpdaterServiceListenerDelegate.progressSink( for: newConnection )
         )
 

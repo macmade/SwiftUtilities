@@ -25,6 +25,7 @@
 #if canImport( AppKit )
 
     import AppKit
+    import Observation
     import SwiftUI
 
     /// Hosts the update-available window.
@@ -99,6 +100,12 @@
 
         #if !SWIFT_PACKAGE
 
+        /// The in-app flow whose busy state gates the window's close control.
+        private weak var flowModel: InAppUpdateViewModel?
+
+        /// The hosted window whose close button is enabled or disabled.
+        private weak var hostedWindow: NSWindow?
+
         /// Shows the in-app update window, reusing the existing one if open.
         ///
         /// Presents ``UpdateAvailableView``, driven by an ``InAppUpdateViewModel`` that
@@ -168,6 +175,48 @@
                     window in
 
                     window.title = Localization.string( "GitHubUpdater.window.title" )
+
+                    controller.trackCloseControl( for: model, in: window )
+                }
+            }
+        }
+
+        /// Starts keeping the window's close control in step with the in-app flow.
+        ///
+        /// - Parameters:
+        ///   - model:  The in-app flow whose busy state drives the close control.
+        ///   - window: The window whose close button to enable or disable.
+        private func trackCloseControl( for model: InAppUpdateViewModel, in window: NSWindow )
+        {
+            self.flowModel    = model
+            self.hostedWindow = window
+
+            self.updateCloseControl()
+        }
+
+        /// Enables or disables the window's close button to match the flow.
+        ///
+        /// While the flow is busy (downloading / installing / relaunching) the close
+        /// button is disabled, which also blocks ⌘W — closing would neither stop the
+        /// work nor cancel the pending relaunch. Re-arms itself on each state change
+        /// through Observation, and stops once the window or model is gone.
+        private func updateCloseControl()
+        {
+            guard let window = self.hostedWindow, let model = self.flowModel
+            else
+            {
+                return
+            }
+
+            withObservationTracking
+            {
+                window.standardWindowButton( .closeButton )?.isEnabled = ( model.isBusy == false )
+            }
+            onChange:
+            {
+                Task
+                {
+                    [ weak self ] in await self?.updateCloseControl()
                 }
             }
         }

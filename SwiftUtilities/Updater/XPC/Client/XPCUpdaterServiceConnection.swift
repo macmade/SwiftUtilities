@@ -116,18 +116,18 @@ public struct XPCUpdaterServiceConnection: UpdaterServiceConnecting
     /// The connection can complete either through the reply block or the proxy's
     /// error handler, and only one of them must resume the continuation — resuming a
     /// `CheckedContinuation` twice traps. This guards the hand-off under a lock.
-    private final class SingleResumer: @unchecked Sendable
+    private final class SingleResumer< T: Sendable >: @unchecked Sendable
     {
         /// The lock guarding ``continuation``.
         private let lock = NSLock()
 
         /// The continuation to resume, cleared once resumed.
-        private var continuation: CheckedContinuation< Data, any Error >?
+        private var continuation: CheckedContinuation< T, any Error >?
 
         /// Creates a resumer for the given continuation.
         ///
         /// - Parameter continuation: The continuation to resume exactly once.
-        init( _ continuation: CheckedContinuation< Data, any Error > )
+        init( _ continuation: CheckedContinuation< T, any Error > )
         {
             self.continuation = continuation
         }
@@ -135,7 +135,7 @@ public struct XPCUpdaterServiceConnection: UpdaterServiceConnecting
         /// Resumes the continuation with a value, if it has not resumed yet.
         ///
         /// - Parameter value: The value to return.
-        func resume( returning value: Data )
+        func resume( returning value: T )
         {
             self.take()?.resume( returning: value )
         }
@@ -151,7 +151,7 @@ public struct XPCUpdaterServiceConnection: UpdaterServiceConnecting
         /// Atomically takes and clears the pending continuation.
         ///
         /// - Returns: The continuation the first time, `nil` on every later call.
-        private func take() -> CheckedContinuation< Data, any Error >?
+        private func take() -> CheckedContinuation< T, any Error >?
         {
             self.lock.lock()
 
