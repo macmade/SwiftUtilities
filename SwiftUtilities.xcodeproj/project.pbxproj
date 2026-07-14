@@ -144,6 +144,10 @@
 		AA01ACC0000000000000B002 /* WindowResolvingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000B001 /* WindowResolvingView.swift */; };
 		C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */; };
 		FCA5E7B0000000000000E002 /* WindowResizeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */; };
+		05F000C4000000000000000B /* SkippedVersionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C4000000000000000A /* SkippedVersionStore.swift */; };
+		05F000C5000000000000000B /* GitHubUpdater+Skip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C5000000000000000A /* GitHubUpdater+Skip.swift */; };
+		05F000C6000000000000000B /* SkippedVersionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C6000000000000000A /* SkippedVersionStore.swift */; };
+		05F000C7000000000000000B /* GitHubUpdater+Skip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C7000000000000000A /* GitHubUpdater+Skip.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -329,6 +333,10 @@
 		AA01ACC0000000000000A001 /* WindowAccessor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		AA01ACC0000000000000B001 /* WindowResolvingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResolvingView.swift; sourceTree = "<group>"; };
 		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
+		05F000C4000000000000000A /* SkippedVersionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedVersionStore.swift; sourceTree = "<group>"; };
+		05F000C5000000000000000A /* GitHubUpdater+Skip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Skip.swift"; sourceTree = "<group>"; };
+		05F000C6000000000000000A /* SkippedVersionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedVersionStore.swift; sourceTree = "<group>"; };
+		05F000C7000000000000000A /* GitHubUpdater+Skip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Skip.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -584,8 +592,10 @@
 			children = (
 				05398CAE2DEEC91B005904EC /* GitHubUpdater.swift */,
 				05F00002000000000000000A /* GitHubUpdater+AppKit.swift */,
+				05F000C5000000000000000A /* GitHubUpdater+Skip.swift */,
 				05F00001000000000000000A /* UpdateCheckResult.swift */,
 				05F0003B000000000000000A /* UpdateBehavior.swift */,
+				05F000C4000000000000000A /* SkippedVersionStore.swift */,
 			);
 			path = GitHub;
 			sourceTree = "<group>";
@@ -757,6 +767,8 @@
 				05398CC92DEECD14005904EC /* GitHubUpdater.swift */,
 				05F00003000000000000000A /* GitHubUpdater+AppKit.swift */,
 				05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */,
+				05F000C7000000000000000A /* GitHubUpdater+Skip.swift */,
+				05F000C6000000000000000A /* SkippedVersionStore.swift */,
 			);
 			path = GitHub;
 			sourceTree = "<group>";
@@ -1054,6 +1066,8 @@
 			files = (
 				05398CB22DEEC91B005904EC /* GitHubUpdater.swift in Sources */,
 				05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,
+				05F000C5000000000000000B /* GitHubUpdater+Skip.swift in Sources */,
+				05F000C4000000000000000B /* SkippedVersionStore.swift in Sources */,
 				05F0003B000000000000000B /* UpdateBehavior.swift in Sources */,
 				05F0003D000000000000000B /* UpdateArchiveFormat.swift in Sources */,
 				05F0003F000000000000000B /* CodeSigningIdentity.swift in Sources */,
@@ -1138,6 +1152,8 @@
 				05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */,
 				05398CC22DEEC9E3005904EC /* RuntimeError.swift in Sources */,
 				05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */,
+				05F000C7000000000000000B /* GitHubUpdater+Skip.swift in Sources */,
+				05F000C6000000000000000B /* SkippedVersionStore.swift in Sources */,
 				05F00033000000000000000B /* Credit.swift in Sources */,
 				05F0000E000000000000000B /* MarkdownContent.swift in Sources */,
 				05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */,

@@ -1,0 +1,477 @@
+<meta charset="utf-8">
+<title>Updater — Implementation Plan</title>
+<style>
+    :root {
+        color-scheme: dark;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 2.5rem 1.5rem 4rem;
+        background: #14161a;
+        color: #d7dce3;
+        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    main {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    header.doc {
+        border-bottom: 1px solid #2a2f38;
+        padding-bottom: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    h1 {
+        margin: 0 0 0.5rem;
+        font-size: 2rem;
+        color: #f4f6f9;
+    }
+
+    .meta {
+        margin: 0.15rem 0;
+        font-size: 0.9rem;
+        color: #8b95a3;
+    }
+
+    .meta code {
+        color: #b9c2cf;
+    }
+
+    h2 {
+        font-size: 1.05rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #8b95a3;
+        margin: 2.75rem 0 1rem;
+        border-bottom: 1px solid #22262e;
+        padding-bottom: 0.4rem;
+    }
+
+    h3.phase {
+        color: #f4f6f9;
+        font-size: 1.3rem;
+        margin: 2.5rem 0 0.5rem;
+    }
+
+    p {
+        margin: 0.6rem 0;
+        color: #c8cfd8;
+    }
+
+    a {
+        color: #6ea8fe;
+    }
+
+    code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.86em;
+        background: #22262e;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        color: #e3c78a;
+    }
+
+    dl.qa {
+        margin: 0;
+    }
+
+    dl.qa dt {
+        font-weight: 600;
+        color: #f4f6f9;
+        margin-top: 1rem;
+    }
+
+    dl.qa dd {
+        margin: 0.25rem 0 0;
+        color: #b6c9a9;
+    }
+
+    dl.qa dd::before {
+        content: "→ ";
+        color: #7d8694;
+    }
+
+    ul.notes {
+        padding-left: 1.2rem;
+    }
+
+    ul.notes li {
+        margin: 0.4rem 0;
+    }
+
+    .milestone {
+        background: #1b1f26;
+        border: 1px solid #2a2f38;
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .milestone > h4 {
+        margin: 0 0 0.35rem;
+        font-size: 1.15rem;
+        color: #f4f6f9;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .field {
+        margin: 0.9rem 0 0;
+    }
+
+    .field > .label {
+        display: block;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #7d8694;
+        margin-bottom: 0.3rem;
+    }
+
+    .capsule {
+        display: inline-block;
+        padding: 0.15rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        vertical-align: middle;
+    }
+
+    .capsule.not-started {
+        background: #363b45;
+        color: #b9c2cf;
+    }
+
+    .capsule.in-progress {
+        background: #7a5b12;
+        color: #ffd782;
+    }
+
+    .capsule.completed {
+        background: #1f5e34;
+        color: #9ff0b8;
+    }
+
+    .tasks {
+        list-style: none;
+        margin: 0.3rem 0 0;
+        padding: 0;
+    }
+
+    .tasks li {
+        position: relative;
+        padding-left: 1.7rem;
+        margin: 0.35rem 0;
+    }
+
+    .tasks li::before {
+        content: "☐";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #6b7686;
+        font-size: 1rem;
+    }
+
+    .placeholder {
+        color: #6b7686;
+        font-style: italic;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid #2a2f38;
+        margin: 3rem 0 0;
+    }
+
+    table.truth {
+        border-collapse: collapse;
+        margin: 0.6rem 0;
+        font-size: 0.9rem;
+    }
+
+    table.truth th,
+    table.truth td {
+        border: 1px solid #2a2f38;
+        padding: 0.4rem 0.8rem;
+        text-align: left;
+    }
+
+    table.truth th {
+        background: #22262e;
+        color: #cdd5df;
+    }
+</style>
+
+<main>
+    <header class="doc">
+        <h1>Updater — Skip Version &amp; Deployment-Target Verification</h1>
+        <p class="meta"><strong>Generated:</strong> 2026-07-13</p>
+        <p class="meta"><strong>Source:</strong> <code>Docs/agent-plans/active/2026-07-13-updater/updater.html</code></p>
+    </header>
+
+    <section>
+        <h2>Overview</h2>
+        <p>
+            This plan implements the two backlog items for the in-app updater. The first
+            lets the user <strong>skip a specific update</strong> so the "update available"
+            window stops appearing for that version, while a strictly newer version still
+            re-triggers it. The second <strong>verifies the downloaded app's deployment
+            target</strong> against the host OS before the running application is replaced,
+            aborting with a readable error when the host is too old to run the update.
+        </p>
+        <p>
+            The approach follows the existing updater architecture: pure, injectable
+            building blocks with value-level decision seams that are unit-testable without
+            UI, the network, or a live XPC connection. The skip decision reuses the module's
+            existing numeric version comparison; the deployment-target check is inserted into
+            the service-side install composition where the extracted bundle already exists,
+            and surfaces through the failure path that is already wired into the window.
+        </p>
+    </section>
+
+    <section>
+        <h2>Questions &amp; answers</h2>
+        <dl class="qa">
+            <dt>When a version is skipped, should an explicit "Check for Updates…" still surface it, or should skipping hide that version everywhere until a newer one ships?</dt>
+            <dd><strong>Manual check overrides skip.</strong> Background/automatic checks stay silent for the skipped version; an explicit user-initiated check still shows it (Sparkle-like behavior).</dd>
+
+            <dt>How should the skipped version be stored? (The codebase currently has no persistence layer at all.)</dt>
+            <dd><strong>UserDefaults, single latest version.</strong> A small <code>UserDefaults</code>-backed helper stores one skipped-version string; skipping again replaces it. The "newer supersedes" rule makes a single value sufficient.</dd>
+
+            <dt>Where should the deployment-target (host-OS compatibility) check run?</dt>
+            <dd><strong>Service-side, at install time.</strong> Read <code>LSMinimumSystemVersion</code> from the extracted bundle between extract and replace — the only place the bundle exists — and abort before replacing if the host OS is too old.</dd>
+
+            <dt>When the update can't run on the host OS, what should the window offer besides the error?</dt>
+            <dd><strong>Error + link to release page.</strong> The failure state already renders a "View on GitHub" action alongside the message, so this is satisfied by the existing failure UI (see Notes).</dd>
+        </dl>
+    </section>
+
+    <section>
+        <h2>Notes</h2>
+        <ul class="notes">
+            <li>
+                <strong>No persistence exists yet.</strong> There is no <code>UserDefaults</code>,
+                <code>@AppStorage</code>, or settings type anywhere in the repo. The skipped-version
+                store is the first persisted setting; keep it small and self-contained.
+            </li>
+            <li>
+                <strong>Version comparison.</strong> Reuse <code>GitHubUpdater.isVersion(_:newerThan:)</code>
+                (<code>SwiftUtilities/Updater/GitHub/GitHubUpdater.swift:325</code>), a normalized
+                numeric <code>NSString</code> comparison (so <code>1.10 &gt; 1.9</code>). Do not introduce a
+                second version type. The skip suppression rule is: suppress iff the available
+                update is <em>not</em> strictly newer than the skipped version.
+            </li>
+            <li>
+                <strong>Manual vs. background.</strong> The two entry points differ only by their
+                <code>messages</code> set: <code>checkForUpdates()</code> uses <code>.all</code>,
+                <code>checkForUpdatesInBackground()</code> uses <code>.updateAvailable</code>
+                (<code>GitHubUpdater+AppKit.swift:177</code>, <code>:193</code>). The skip gate must apply to
+                the background path only — thread an explicit flag rather than inferring it from the
+                <code>messages</code> set.
+            </li>
+            <li>
+                <strong>Failure UI already links to the release.</strong> In the <code>.failed</code> state
+                the view renders <code>failure(message:)</code> plus the <code>actions</code> row, which
+                includes "View on GitHub" (opens the release page) and "Later"
+                (<code>UpdateAvailableView.swift:190</code>, <code>:354</code>). A deployment-target error that
+                surfaces through this path needs <em>no new UI</em> to satisfy the "error + link" answer.
+            </li>
+            <li>
+                <strong>Errors cross the XPC boundary as text.</strong> Any <code>LocalizedError</code> thrown
+                inside the install composition has its <code>errorDescription</code> carried through
+                <code>UpdateInstallResult.failure(from:)</code> → the client → the in-window failure state.
+                So the deployment-target error must be a <code>LocalizedError</code> with a clear message.
+            </li>
+            <li>
+                <strong>Single install-composition wiring site.</strong> <code>UpdateInstallation</code> is
+                constructed only at <code>UpdaterService.swift:145</code>. That is the one place to inject the
+                new verifier.
+            </li>
+            <li>
+                <strong>Host OS &amp; deployment target.</strong> Prefer building an
+                <code>OperatingSystemVersion</code> from the parsed <code>LSMinimumSystemVersion</code> and
+                calling <code>ProcessInfo.processInfo.isOperatingSystemAtLeast(_:)</code> (Apple-documented)
+                rather than string math. When <code>LSMinimumSystemVersion</code> is absent or unparseable,
+                skip the check and allow the install (lenient — avoid blocking on missing metadata).
+            </li>
+            <li>
+                <strong>Localization.</strong> New user-facing strings go in
+                <code>SwiftUtilities/Utilities/en.lproj/Localizable.strings</code>, and the resolver test
+                <code>SwiftUtilitiesTests/Utilities/Localization.swift</code> should get a matching assertion.
+            </li>
+            <li>
+                <strong>Keep the Xcode project and package in sync.</strong> Both
+                <code>SwiftUtilities.xcodeproj</code> and <code>Package.swift</code> exist. New source files must
+                be added to the Xcode project (SwiftPM globs the target directory automatically). Build and
+                run tests through <code>xcodebuild</code> per the project convention.
+            </li>
+            <li>
+                <strong>Platform guards.</strong> The skip <em>UI</em> is AppKit-only and lives under existing
+                <code>#if canImport(AppKit)</code> / <code>#if !SWIFT_PACKAGE</code> guards. The
+                deployment-target check lives in the shared <code>UpdateInstallation</code> (compiled into the
+                service), so it must not depend on AppKit.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Milestones</h2>
+
+        <h3 class="phase">Phase A — Skip a specific update</h3>
+
+        <div class="milestone">
+            <h4>A1 · Skipped-version store &amp; pure skip decision <span class="capsule completed">Completed</span></h4>
+            <p><strong>Goal:</strong> Introduce a small persisted store for the single skipped version and a pure, testable decision for whether an available update should still be presented.</p>
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li>Add a <code>SkippedVersionStore</code> type (<code>UserDefaults</code>-backed, injectable <code>UserDefaults</code> for tests), keyed per updater by <code>owner/repository</code> — e.g. <code>"GitHubUpdater.&lt;owner&gt;/&lt;repo&gt;.skippedVersion"</code>. API: read, set (replaces), clear.</li>
+                    <li>Add a pure decision helper on <code>GitHubUpdater</code> — e.g. <code>static func shouldPresentUpdate(_ update: String, skippedVersion: String?) -&gt; Bool</code> — suppressing only when a skipped version exists and the update is <em>not</em> newer than it (reuse <code>isVersion(_:newerThan:)</code>).</li>
+                    <li>Unit tests: store round-trip, replace-on-reset, clear, and per-repo key isolation; decision truth table (nil skip → show, equal → suppress, older-than-skip → suppress, newer-than-skip → show).</li>
+                    <li>Place the new file(s) sensibly (e.g. <code>SwiftUtilities/Updater/GitHub/</code> or a new <code>Persistence/</code> folder) and add them to <code>SwiftUtilities.xcodeproj</code>.</li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Status</span> <span class="capsule completed">Completed</span></div>
+            <div class="field"><span class="label">Completed</span> 2026-07-14</div>
+            <div class="field"><span class="label">Implementation notes</span>
+                <p>Implemented with TDD (tests first → red → implement → green). Two new framework files under <code>SwiftUtilities/Updater/GitHub/</code>:</p>
+                <ul class="notes">
+                    <li><code>SkippedVersionStore.swift</code> — a <code>public struct</code> backed by an injectable <code>UserDefaults</code> (defaulting to <code>.standard</code>). Key is namespaced per repository as <code>"GitHubUpdater.&lt;owner&gt;/&lt;repo&gt;.skippedVersion"</code> (exposed as the <code>public let key</code>). API: <code>var skippedVersion: String?</code> (read via <code>string(forKey:)</code>), <code>setSkippedVersion(_:)</code> (replaces via <code>set(_:forKey:)</code>), <code>clearSkippedVersion()</code> (via <code>removeObject(forKey:)</code>). Not marked <code>Sendable</code> because <code>UserDefaults</code> is not <code>Sendable</code> and the store is constructed at point of use on the main actor; no cross-actor use exists in A1.</li>
+                    <li><code>GitHubUpdater+Skip.swift</code> — an extension adding <code>internal static func shouldPresentUpdate(_ update: String, skippedVersion: String?) -&gt; Bool</code>. Returns <code>true</code> when no version is skipped, otherwise delegates to the existing <code>isVersion(_:newerThan:)</code>, so the update shows only when strictly newer than the skip. Kept <code>internal</code> to match the existing <code>isVersion</code> decision-seam precedent (tested via <code>@testable import</code>), rather than exposing it as public API.</li>
+                </ul>
+                <p><strong>File placement decision:</strong> chose the existing <code>Updater/GitHub/</code> folder over a new <code>Persistence/</code> folder, since the store's key prefix and semantics are GitHub-updater-specific. Placed the decision helper alongside the other <code>GitHubUpdater+*.swift</code> extensions.</p>
+                <p><strong>Xcode/SwiftPM sync:</strong> added the two source files (framework target: group <code>05F000B0</code>, Sources phase <code>05C5277E</code>) and two matching test files (test target: group <code>05F000BA</code>, Sources phase <code>05C52787</code>) to <code>project.pbxproj</code> using fresh IDs <code>05F000C4–C7</code>. The XPC <code>Updater</code> target was intentionally left untouched (the skip feature is client-side only). <code>Package.swift</code> needs no edit: it auto-globs <code>Updater/GitHub/</code> (not excluded), confirmed by a clean <code>swift build</code>.</p>
+                <p><strong>Tests:</strong> <code>Test_SkippedVersionStore</code> (round-trip, replace-on-reset, clear, per-repo key isolation — each using an isolated temporary <code>UserDefaults(suiteName:)</code> torn down via <code>removePersistentDomain</code>) and <code>Test_GitHubUpdater_Skip</code> (full truth table plus numeric-ordering and <code>v</code>-prefix cases). All 10 new tests pass; full suite green at <strong>187 tests, 0 regressions</strong> via <code>xcodebuild</code>.</p>
+                <p><strong>Automated review loop:</strong> 1 round; converged immediately with no Critical/High/Medium findings (see below).</p>
+            </div>
+            <div class="field"><span class="label">Automated review</span>
+                <ul class="notes">
+                    <li><strong>Skip decision correctness</strong> (Info) — verified the decision matches the required truth table exactly against <code>isVersion</code>. <em>No change needed.</em></li>
+                    <li><strong>Store UserDefaults usage</strong> (Info) — key construction, read/replace/clear all confirmed correct. <em>No change needed.</em></li>
+                    <li><strong>Access control follows established seam</strong> (Info) — <code>internal shouldPresentUpdate</code> + <code>public</code> store are appropriate. <em>No change needed.</em></li>
+                    <li><strong>API asymmetry: computed read property vs. method writes</strong> (Low) — deliberate; a settable property can't express "clear" as cleanly. <em>Deferred — no change.</em></li>
+                    <li><strong>Unnecessary <code>async</code> on skip tests</strong> (Low) — flagged that the skip tests are <code>async throws</code> without <code>await</code>. Left as-is: this matches the existing <code>Test_GitHubUpdater</code> convention (its methods are also <code>async throws</code> without <code>await</code>). <em>Deferred — no change.</em></li>
+                    <li><strong>fileRef ordering in the framework GitHub group</strong> (Info) — cosmetic; irrelevant to the build. <em>Deferred — no change.</em></li>
+                </ul>
+                <p>Independent checks by the reviewer: <code>plutil -lint</code> on the pbxproj passed; new IDs unique with no collisions/dangling refs; correct target membership (XPC target excluded); clean <code>swift build</code>. No regressions.</p>
+            </div>
+            <div class="field"><span class="label">Review comments</span>
+                <ul class="notes">
+                    <li>"Looks good" — approved the milestone as implemented; no changes requested.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="milestone">
+            <h4>A2 · Gate the background presentation on the skip <span class="capsule not-started">Not started</span></h4>
+            <p><strong>Goal:</strong> Suppress the update-available window for a skipped version on background checks only, leaving manual checks unaffected.</p>
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li>Add an explicit flag to the AppKit presentation (e.g. <code>present(_:messages:respectingSkip:)</code>); <code>checkForUpdatesInBackground()</code> passes <code>true</code>, <code>checkForUpdates()</code> passes <code>false</code>.</li>
+                    <li>In <code>present</code>, when the flag is set and the result is <code>.updateAvailable</code>, read the store (built from the updater's <code>owner</code>/<code>repository</code>) and consult the A1 decision helper; treat a suppressed update like <code>.none</code>.</li>
+                    <li>Ensure the manual path never suppresses, so a skipped version reappears on an explicit "Check for Updates…".</li>
+                    <li>Tests target the pure decision helper (the presentation itself is UI); confirm background-vs-manual routing via the flag.</li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
+            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
+            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
+            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+        </div>
+
+        <div class="milestone">
+            <h4>A3 · "Skip This Version" button in the update window <span class="capsule not-started">Not started</span></h4>
+            <p><strong>Goal:</strong> Give the user a way to skip the current update from both the link and in-app windows, persisting the choice and closing the window.</p>
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li>Add an <code>onSkip</code> callback to <code>UpdateAvailableView</code> and render a "Skip This Version" button in the idle <code>actions</code> row (shown for both link and in-app modes, idle state only — not while downloading/installing/failed).</li>
+                    <li>Thread <code>onSkip</code> through <code>UpdateWindowController.show(...)</code> and <code>showInApp(...)</code>, and wire it in <code>GitHubUpdater+AppKit</code> to write the available <code>update</code> version to the store and close the window.</li>
+                    <li>Add localization key <code>GitHubUpdater.window.button.skip</code> (e.g. "Skip This Version") to <code>Localizable.strings</code> and a matching assertion in the <code>Localization</code> resolver test.</li>
+                    <li>Update/extend the SwiftUI previews so the new action is covered.</li>
+                    <li>Confirm the button placement doesn't disrupt the default-action keyboard shortcut wiring for Download / View on GitHub.</li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
+            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
+            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
+            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+        </div>
+
+        <h3 class="phase">Phase B — Verify deployment target before replacing</h3>
+
+        <div class="milestone">
+            <h4>B1 · Deployment-target verification building block &amp; error <span class="capsule not-started">Not started</span></h4>
+            <p><strong>Goal:</strong> Provide an injectable, testable verifier that decides whether a downloaded bundle can run on the host OS, and a readable error for when it cannot.</p>
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li>Add a <code>DeploymentTargetVerifying</code> protocol and a concrete implementation that reads <code>LSMinimumSystemVersion</code> from the candidate bundle's <code>Contents/Info.plist</code>, parses it into an <code>OperatingSystemVersion</code>, and compares against the host via <code>ProcessInfo.processInfo.isOperatingSystemAtLeast(_:)</code>.</li>
+                    <li>When <code>LSMinimumSystemVersion</code> is absent or unparseable, allow the install (do not block on missing metadata) — document this leniency.</li>
+                    <li>Add a <code>LocalizedError</code> for the incompatible case (e.g. <code>DeploymentTargetError.incompatible(required:host:)</code>) whose <code>errorDescription</code> names the required and host OS versions.</li>
+                    <li>Inject the host OS version so the comparison is unit-testable without depending on the running machine.</li>
+                    <li>Tests: compatible → passes; host too old → throws; missing/invalid key → passes. Add new file(s) to <code>SwiftUtilities.xcodeproj</code>.</li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
+            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
+            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
+            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+        </div>
+
+        <div class="milestone">
+            <h4>B2 · Insert the check into the install composition <span class="capsule not-started">Not started</span></h4>
+            <p><strong>Goal:</strong> Run the deployment-target verification after extraction and before replacement, so an incompatible update is refused with the running app left untouched, surfacing as the in-window failure with its existing "View on GitHub" link.</p>
+            <div class="field">
+                <span class="label">Tasks</span>
+                <ul class="tasks">
+                    <li>Inject the verifier into <code>UpdateInstallation</code> and call it between extract and replace. Recommended ordering: extract → validate signature → verify deployment target → replace (preserves the documented security-first ordering); the verifier throws on incompatibility so <code>replaceApplication</code> never runs.</li>
+                    <li>Run the verification without adding a new <code>InstallProgress</code> phase (it is sub-second) to avoid enum/XPC/localization churn — note the alternative of a dedicated phase if a distinct status is later wanted.</li>
+                    <li>Wire the production verifier at the single construction site (<code>UpdaterService.swift:145</code>), matching how the extractor/validator/replacer are supplied by the service listener.</li>
+                    <li>Tests: install refuses on an incompatible target (replacer not invoked, error thrown); proceeds when compatible; verify the <code>UpdateInstallResult.failure(reason:)</code> carries the error's message.</li>
+                    <li>Confirm end-to-end that the message reaches the window's <code>.failed</code> state and that "View on GitHub" / "Later" are available there (no new UI expected).</li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
+            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
+            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
+            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Appendix</h2>
+        <p><strong>Skip suppression truth table</strong> (available update vs. stored skipped version, using <code>isVersion(update, newerThan: skipped)</code>):</p>
+        <table class="truth">
+            <tr><th>Stored skipped version</th><th>Available update</th><th>Outcome (background)</th></tr>
+            <tr><td>none</td><td>any</td><td>Show</td></tr>
+            <tr><td>1.1.0</td><td>1.1.0 (equal)</td><td>Suppress</td></tr>
+            <tr><td>1.1.0</td><td>1.0.5 (older)</td><td>Suppress</td></tr>
+            <tr><td>1.1.0</td><td>1.2.0 (newer)</td><td>Show (supersedes skip)</td></tr>
+        </table>
+        <p>A manual "Check for Updates…" ignores the stored skip entirely and always shows an available update.</p>
+        <p>
+            <strong>Deployment-target comparison.</strong> <code>LSMinimumSystemVersion</code> is a dotted string
+            (e.g. <code>"13.0"</code>); parse its numeric components into an <code>OperatingSystemVersion</code>
+            (<code>majorVersion</code>/<code>minorVersion</code>/<code>patchVersion</code>) and call
+            <code>ProcessInfo.processInfo.isOperatingSystemAtLeast(_:)</code>. A <code>false</code> result means the
+            host is too old and the install is refused before <code>AppReplacer</code> runs.
+        </p>
+    </section>
+</main>
