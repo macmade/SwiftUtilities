@@ -103,6 +103,60 @@
             #expect( GitHubUpdater.alert( for: .failed( reason: "Boom" ), messages: .all )
                 == .error( message: "Boom" ) )
         }
+
+        private func makeUpdateAvailable( update: String = "2.0.0" ) throws -> ( result: UpdateCheckResult, url: URL )
+        {
+            let url    = try #require( URL( string: "https://example.com/\( update )" ) )
+            let result = UpdateCheckResult.updateAvailable( application: "App", version: "1.0.0", update: update, url: url, notes: "Notes", downloadURL: nil )
+
+            return ( result, url )
+        }
+
+        @Test
+        func backgroundSuppressesSkippedUpdate() async throws
+        {
+            let available = try self.makeUpdateAvailable( update: "2.0.0" )
+
+            #expect( GitHubUpdater.alert( for: available.result, messages: .updateAvailable, respectingSkip: true, skippedVersion: "2.0.0" ) == .none )
+            #expect( GitHubUpdater.alert( for: available.result, messages: .updateAvailable, respectingSkip: true, skippedVersion: "2.5.0" ) == .none )
+        }
+
+        @Test
+        func backgroundShowsUpdateNewerThanSkipped() async throws
+        {
+            let available = try self.makeUpdateAvailable( update: "2.0.0" )
+            let alert     = GitHubUpdater.alert( for: available.result, messages: .updateAvailable, respectingSkip: true, skippedVersion: "1.5.0" )
+
+            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: available.url, notes: "Notes", downloadURL: nil ) )
+        }
+
+        @Test
+        func backgroundShowsWhenNothingSkipped() async throws
+        {
+            let available = try self.makeUpdateAvailable( update: "2.0.0" )
+            let alert     = GitHubUpdater.alert( for: available.result, messages: .updateAvailable, respectingSkip: true, skippedVersion: nil )
+
+            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: available.url, notes: "Notes", downloadURL: nil ) )
+        }
+
+        @Test
+        func manualCheckIgnoresSkip() async throws
+        {
+            let available = try self.makeUpdateAvailable( update: "2.0.0" )
+            let alert     = GitHubUpdater.alert( for: available.result, messages: .all, respectingSkip: false, skippedVersion: "2.0.0" )
+
+            #expect( alert == .updateAvailable( application: "App", version: "1.0.0", update: "2.0.0", url: available.url, notes: "Notes", downloadURL: nil ) )
+        }
+
+        @Test
+        func skipGateLeavesOtherOutcomesUntouched() async throws
+        {
+            #expect( GitHubUpdater.alert( for: .upToDate( application: "App", version: "1.0.0" ), messages: .all, respectingSkip: true, skippedVersion: "2.0.0" )
+                == .upToDate( application: "App", version: "1.0.0" ) )
+
+            #expect( GitHubUpdater.alert( for: .failed( reason: "Boom" ), messages: .all, respectingSkip: true, skippedVersion: "2.0.0" )
+                == .error( message: "Boom" ) )
+        }
     }
 
 #endif

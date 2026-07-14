@@ -131,6 +131,41 @@
             }
         }
 
+        /// Determines which alert to present, suppressing an available update the
+        /// user has chosen to skip.
+        ///
+        /// Pure: wraps ``alert(for:messages:)`` with the skip gate. When
+        /// `respectingSkip` is `true` (a background check), an
+        /// ``Alert/updateAvailable`` outcome is downgraded to ``Alert/none`` if
+        /// ``shouldPresentUpdate(_:skippedVersion:)`` reports the update should stay
+        /// silent — i.e. a version was skipped and this update is not strictly newer
+        /// than it. When `respectingSkip` is `false` (an explicit "Check for
+        /// Updates…"), the skip is ignored entirely, so a skipped version reappears
+        /// on a manual check. All other outcomes pass through unchanged. Performs no
+        /// UI or persistence work.
+        ///
+        /// - Parameters:
+        ///   - result:         The outcome to present.
+        ///   - messages:       The set of outcomes for which an alert should be shown.
+        ///   - respectingSkip: Whether a skipped update should be suppressed.
+        ///   - skippedVersion: The version the user chose to skip, or `nil` if none.
+        ///
+        /// - Returns: The alert to present, or ``Alert/none`` if the outcome is suppressed.
+        internal static func alert( for result: UpdateCheckResult, messages: MessageOptions, respectingSkip: Bool, skippedVersion: String? ) -> Alert
+        {
+            let alert = GitHubUpdater.alert( for: result, messages: messages )
+
+            guard respectingSkip,
+                  case .updateAvailable( _, _, let update, _, _, _ ) = alert,
+                  GitHubUpdater.shouldPresentUpdate( update, skippedVersion: skippedVersion ) == false
+            else
+            {
+                return alert
+            }
+
+            return .none
+        }
+
         #if !SWIFT_PACKAGE
 
         /// Determines how the update-available window should present a newer release.
@@ -180,7 +215,7 @@
             {
                 let result = await self.performUpdateCheck()
 
-                await self.present( result, messages: .all )
+                await self.present( result, messages: .all, respectingSkip: false )
             }
         }
 
@@ -196,7 +231,7 @@
             {
                 let result = await self.performUpdateCheck()
 
-                await self.present( result, messages: .updateAvailable )
+                await self.present( result, messages: .updateAvailable, respectingSkip: true )
             }
         }
 
@@ -204,17 +239,25 @@
         ///
         /// The up-to-date and error outcomes are shown as modal alerts; the
         /// update-available outcome opens the non-modal update window, whose flavor
-        /// is chosen by ``updateWindowMode(for:downloadURL:)`` from the updater's
-        /// ``behavior``.
+        /// is chosen by ``updateWindowMode(for:downloadURL:serviceAvailable:)`` from
+        /// the updater's ``behavior``.
         ///
         /// - Parameters:
-        ///   - result:   The outcome to present.
-        ///   - messages: The set of outcomes for which feedback should be shown.
+        ///   - result:         The outcome to present.
+        ///   - messages:       The set of outcomes for which feedback should be shown.
         ///     Outcomes not present in the set are handled silently.
+        ///   - respectingSkip: Whether an available update the user has chosen to
+        ///     skip should be suppressed. Background checks pass `true`; an explicit
+        ///     "Check for Updates…" passes `false`, so a skipped version still
+        ///     surfaces on a manual check. When `true`, the skipped version is read
+        ///     from the ``SkippedVersionStore`` keyed by this updater's ``owner`` and
+        ///     ``repository``; the manual path performs no persistence read.
         @MainActor
-        private func present( _ result: UpdateCheckResult, messages: MessageOptions )
+        private func present( _ result: UpdateCheckResult, messages: MessageOptions, respectingSkip: Bool )
         {
-            switch GitHubUpdater.alert( for: result, messages: messages )
+            let skippedVersion = respectingSkip ? SkippedVersionStore( owner: self.owner, repository: self.repository ).skippedVersion : nil
+
+            switch GitHubUpdater.alert( for: result, messages: messages, respectingSkip: respectingSkip, skippedVersion: skippedVersion )
             {
                 case .none:
 

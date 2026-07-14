@@ -374,7 +374,7 @@
         </div>
 
         <div class="milestone">
-            <h4>A2 · Gate the background presentation on the skip <span class="capsule not-started">Not started</span></h4>
+            <h4>A2 · Gate the background presentation on the skip <span class="capsule completed">Completed</span></h4>
             <p><strong>Goal:</strong> Suppress the update-available window for a skipped version on background checks only, leaving manual checks unaffected.</p>
             <div class="field">
                 <span class="label">Tasks</span>
@@ -385,11 +385,36 @@
                     <li>Tests target the pure decision helper (the presentation itself is UI); confirm background-vs-manual routing via the flag.</li>
                 </ul>
             </div>
-            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
-            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
-            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
-            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
-            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Status</span> <span class="capsule completed">Completed</span></div>
+            <div class="field"><span class="label">Completed</span> 2026-07-14</div>
+            <div class="field"><span class="label">Implementation notes</span>
+                <p>Implemented with TDD (tests first → red → implement → green). Changes are confined to the existing <code>GitHubUpdater+AppKit.swift</code> (source and test) — no new files, so no <code>project.pbxproj</code> or <code>Package.swift</code> edits were needed.</p>
+                <ul class="notes">
+                    <li>Added a pure overload <code>alert(for:messages:respectingSkip:skippedVersion:) -&gt; Alert</code> next to the existing two-arg seam. It calls the base <code>alert(for:messages:)</code>, then downgrades an <code>.updateAvailable</code> result to <code>.none</code> only when <code>respectingSkip</code> is <code>true</code> and the A1 helper <code>shouldPresentUpdate(update, skippedVersion:)</code> reports the update should stay silent. All other outcomes (up-to-date, error, none) pass through untouched. Kept <code>internal</code> to match the existing alert-seam precedent (tested via <code>@testable import</code>).</li>
+                    <li>Threaded an explicit <code>respectingSkip: Bool</code> through <code>present(_:messages:respectingSkip:)</code> — not inferred from the <code>messages</code> set, per the plan's design note. <code>checkForUpdatesInBackground()</code> passes <code>true</code>; <code>checkForUpdates()</code> passes <code>false</code>.</li>
+                    <li>In <code>present</code>, the <code>SkippedVersionStore</code> is read <em>only</em> when <code>respectingSkip</code> is <code>true</code> (<code>respectingSkip ? SkippedVersionStore( owner:repository: ).skippedVersion : nil</code>), so the manual path performs no persistence read at all. The read stays on the <code>@MainActor</code>.</li>
+                </ul>
+                <p><strong>Tests</strong> (added to <code>Test_GitHubUpdaterAlert</code>): background suppresses when the update equals or is older than the skip; background shows when the update is strictly newer; background shows when nothing is skipped; a manual check ignores a matching skip; and the gate leaves up-to-date/error outcomes untouched. All pass; full suite green at <strong>192 tests, 0 regressions</strong> via <code>xcodebuild</code>, and <code>swift build</code> (SwiftPM) is clean.</p>
+                <p><strong>Automated review loop:</strong> 1 round; converged immediately with no Critical/High/Medium findings (see below).</p>
+                <p><strong>Post-review change (user feedback):</strong> fixed the pre-existing stale doc reference in <code>present</code>'s comment — <code>updateWindowMode(for:downloadURL:)</code> → <code>updateWindowMode(for:downloadURL:serviceAvailable:)</code> — at the user's request. Doc-comment only; no behavior change. <code>swift build</code> remains clean.</p>
+            </div>
+            <div class="field"><span class="label">Automated review</span>
+                <ul class="notes">
+                    <li><strong>Skip gate correctness / edge cases</strong> (Info) — verified exact: equal-to-skip and older-than-skip suppressed, strictly-newer shown, nil-skip shown, non-update outcomes untouched; the pattern binds the correct <code>update</code> associated value. <em>No change needed.</em></li>
+                    <li><strong>Manual path avoids the persistence read</strong> (Info) — confirmed the store is only constructed when <code>respectingSkip</code> is true. <em>No change needed.</em></li>
+                    <li><strong>Explicit flag, not inferred; no regressions</strong> (Info) — flag threaded from the two call sites; base seam retained; <code>#if !SWIFT_PACKAGE</code> gating untouched; <code>present</code>'s only callers are the two updated sites. <em>No change needed.</em></li>
+                    <li><strong>Wasted defaults read on background non-update outcomes</strong> (Info/Low) — on a background <code>.upToDate</code>/<code>.failed</code> result the store read is done and discarded. Harmless and cheap; guarding it would complicate the code for negligible gain. <em>Deferred — no change.</em></li>
+                    <li><strong>Call-site flag wiring not unit-tested</strong> (Info) — inherent, since <code>present</code> is <code>@MainActor private</code> UI and the plan scopes tests to the decision helper. <em>Deferred — no change.</em></li>
+                    <li><strong>Pre-existing stale doc reference</strong> (Info, out of scope) — <code>present</code>'s doc comment still names <code>updateWindowMode(for:downloadURL:)</code> instead of <code>...serviceAvailable:</code>. Predates A2 and is not in this diff; surfaced to the user to fix separately if desired. <em>Not changed under A2.</em></li>
+                </ul>
+                <p>The reviewer performed a static review (no test execution), cross-checking all references against the source and git history. No regressions found.</p>
+            </div>
+            <div class="field"><span class="label">Review comments</span>
+                <ul class="notes">
+                    <li>"Fix the stale doc comment too" — approved fixing the pre-existing stale doc reference flagged in the automated review (note #6): <code>present</code>'s doc comment referenced <code>updateWindowMode(for:downloadURL:)</code> instead of the actual <code>updateWindowMode(for:downloadURL:serviceAvailable:)</code>. Fixed as part of A2.</li>
+                    <li>"Looks good" — approved the milestone (including the doc-comment fix) as implemented; no further changes requested.</li>
+                </ul>
+            </div>
         </div>
 
         <div class="milestone">
