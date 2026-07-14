@@ -148,6 +148,13 @@
 		05F000C5000000000000000B /* GitHubUpdater+Skip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C5000000000000000A /* GitHubUpdater+Skip.swift */; };
 		05F000C6000000000000000B /* SkippedVersionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C6000000000000000A /* SkippedVersionStore.swift */; };
 		05F000C7000000000000000B /* GitHubUpdater+Skip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C7000000000000000A /* GitHubUpdater+Skip.swift */; };
+		05F000C8000000000000000B /* DeploymentTargetVerifying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C8000000000000000A /* DeploymentTargetVerifying.swift */; };
+		05F000C9000000000000000B /* DeploymentTargetVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C9000000000000000A /* DeploymentTargetVerifier.swift */; };
+		05F000CA000000000000000B /* DeploymentTargetError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000CA000000000000000A /* DeploymentTargetError.swift */; };
+		05F000CB000000000000000B /* DeploymentTargetVerifying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C8000000000000000A /* DeploymentTargetVerifying.swift */; };
+		05F000CC000000000000000B /* DeploymentTargetVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C9000000000000000A /* DeploymentTargetVerifier.swift */; };
+		05F000CD000000000000000B /* DeploymentTargetError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000CA000000000000000A /* DeploymentTargetError.swift */; };
+		05F000CE000000000000000B /* DeploymentTargetVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000CE000000000000000A /* DeploymentTargetVerifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -337,6 +344,10 @@
 		05F000C5000000000000000A /* GitHubUpdater+Skip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Skip.swift"; sourceTree = "<group>"; };
 		05F000C6000000000000000A /* SkippedVersionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedVersionStore.swift; sourceTree = "<group>"; };
 		05F000C7000000000000000A /* GitHubUpdater+Skip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Skip.swift"; sourceTree = "<group>"; };
+		05F000C8000000000000000A /* DeploymentTargetVerifying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetVerifying.swift; sourceTree = "<group>"; };
+		05F000C9000000000000000A /* DeploymentTargetVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetVerifier.swift; sourceTree = "<group>"; };
+		05F000CA000000000000000A /* DeploymentTargetError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetError.swift; sourceTree = "<group>"; };
+		05F000CE000000000000000A /* DeploymentTargetVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetVerifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -645,6 +656,9 @@
 				05F00054000000000000000A /* AppReplacer.swift */,
 				05F00068000000000000000A /* ExpectedIdentityInspector.swift */,
 				05F0009E000000000000000A /* UpdateInstallError.swift */,
+				05F000C8000000000000000A /* DeploymentTargetVerifying.swift */,
+				05F000C9000000000000000A /* DeploymentTargetVerifier.swift */,
+				05F000CA000000000000000A /* DeploymentTargetError.swift */,
 			);
 			path = Install;
 			sourceTree = "<group>";
@@ -807,6 +821,7 @@
 				05F00059000000000000000A /* AppReplacer.swift */,
 				05F00058000000000000000A /* UpdateInstallation.swift */,
 				05F0006D000000000000000A /* ExpectedIdentityInspector.swift */,
+				05F000CE000000000000000A /* DeploymentTargetVerifier.swift */,
 			);
 			path = Install;
 			sourceTree = "<group>";
@@ -1087,6 +1102,9 @@
 				05F00053000000000000000B /* AppReplacing.swift in Sources */,
 				05F00054000000000000000B /* AppReplacer.swift in Sources */,
 				05F00057000000000000000B /* UpdateInstallation.swift in Sources */,
+				05F000C8000000000000000B /* DeploymentTargetVerifying.swift in Sources */,
+				05F000C9000000000000000B /* DeploymentTargetVerifier.swift in Sources */,
+				05F000CA000000000000000B /* DeploymentTargetError.swift in Sources */,
 				05F0005D000000000000000B /* XPCMessage.swift in Sources */,
 				05F0005E000000000000000B /* UpdateInstallRequest.swift in Sources */,
 				05F0005F000000000000000B /* UpdateInstallResult.swift in Sources */,
@@ -1167,6 +1185,7 @@
 				05F00050000000000000000B /* ArchiveExtractor.swift in Sources */,
 				05F00058000000000000000B /* UpdateInstallation.swift in Sources */,
 				05F00059000000000000000B /* AppReplacer.swift in Sources */,
+				05F000CE000000000000000B /* DeploymentTargetVerifier.swift in Sources */,
 				05F00063000000000000000B /* XPCMessage.swift in Sources */,
 				05F00064000000000000000B /* UpdateInstallRequest.swift in Sources */,
 				05F00065000000000000000B /* UpdateInstallResult.swift in Sources */,
@@ -1203,6 +1222,9 @@
 				05F0008C000000000000000B /* AppReplacing.swift in Sources */,
 				05F0008D000000000000000B /* AppReplacer.swift in Sources */,
 				05F0008F000000000000000B /* UpdateInstallation.swift in Sources */,
+				05F000CB000000000000000B /* DeploymentTargetVerifying.swift in Sources */,
+				05F000CC000000000000000B /* DeploymentTargetVerifier.swift in Sources */,
+				05F000CD000000000000000B /* DeploymentTargetError.swift in Sources */,
 				05F00090000000000000000B /* XPCMessage.swift in Sources */,
 				05F00091000000000000000B /* UpdateInstallRequest.swift in Sources */,
 				05F00092000000000000000B /* UpdateInstallResult.swift in Sources */,

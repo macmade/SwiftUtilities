@@ -464,7 +464,7 @@
         <h3 class="phase">Phase B — Verify deployment target before replacing</h3>
 
         <div class="milestone">
-            <h4>B1 · Deployment-target verification building block &amp; error <span class="capsule not-started">Not started</span></h4>
+            <h4>B1 · Deployment-target verification building block &amp; error <span class="capsule completed">Completed</span></h4>
             <p><strong>Goal:</strong> Provide an injectable, testable verifier that decides whether a downloaded bundle can run on the host OS, and a readable error for when it cannot.</p>
             <div class="field">
                 <span class="label">Tasks</span>
@@ -476,11 +476,39 @@
                     <li>Tests: compatible → passes; host too old → throws; missing/invalid key → passes. Add new file(s) to <code>SwiftUtilities.xcodeproj</code>.</li>
                 </ul>
             </div>
-            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
-            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
-            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
-            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
-            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Status</span> <span class="capsule completed">Completed</span></div>
+            <div class="field"><span class="label">Completed</span> 2026-07-14</div>
+            <div class="field"><span class="label">Implementation notes</span>
+                <p>Implemented with TDD (verifier stubbed to allow everything → the throw tests went red → real implementation → green). Three new source files under <code>SwiftUtilities/Updater/Install/</code> (one type per file, matching the <code>AppReplacing</code>/<code>AppReplacer</code> seam pattern), plus one test file:</p>
+                <ul class="notes">
+                    <li><code>DeploymentTargetVerifying.swift</code> — a <code>public protocol</code> (<code>: Sendable</code>) with <code>func verify( bundle: URL ) throws</code>, the DI seam for B2.</li>
+                    <li><code>DeploymentTargetVerifier.swift</code> — the concrete <code>public struct</code>. Reads <code>LSMinimumSystemVersion</code> from <code>&lt;bundle&gt;/Contents/Info.plist</code> (via <code>PropertyListSerialization</code>, all failure paths <code>try?</code>→<code>nil</code>), parses a dotted string into an <code>OperatingSystemVersion</code> (missing minor/patch default to 0; empty/partial/non-numeric → <code>nil</code>), and compares against an injected <code>host</code> (default <code>ProcessInfo.processInfo.operatingSystemVersion</code>) using a component-wise tuple comparison <code>(major, minor, patch) &gt;= (…)</code>. Throws <code>DeploymentTargetError.incompatible</code> only when the host is too old; absent/unparseable metadata returns without throwing (lenient).</li>
+                    <li><code>DeploymentTargetError.swift</code> — a <code>public enum</code> (<code>Error, Equatable, Sendable</code>) with <code>case incompatible(required: String, host: String)</code> and a <code>LocalizedError</code> message.</li>
+                </ul>
+                <p><strong>Deviation from the plan (worth a look):</strong> two points where I diverged from the plan's letter for a code-verified reason:</p>
+                <ul class="notes">
+                    <li><strong>Not <code>isOperatingSystemAtLeast</code>.</strong> The plan preferred <code>ProcessInfo.processInfo.isOperatingSystemAtLeast(_:)</code>, but that API only ever tests the <em>running process's own</em> OS, so it cannot be pointed at an injected host version — which the same task list requires for testability. I inject the host and compare component-wise with the identical (major→minor→patch) ordering that API uses. Documented in the source.</li>
+                    <li><strong>Plain-English error, not a localized string.</strong> The plan's Notes suggested new user-facing strings go in <code>Localizable.strings</code> with a resolver-test assertion. But this error is thrown <em>service-side</em>, inside the XPC <code>Updater</code> process, whose target has no Resources phase and does not bundle the strings table — a <code>Localization.string</code> lookup there would just echo the key. So, consistent with the sibling install errors (<code>UpdateInstallError</code>, <code>CodeSignatureError</code>, <code>ArchiveExtractionError</code>, which are all hardcoded English), <code>DeploymentTargetError</code>'s message is plain English and crosses the XPC boundary as text. No <code>Localizable.strings</code>/resolver-test change was made. The reviewer independently confirmed the XPC target has no Resources phase and agreed this is correct.</li>
+                </ul>
+                <p><strong>Xcode wiring:</strong> the three source files were added to both the framework target (group <code>05F000B4</code>, Sources phase <code>05C5277E</code>) and the XPC <code>Updater</code> target (Sources phase <code>05F0007A</code>) — since the install composition compiles into both and B2 will reference the verifier from the service. The test file was added to the test target only (group <code>05F000BE</code>, phase <code>05C52787</code>). IDs <code>05F000C8–CE</code>. <code>Package.swift</code> needs no change: <code>Updater/Install</code> is excluded from SwiftPM.</p>
+                <p><strong>Tests:</strong> <code>Test_DeploymentTargetVerifier</code> builds throwaway bundles in unique temp dirs (torn down via <code>defer</code>) and covers host newer / equal / too-old, numeric ordering (<code>13.10</code> vs <code>13.9</code>), the patch component, all three leniency paths (missing key, missing <code>Info.plist</code>, unparseable value), and that the error names both versions. After the review I added a parametrized test over 8 malformed strings and a whitespace-trimming test (see below). 11 tests, all pass; full suite green at <strong>203 tests, 0 regressions</strong> (<code>xcodebuild</code>); the XPC <code>Updater</code> target builds clean under <code>-warnings-as-errors</code>; <code>swift build</code> unaffected.</p>
+                <p><strong>Automated review loop:</strong> the first two review sub-agents died from infrastructure errors (dropped connection / stream stall) before returning findings; a third (static-only) completed. 1 effective round; converged with no Critical/High/Medium findings.</p>
+            </div>
+            <div class="field"><span class="label">Automated review</span>
+                <ul class="notes">
+                    <li><strong>pbxproj correctness</strong> (Info) — verified: unique IDs, correct fileRef cross-refs, all three sources in both framework and XPC phases, test file in the test target/group only, additive (no existing entries disturbed). <em>No change needed.</em></li>
+                    <li><strong>Plain-English error is correct</strong> (Info) — reviewer independently confirmed the XPC target has no Resources phase and that the siblings are all hardcoded English; called it good judgment. <em>No change needed.</em></li>
+                    <li><strong>Parsing / comparison / plist-read / Sendable / access control / doc accuracy</strong> (Info) — all verified sound: no force-unwrap or index-out-of-range (<code>numbers[0]</code> is guarded), tuple comparison matches <code>isOperatingSystemAtLeast</code> semantics, every plist failure path returns <code>nil</code>, all DocC references resolve. <em>No change needed.</em></li>
+                    <li><strong>Untested parse edge cases</strong> (Info) — the malformed/whitespace inputs were covered only by trace, not asserted. <em>Fixed</em> — added a parametrized <code>allowsMalformedVersion</code> test over <code>""</code>, <code>".5"</code>, <code>"13."</code>, <code>"13..4"</code>, <code>"not-a-version"</code>, <code>"13.x"</code>, <code>"v13.0"</code>, <code>".."</code> and a <code>trimsSurroundingWhitespace</code> test.</li>
+                    <li><strong>Test file shares the source basename</strong> (Info) — no object-file collision (disjoint targets) and it matches the repo's sibling-test naming convention. <em>Deferred — no change.</em></li>
+                </ul>
+                <p>Note: two earlier review sub-agents failed from transient infrastructure errors, not review findings; the third (static-only) completed the review.</p>
+            </div>
+            <div class="field"><span class="label">Review comments</span>
+                <ul class="notes">
+                    <li>"Looks good" — approved the milestone as implemented, including the two deliberate deviations from the plan's letter (component-wise comparison against an injected host instead of <code>isOperatingSystemAtLeast</code>, and a plain-English service-side error instead of a localized string). No changes requested.</li>
+                </ul>
+            </div>
         </div>
 
         <div class="milestone">
