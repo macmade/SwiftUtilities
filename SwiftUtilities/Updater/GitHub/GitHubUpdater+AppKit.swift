@@ -325,9 +325,9 @@
         /// Opens the non-modal window offering to download an available update.
         ///
         /// The window renders the release notes and offers Download (when an asset
-        /// exists), View on GitHub, and Later. It is owned by a self-retaining
-        /// ``UpdateWindowController`` so the `Sendable` updater needs no stored
-        /// state.
+        /// exists), View on GitHub, Skip This Version, and Later. It is owned by a
+        /// self-retaining ``UpdateWindowController`` so the `Sendable` updater needs
+        /// no stored state.
         ///
         /// - Parameters:
         ///   - application: The display name of the application.
@@ -346,8 +346,32 @@
                 updateVersion:   update,
                 notes:           notes,
                 downloadURL:     downloadURL,
-                releaseURL:      url
+                releaseURL:      url,
+                onSkip:          self.skipAction( update: update )
             )
+        }
+
+        /// Builds the action that records a version as skipped for this updater.
+        ///
+        /// Captures the updater's ``owner`` and ``repository`` so the returned closure
+        /// writes to the matching ``SkippedVersionStore``, suppressing the version on
+        /// later background checks until a strictly newer one ships. The window closes
+        /// itself after invoking this, so it only persists the choice.
+        ///
+        /// - Parameter update: The offered version to record as skipped.
+        ///
+        /// - Returns: A closure that persists the skipped version.
+        private func skipAction( update: String ) -> () -> Void
+        {
+            let owner      = self.owner
+            let repository = self.repository
+
+            let action: () -> Void =
+            {
+                SkippedVersionStore( owner: owner, repository: repository ).setSkippedVersion( update )
+            }
+
+            return action
         }
 
         #if !SWIFT_PACKAGE
@@ -388,7 +412,8 @@
                 updateVersion:   update,
                 notes:           notes,
                 downloadURL:     downloadURL,
-                releaseURL:      url
+                releaseURL:      url,
+                onSkip:          self.skipAction( update: update )
             )
         }
 

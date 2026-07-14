@@ -35,7 +35,7 @@
     ///
     /// ``GitHubUpdater`` is a `Sendable` value type with no mutable state, so it
     /// cannot itself retain a window. Instead it calls the type method
-    /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
+    /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:onSkip:)``,
     /// which guarantees a single update window.
     @MainActor
     public final class UpdateWindowController: HostingWindowController
@@ -53,13 +53,17 @@
         ///   - downloadURL:     The direct download URL, or `nil` when the release
         ///                      has no downloadable asset.
         ///   - releaseURL:      The URL of the release page on GitHub.
+        ///   - onSkip:          Records the offered version as skipped. The window
+        ///                      closes itself afterwards, so the caller only needs to
+        ///                      persist the choice.
         public static func show(
             applicationName: String,
             currentVersion:  String,
             updateVersion:   String,
             notes:           String,
             downloadURL:     URL?,
-            releaseURL:      URL
+            releaseURL:      URL,
+            onSkip:          @escaping () -> Void
         )
         {
             HostingWindowController.show( using: UpdateWindowController.init )
@@ -86,6 +90,13 @@
                     onLater:
                     {
                         [ weak controller ] in controller?.close()
+                    },
+                    onSkip:
+                    {
+                        [ weak controller ] in
+
+                        onSkip()
+                        controller?.close()
                     }
                 )
 
@@ -111,7 +122,7 @@
         /// Presents ``UpdateAvailableView``, driven by an ``InAppUpdateViewModel`` that
         /// downloads, installs, and relaunches in place. If the release asset is not
         /// a supported archive, it falls back to
-        /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:)``,
+        /// ``show(applicationName:currentVersion:updateVersion:notes:downloadURL:releaseURL:onSkip:)``,
         /// so a newer release always stays reachable.
         ///
         /// In-app updates require the Xcode framework (which bundles the updater
@@ -124,13 +135,17 @@
         ///   - notes:           The release's Markdown notes.
         ///   - downloadURL:     The direct download URL of the release's asset.
         ///   - releaseURL:      The URL of the release page on GitHub.
+        ///   - onSkip:          Records the offered version as skipped. The window
+        ///                      closes itself afterwards, so the caller only needs to
+        ///                      persist the choice.
         public static func showInApp(
             applicationName: String,
             currentVersion:  String,
             updateVersion:   String,
             notes:           String,
             downloadURL:     URL,
-            releaseURL:      URL
+            releaseURL:      URL,
+            onSkip:          @escaping () -> Void
         )
         {
             guard let model = InAppUpdateViewModel( downloadURL: downloadURL )
@@ -142,7 +157,8 @@
                     updateVersion:   updateVersion,
                     notes:           notes,
                     downloadURL:     downloadURL,
-                    releaseURL:      releaseURL
+                    releaseURL:      releaseURL,
+                    onSkip:          onSkip
                 )
 
                 return
@@ -167,6 +183,13 @@
                     onLater:
                     {
                         [ weak controller ] in controller?.close()
+                    },
+                    onSkip:
+                    {
+                        [ weak controller ] in
+
+                        onSkip()
+                        controller?.close()
                     }
                 )
 

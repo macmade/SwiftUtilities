@@ -79,6 +79,9 @@
         /// Invoked when the user dismisses the window.
         private let onLater: () -> Void
 
+        /// Invoked when the user chooses to skip the offered update.
+        private let onSkip: () -> Void
+
         #if !SWIFT_PACKAGE
 
         /// Creates the update-available content view.
@@ -95,6 +98,7 @@
         ///   - onDownload:      Invoked when the user chooses to download (link mode).
         ///   - onViewOnGitHub:  Invoked when the user chooses to view the release.
         ///   - onLater:         Invoked when the user dismisses the window.
+        ///   - onSkip:          Invoked when the user chooses to skip this update.
         public init(
             applicationName: String,
             currentVersion:  String,
@@ -104,7 +108,8 @@
             model:           InAppUpdateViewModel? = nil,
             onDownload:      @escaping () -> Void,
             onViewOnGitHub:  @escaping () -> Void,
-            onLater:         @escaping () -> Void
+            onLater:         @escaping () -> Void,
+            onSkip:          @escaping () -> Void
         )
         {
             self.applicationName = applicationName
@@ -116,6 +121,7 @@
             self.onDownload      = onDownload
             self.onViewOnGitHub  = onViewOnGitHub
             self.onLater         = onLater
+            self.onSkip          = onSkip
         }
 
         #else
@@ -132,6 +138,7 @@
         ///   - onDownload:      Invoked when the user chooses to download.
         ///   - onViewOnGitHub:  Invoked when the user chooses to view the release.
         ///   - onLater:         Invoked when the user dismisses the window.
+        ///   - onSkip:          Invoked when the user chooses to skip this update.
         public init(
             applicationName: String,
             currentVersion:  String,
@@ -140,7 +147,8 @@
             downloadURL:     URL?,
             onDownload:      @escaping () -> Void,
             onViewOnGitHub:  @escaping () -> Void,
-            onLater:         @escaping () -> Void
+            onLater:         @escaping () -> Void,
+            onSkip:          @escaping () -> Void
         )
         {
             self.applicationName = applicationName
@@ -151,6 +159,7 @@
             self.onDownload      = onDownload
             self.onViewOnGitHub  = onViewOnGitHub
             self.onLater         = onLater
+            self.onSkip          = onSkip
         }
 
         #endif
@@ -348,14 +357,18 @@
 
         /// The trailing row of actions, shown while idle and on failure.
         ///
-        /// Later sits on the leading edge; View on GitHub and the download action
-        /// (when applicable) sit on the trailing edge. The default button is the
-        /// download action when it is shown, otherwise View on GitHub.
+        /// Later and Skip This Version (idle only) sit on the leading edge; View on
+        /// GitHub and the download action (when applicable) sit on the trailing edge.
+        /// The default button is the download action when it is shown, otherwise View
+        /// on GitHub. Skip carries no keyboard shortcut, so it never competes for the
+        /// default action.
         private var actions: some View
         {
             HStack
             {
                 Button( Localization.string( "GitHubUpdater.window.button.later" ), action: self.onLater )
+
+                self.skipButton
 
                 Spacer()
 
@@ -363,6 +376,21 @@
                     .keyboardShortcut( self.showsDownload ? nil : KeyboardShortcut.defaultAction )
 
                 self.downloadButton
+            }
+        }
+
+        /// The skip action, shown only in the idle state, in both modes.
+        ///
+        /// Invokes ``onSkip``, which records the offered version as skipped and closes
+        /// the window, so background checks stop surfacing it until a strictly newer
+        /// version ships. Absent while downloading, installing, relaunching, or on
+        /// failure, so it never appears alongside those states' actions.
+        @ViewBuilder
+        private var skipButton: some View
+        {
+            if self.showsSkip
+            {
+                Button( Localization.string( "GitHubUpdater.window.button.skip" ), action: self.onSkip )
             }
         }
 
@@ -416,6 +444,28 @@
             #else
 
             return self.downloadURL != nil
+
+            #endif
+        }
+
+        /// Whether the skip action is shown: only while idle.
+        ///
+        /// Unlike ``showsDownload`` this does not depend on a downloadable asset — a
+        /// release can be skipped whether or not it has one.
+        private var showsSkip: Bool
+        {
+            #if !SWIFT_PACKAGE
+
+            if case .idle = self.model?.state ?? .idle
+            {
+                return true
+            }
+
+            return false
+
+            #else
+
+            return true
 
             #endif
         }
@@ -479,7 +529,8 @@
             downloadURL:     URL( string: "https://example.com/download" ),
             onDownload:      {},
             onViewOnGitHub:  {},
-            onLater:         {}
+            onLater:         {},
+            onSkip:          {}
         )
     }
 
@@ -496,7 +547,8 @@
             model:           previewModel( state: .idle ),
             onDownload:      {},
             onViewOnGitHub:  {},
-            onLater:         {}
+            onLater:         {},
+            onSkip:          {}
         )
     }
 
@@ -511,7 +563,8 @@
             model:           previewModel( state: .downloading( fraction: 0.4 ) ),
             onDownload:      {},
             onViewOnGitHub:  {},
-            onLater:         {}
+            onLater:         {},
+            onSkip:          {}
         )
     }
 
@@ -526,7 +579,8 @@
             model:           previewModel( state: .installed ),
             onDownload:      {},
             onViewOnGitHub:  {},
-            onLater:         {}
+            onLater:         {},
+            onSkip:          {}
         )
     }
 
@@ -541,7 +595,8 @@
             model:           previewModel( state: .failed( message: "The downloaded application is not signed by the same developer." ) ),
             onDownload:      {},
             onViewOnGitHub:  {},
-            onLater:         {}
+            onLater:         {},
+            onSkip:          {}
         )
     }
 

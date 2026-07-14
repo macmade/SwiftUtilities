@@ -418,7 +418,7 @@
         </div>
 
         <div class="milestone">
-            <h4>A3 · "Skip This Version" button in the update window <span class="capsule not-started">Not started</span></h4>
+            <h4>A3 · "Skip This Version" button in the update window <span class="capsule completed">Completed</span></h4>
             <p><strong>Goal:</strong> Give the user a way to skip the current update from both the link and in-app windows, persisting the choice and closing the window.</p>
             <div class="field">
                 <span class="label">Tasks</span>
@@ -430,11 +430,35 @@
                     <li>Confirm the button placement doesn't disrupt the default-action keyboard shortcut wiring for Download / View on GitHub.</li>
                 </ul>
             </div>
-            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
-            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
-            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
-            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
-            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Status</span> <span class="capsule completed">Completed</span></div>
+            <div class="field"><span class="label">Completed</span> 2026-07-14</div>
+            <div class="field"><span class="label">Implementation notes</span>
+                <p>Implemented with TDD for the testable artifact (the localization resolution): added the resolver-test assertion first → watched it fail (the key echoed back) → added the string → green. The view/controller wiring is UI (consistent with how <code>showsDownload</code> and the other private view helpers are not unit-tested); it is covered by the SwiftUI previews and by both build configurations compiling. No new files, so no <code>project.pbxproj</code> or <code>Package.swift</code> changes were needed.</p>
+                <ul class="notes">
+                    <li><code>UpdateAvailableView</code>: added a required <code>onSkip: () -&gt; Void</code> (both the framework and SwiftPM <code>init</code>s) and a <code>skipButton</code> rendered in the <code>actions</code> row on the leading edge, after Later. Gated by a new <code>showsSkip</code> computed — true only in the <code>.idle</code> state (unlike <code>showsDownload</code> it does not require a download asset, since a release can be skipped regardless). Because <code>actions</code> is also rendered in the <code>.failed</code> state, this gating keeps Skip out of failure (and out of downloading/installing/relaunching). Skip carries no keyboard shortcut, so the default action (Download/Install, else View on GitHub) is unchanged.</li>
+                    <li><code>UpdateWindowController.show(...)</code> and <code>showInApp(...)</code>: added an <code>onSkip</code> parameter threaded to the view as <code>{ [weak controller] in onSkip(); controller?.close() }</code>, mirroring the existing <code>onLater</code> close pattern — the caller only persists; the window closes itself. <code>onSkip</code> is also threaded through <code>showInApp</code>'s no-model fallback to <code>show(...)</code>.</li>
+                    <li><code>GitHubUpdater+AppKit</code>: added a private <code>skipAction(update:)</code> helper (used by both <code>showUpdateAvailableWindow</code> and <code>showInAppUpdateWindow</code>) that captures <code>owner</code>/<code>repository</code> and returns a closure writing <code>SkippedVersionStore(owner:repository:).setSkippedVersion(update)</code> — the same per-repo key the A2 background gate reads. The offered <code>update</code> version is what gets persisted.</li>
+                    <li>Localization: added <code>GitHubUpdater.window.button.skip</code> = "Skip This Version" to <code>Localizable.strings</code> with a matching assertion in <code>Test_Localization</code>. All five previews (Link, In-App, Downloading, Installed, Failed) updated to pass <code>onSkip: {}</code>.</li>
+                </ul>
+                <p><strong>Note during implementation:</strong> the first draft of <code>skipAction</code> used <code>return</code> followed by a closure literal on the next line, which triggered Swift's "expression following 'return' is treated as an argument" warning (the project builds framework code with <code>-warnings-as-errors</code>). Rewrote it to bind the closure to a typed local and return that.</p>
+                <p><strong>Verification:</strong> full suite green at <strong>192 tests, 0 regressions</strong> (<code>xcodebuild</code>, framework build is warnings-as-errors); <code>swift build</code> (SwiftPM link-only path) clean. Both build configurations compile the skip UI.</p>
+                <p><strong>Automated review loop:</strong> 1 round; converged with no Critical/High/Medium findings (see below).</p>
+            </div>
+            <div class="field"><span class="label">Automated review</span>
+                <ul class="notes">
+                    <li><strong>Idle-only gating verified for both modes</strong> (Info) — Skip present only in idle, absent in downloading/installing/relaunching/failed; Later + View still shown on failure. <em>No change needed.</em></li>
+                    <li><strong>Persist-then-close exactly once; correct store key; fallback threaded; keyboard shortcuts intact; no retain cycle; previews + localization correct</strong> (Info) — all verified against source and by building both targets. <em>No change needed.</em></li>
+                    <li><strong>Stale DocC references to <code>show(...)</code> missing <code>onSkip:</code></strong> (Low) — A3's new parameter made two <code>///</code> links in <code>UpdateWindowController.swift</code> (class doc and <code>showInApp</code> doc) stale. <em>Fixed</em> — appended <code>onSkip:</code> to both link targets, matching the doc-accuracy feedback from A2.</li>
+                    <li><strong><code>showUpdateAvailableWindow</code> doc no longer listed all actions</strong> (Info) — it enumerated Download/View/Later but not Skip. <em>Fixed</em> — added "Skip This Version" to the enumerated actions.</li>
+                    <li><strong>Required (non-optional) <code>onSkip</code> is a source-breaking public API change</strong> (Info) — all in-repo callers are updated (no internal regression), but external consumers of these public entry points must now supply <code>onSkip</code>. Intentional milestone choice; the alternative (an <code>= {}</code> default) would silently no-op skip. <em>Surfaced to the user for release-notes/semver awareness; no code change.</em></li>
+                </ul>
+                <p>The reviewer built both configurations (framework with <code>-warnings-as-errors</code>, SwiftPM link-only) and ran the localization test — all green. No correctness or regression issues.</p>
+            </div>
+            <div class="field"><span class="label">Review comments</span>
+                <ul class="notes">
+                    <li>"Looks good" — approved the milestone as implemented (including the two doc fixes carried out during the automated review); no changes requested. The source-breaking required-<code>onSkip</code> API note was surfaced and left as-is.</li>
+                </ul>
+            </div>
         </div>
 
         <h3 class="phase">Phase B — Verify deployment target before replacing</h3>

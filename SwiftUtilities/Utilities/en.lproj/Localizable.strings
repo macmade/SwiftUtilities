@@ -34,6 +34,9 @@
 /* Button dismissing the update-available window without downloading. */
 "GitHubUpdater.window.button.later" = "Later";
 
+/* Button skipping the offered update so background checks stop surfacing it until a newer version ships. */
+"GitHubUpdater.window.button.skip" = "Skip This Version";
+
 /* Button downloading and installing the update in place, in the in-app update window. */
 "GitHubUpdater.window.button.install" = "Download & Install";
 
