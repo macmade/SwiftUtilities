@@ -24,15 +24,17 @@
 
 import Foundation
 
-/// The in-app install composition: extract → validate → replace.
+/// The in-app install composition: extract → validate → verify → replace.
 ///
 /// This runs inside the bundled updater XPC service (off the sandbox), not in the
 /// app, so it can perform the privileged file operations. It composes the building
 /// blocks in a security-first order: **extract** the archive, **validate** the
-/// extracted application's code signature against the running application, then
-/// **replace** the application on disk. Validation runs on the exact bundle about to
-/// be installed, and replacement is refused unless validation succeeds, so an
-/// unsigned or mismatched download is never written into place.
+/// extracted application's code signature against the running application, **verify**
+/// the extracted application's declared minimum OS against the host, then **replace**
+/// the application on disk. Validation and verification both run on the exact bundle
+/// about to be installed, and replacement is refused unless both succeed, so an
+/// unsigned or mismatched download — or one that cannot run on this host — is never
+/// written into place.
 ///
 /// The relaunch is a **separate** step, triggered only when the user asks to
 /// relaunch (see the service's relaunch operation), so installing an update does not
@@ -48,6 +50,9 @@ public struct UpdateInstallation: UpdateInstaller
     /// Validates the extracted application's code signature.
     private let validator: CodeSignatureValidator
 
+    /// Verifies the extracted application can run on the host operating system.
+    private let verifier: DeploymentTargetVerifying
+
     /// Replaces the application on disk.
     private let replacer: AppReplacing
 
@@ -56,11 +61,13 @@ public struct UpdateInstallation: UpdateInstaller
     /// - Parameters:
     ///   - extractor: Unpacks the archive and locates the application.
     ///   - validator: Validates the extracted application's code signature.
+    ///   - verifier:  Verifies the extracted application can run on the host OS.
     ///   - replacer:  Replaces the application on disk.
-    public init( extractor: ArchiveExtracting, validator: CodeSignatureValidator, replacer: AppReplacing )
+    public init( extractor: ArchiveExtracting, validator: CodeSignatureValidator, verifier: DeploymentTargetVerifying, replacer: AppReplacing )
     {
         self.extractor = extractor
         self.validator = validator
+        self.verifier  = verifier
         self.replacer  = replacer
     }
 
@@ -77,8 +84,8 @@ public struct UpdateInstallation: UpdateInstaller
     ///   - progress:         Invoked as each ``InstallProgress`` phase begins.
     ///                       Defaults to ignoring progress.
     ///
-    /// - Throws: An error if any step fails; on a validation failure the
-    ///   application on disk is left untouched.
+    /// - Throws: An error if any step fails; on a validation or deployment-target
+    ///   failure the application on disk is left untouched.
     public func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL = FileManager.default.temporaryDirectory, progress: @escaping @Sendable ( InstallProgress ) -> Void = { _ in } ) async throws
     {
         let work = try self.makeWorkingDirectory( for: target, fallback: workingDirectory )
@@ -95,6 +102,8 @@ public struct UpdateInstallation: UpdateInstaller
         progress( .validating )
 
         try self.validator.validate( candidateAt: candidate )
+
+        try self.verifier.verify( bundle: candidate )
 
         progress( .replacing )
 

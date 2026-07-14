@@ -126,6 +126,88 @@ struct Test_UpdaterService
         )
     }
 
+    /// Builds a throwaway application bundle whose `Info.plist` declares the given
+    /// `LSMinimumSystemVersion`, returning its URL. The caller removes it.
+    private func makeBundle( minimumSystemVersion: String ) throws -> URL
+    {
+        let root     = URL( fileURLWithPath: NSTemporaryDirectory(), isDirectory: true ).appendingPathComponent( "UpdaterServiceTests.\( UUID().uuidString ).app", isDirectory: true )
+        let contents = root.appendingPathComponent( "Contents", isDirectory: true )
+
+        try FileManager.default.createDirectory( at: contents, withIntermediateDirectories: true )
+
+        let info: [ String: Any ] = [ "CFBundleName": "App", "LSMinimumSystemVersion": minimumSystemVersion ]
+        let data                  = try PropertyListSerialization.data( fromPropertyList: info, format: .xml, options: 0 )
+
+        try data.write( to: contents.appendingPathComponent( "Info.plist" ) )
+
+        return root
+    }
+
+    @Test
+    func runRefusesAndReportsMessageWhenDeploymentTargetIsIncompatible() async throws
+    {
+        // An impossibly high requirement, so the host is always too old and the real
+        // DeploymentTargetVerifier wired into run(...) refuses the install.
+        let candidate = try self.makeBundle( minimumSystemVersion: "99.0" )
+
+        defer { try? FileManager.default.removeItem( at: candidate ) }
+
+        let extractor = StubExtractor( result: candidate )
+        let inspector = StubInspector()
+        let replacer  = StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) )
+        let progress  = ProgressCollector()
+
+        let result = await UpdaterService.run(
+            request:        try Test_UpdaterService.request().encoded(),
+            extractor:      extractor,
+            inspector:      inspector,
+            replacer:       replacer,
+            reportProgress: { progress.record( $0 ) }
+        )
+
+        guard case .failure( let reason ) = result
+        else
+        {
+            Issue.record( "Expected a failure result for an incompatible deployment target." )
+
+            return
+        }
+
+        // The verifier's message crosses into the failure reason, the replacer is
+        // never invoked, and the replacing phase is never entered.
+        #expect( reason.contains( "99.0" ) )
+        #expect( replacer.target == nil )
+        #expect( progress.values == [ .extracting, .validating ] )
+    }
+
+    @Test
+    func runProceedsThroughTheRealVerifierWhenDeploymentTargetIsSatisfied() async throws
+    {
+        // A trivially low requirement any real host satisfies, so the production
+        // DeploymentTargetVerifier lets the install proceed to replacement.
+        let candidate = try self.makeBundle( minimumSystemVersion: "10.0" )
+
+        defer { try? FileManager.default.removeItem( at: candidate ) }
+
+        let installed = URL( fileURLWithPath: "/Applications/App.app" )
+        let extractor = StubExtractor( result: candidate )
+        let inspector = StubInspector()
+        let replacer  = StubReplacer( installed: installed )
+        let progress  = ProgressCollector()
+
+        let result = await UpdaterService.run(
+            request:        try Test_UpdaterService.request().encoded(),
+            extractor:      extractor,
+            inspector:      inspector,
+            replacer:       replacer,
+            reportProgress: { progress.record( $0 ) }
+        )
+
+        #expect( result == .success )
+        #expect( replacer.replacement == candidate )
+        #expect( progress.values      == [ .extracting, .validating, .replacing ] )
+    }
+
     @Test
     func runInstallsAndReportsSuccess() async throws
     {

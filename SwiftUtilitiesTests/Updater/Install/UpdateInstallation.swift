@@ -115,11 +115,31 @@ struct Test_UpdateInstallation
         }
     }
 
-    private func makeInstaller( extractor: StubExtractor, verificationSucceeds: Bool = true, replacer: StubReplacer ) -> UpdateInstallation
+    /// A deployment-target verifier that passes, or throws a supplied error.
+    private struct StubVerifier: DeploymentTargetVerifying
+    {
+        let error: ( any Error & Sendable )?
+
+        init( error: ( any Error & Sendable )? = nil )
+        {
+            self.error = error
+        }
+
+        func verify( bundle: URL ) throws
+        {
+            if let error = self.error
+            {
+                throw error
+            }
+        }
+    }
+
+    private func makeInstaller( extractor: StubExtractor, verificationSucceeds: Bool = true, verifier: StubVerifier = StubVerifier(), replacer: StubReplacer ) -> UpdateInstallation
     {
         UpdateInstallation(
             extractor: extractor,
             validator: CodeSignatureValidator( inspector: StubInspector( verificationSucceeds: verificationSucceeds ) ),
+            verifier:  verifier,
             replacer:  replacer
         )
     }
@@ -159,6 +179,29 @@ struct Test_UpdateInstallation
             try await installer.install( archive: archive, format: .zip, replacing: target, into: FileManager.default.temporaryDirectory ) { progress.record( $0 ) }
         }
 
+        #expect( replacer.target == nil )
+        #expect( progress.values == [ .extracting, .validating ] )
+    }
+
+    @Test
+    func installRefusesToReplaceOnIncompatibleDeploymentTarget() async throws
+    {
+        let candidate = URL( fileURLWithPath: "/tmp/New.app" )
+        let target    = URL( fileURLWithPath: "/Applications/App.app" )
+        let archive   = URL( fileURLWithPath: "/tmp/App.zip" )
+        let extractor = StubExtractor( result: candidate )
+        let replacer  = StubReplacer()
+        let progress  = ProgressCollector()
+        let installer = self.makeInstaller( extractor: extractor, verifier: StubVerifier( error: StubError() ), replacer: replacer )
+
+        await #expect( throws: StubError.self )
+        {
+            try await installer.install( archive: archive, format: .zip, replacing: target, into: FileManager.default.temporaryDirectory ) { progress.record( $0 ) }
+        }
+
+        // The deployment-target check runs after validation and before replacement:
+        // validation was reported, replacement was refused, and the replacer was
+        // never invoked.
         #expect( replacer.target == nil )
         #expect( progress.values == [ .extracting, .validating ] )
     }

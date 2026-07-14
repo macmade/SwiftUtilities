@@ -512,7 +512,7 @@
         </div>
 
         <div class="milestone">
-            <h4>B2 · Insert the check into the install composition <span class="capsule not-started">Not started</span></h4>
+            <h4>B2 · Insert the check into the install composition <span class="capsule completed">Completed</span></h4>
             <p><strong>Goal:</strong> Run the deployment-target verification after extraction and before replacement, so an incompatible update is refused with the running app left untouched, surfacing as the in-window failure with its existing "View on GitHub" link.</p>
             <div class="field">
                 <span class="label">Tasks</span>
@@ -524,11 +524,31 @@
                     <li>Confirm end-to-end that the message reaches the window's <code>.failed</code> state and that "View on GitHub" / "Later" are available there (no new UI expected).</li>
                 </ul>
             </div>
-            <div class="field"><span class="label">Status</span> <span class="capsule not-started">Not started</span></div>
-            <div class="field"><span class="label">Completed</span> <span class="placeholder">—</span></div>
-            <div class="field"><span class="label">Implementation notes</span> <p class="placeholder">To be filled in during implementation.</p></div>
-            <div class="field"><span class="label">Automated review</span> <p class="placeholder">Pending.</p></div>
-            <div class="field"><span class="label">Review comments</span> <p class="placeholder">Pending.</p></div>
+            <div class="field"><span class="label">Status</span> <span class="capsule completed">Completed</span></div>
+            <div class="field"><span class="label">Completed</span> 2026-07-14</div>
+            <div class="field"><span class="label">Implementation notes</span>
+                <p>Implemented with TDD (verifier injected but not yet called → the two refuse tests went red → added the one-line verify call → green). Four existing files modified; no new files, so no <code>project.pbxproj</code> or <code>Package.swift</code> change.</p>
+                <ul class="notes">
+                    <li><code>UpdateInstallation</code>: added a <code>verifier: DeploymentTargetVerifying</code> stored property and init parameter (order <code>extractor, validator, verifier, replacer</code>), and inserted <code>try self.verifier.verify( bundle: candidate )</code> between signature validation and <code>progress( .replacing )</code>. This preserves the security-first ordering — the deployment-target plist is read only after the code signature is proven — and the verifier throws on incompatibility so <code>replaceApplication</code> never runs. No new <code>InstallProgress</code> phase was added (the check is sub-second); the alternative of a dedicated phase is noted in the plan if a distinct status is ever wanted.</li>
+                    <li><code>UpdaterService.run(...)</code>: constructs the production <code>DeploymentTargetVerifier()</code> at the single composition site (alongside the <code>CodeSignatureValidator</code>) and passes it to <code>UpdateInstallation</code>. Its default host is <code>ProcessInfo.processInfo.operatingSystemVersion</code>, correct because the service runs on the host. The <code>run</code> signature is unchanged.</li>
+                    <li>Updated the <code>UpdateInstallation</code> class doc (extract → validate → <strong>verify</strong> → replace), the <code>install(...)</code> Throws clause, and the <code>run(...)</code> doc to reflect the new step.</li>
+                </ul>
+                <p><strong>Tests:</strong> in <code>Test_UpdateInstallation</code>, a <code>StubVerifier</code> and a refuse-on-incompatible test proving the replacer is never invoked and the emitted phases are exactly <code>[.extracting, .validating]</code> (the happy-path test already covers "proceeds when compatible", unchanged since verify adds no phase). In <code>Test_UpdaterService</code>, an end-to-end test that runs a crafted bundle declaring <code>LSMinimumSystemVersion = "99.0"</code> through the <em>production</em> verifier and asserts <code>failure(reason:)</code> contains "99.0", the replacer wasn't called, and phases are <code>[.extracting, .validating]</code>. Existing <code>run</code> tests still pass because the verifier is lenient on the fake candidates' missing <code>Info.plist</code>. Full suite green at <strong>206 tests, 0 regressions</strong>; XPC <code>Updater</code> target builds clean under <code>-warnings-as-errors</code>; <code>swift build</code> unaffected.</p>
+                <p><strong>End-to-end failure UI:</strong> per the plan's Notes, a <code>LocalizedError</code> thrown in the composition flows through <code>UpdateInstallResult.failure(from:)</code> (which prefers <code>errorDescription</code>) → the client → the window's <code>.failed</code> state, which already renders the message plus the "View on GitHub" / "Later" actions. So no new UI was needed; the incompatible message reaches the failure state through the existing path.</p>
+                <p><strong>Automated review loop:</strong> 1 round; converged with no Critical/High/Medium findings (in fact no defects at any severity).</p>
+            </div>
+            <div class="field"><span class="label">Automated review</span>
+                <ul class="notes">
+                    <li><strong>Ordering / no-new-phase / security-first / all callers updated / production wiring / no regression / message flow / doc accuracy / style</strong> (all Info — verified correct) — the reviewer confirmed each requirement against the code (verify between validate and <code>progress(.replacing)</code>; <code>InstallProgress</code> still 3 cases; both <code>UpdateInstallation(</code> call sites updated; lenient missing-plist path keeps the existing tests valid; <code>failure(from:)</code> carries <code>errorDescription</code>; the "99.0" test is deterministic; <code>StubVerifier</code> is cleanly <code>Sendable</code>). <em>No change needed.</em></li>
+                    <li><strong>No positive-path integration test through the real verifier</strong> (Info) — coverage of "compatible bundle proceeds to replacement" rested on the B1 unit tests plus the lenient missing-plist path. <em>Fixed</em> — added <code>runProceedsThroughTheRealVerifierWhenDeploymentTargetIsSatisfied</code>: a crafted bundle declaring <code>"10.0"</code> runs through the production verifier to <code>.success</code> with the replacer invoked and full <code>[.extracting, .validating, .replacing]</code> phases (206 tests now).</li>
+                    <li><strong>Two independent test knobs on <code>makeInstaller</code></strong> (Info) — <code>verificationSucceeds</code> (inspector) and <code>verifier</code> are independent by design; the incompatible test isolates the failure to the verify step. <em>No change needed.</em></li>
+                </ul>
+            </div>
+            <div class="field"><span class="label">Review comments</span>
+                <ul class="notes">
+                    <li>"Looks good" — approved the milestone as implemented (including the positive-path integration test added during the automated review); no changes requested.</li>
+                </ul>
+            </div>
         </div>
     </section>
 

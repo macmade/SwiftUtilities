@@ -117,7 +117,8 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     ///
     /// This is the testable core, free of the XPC and task plumbing: it decodes the
     /// request, builds the ``UpdateInstallation`` (validating against the request's
-    /// identity), runs it, and maps success or any thrown error to an
+    /// identity and verifying the download's deployment target against the host),
+    /// runs it, and maps success or any thrown error to an
     /// ``UpdateInstallResult``. It never throws — a failure is reported as
     /// ``UpdateInstallResult/failure(reason:)`` — so the caller always has a result
     /// to reply with.
@@ -142,7 +143,8 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         {
             let decoded      = try UpdateInstallRequest.decoded( from: request )
             let validator    = CodeSignatureValidator( inspector: ExpectedIdentityInspector( expected: decoded.identity, base: inspector ) )
-            let installation = UpdateInstallation( extractor: extractor, validator: validator, replacer: replacer )
+            let verifier     = DeploymentTargetVerifier()
+            let installation = UpdateInstallation( extractor: extractor, validator: validator, verifier: verifier, replacer: replacer )
 
             try await installation.install( archive: decoded.archiveURL, format: decoded.format, replacing: decoded.targetURL, progress: reportProgress )
 
