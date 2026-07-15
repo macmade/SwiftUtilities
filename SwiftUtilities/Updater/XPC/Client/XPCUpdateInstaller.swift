@@ -50,17 +50,24 @@ public struct XPCUpdateInstaller: UpdateInstaller
     /// for the app to exit before relaunching.
     private let processIdentifier: Int32
 
+    /// The sentinel the app writes to request a relaunch, sent so the service can arm
+    /// the relaunch helper during the install (the app cannot reach the service after
+    /// the install replaces its bundle).
+    private let relaunchSentinel: URL
+
     /// Creates an installer from its injected dependencies.
     ///
     /// - Parameters:
     ///   - inspector:         Reads the running application's signing identity.
     ///   - connector:         The transport to the bundled service.
     ///   - processIdentifier: The running application's process identifier.
-    init( inspector: CodeSignatureInspecting, connector: UpdaterServiceConnecting, processIdentifier: Int32 )
+    ///   - relaunchSentinel:  The sentinel the app writes to request a relaunch.
+    init( inspector: CodeSignatureInspecting, connector: UpdaterServiceConnecting, processIdentifier: Int32, relaunchSentinel: URL )
     {
         self.inspector         = inspector
         self.connector         = connector
         self.processIdentifier = processIdentifier
+        self.relaunchSentinel  = relaunchSentinel
     }
 
     /// Hands the update off to the bundled service and awaits the outcome.
@@ -78,7 +85,7 @@ public struct XPCUpdateInstaller: UpdateInstaller
     public func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL, progress: @escaping @Sendable ( InstallProgress ) -> Void ) async throws
     {
         let identity = try self.inspector.runningApplicationIdentity()
-        let request  = UpdateInstallRequest( archive: archive, target: target, identity: identity, format: format, processIdentifier: self.processIdentifier )
+        let request  = UpdateInstallRequest( archive: archive, target: target, identity: identity, format: format, processIdentifier: self.processIdentifier, relaunchSentinel: self.relaunchSentinel )
 
         let resultData = try await self.connector.installUpdate( try request.encoded() )
         {
@@ -117,14 +124,17 @@ public struct XPCUpdateInstaller: UpdateInstaller
         /// ``SecurityCodeSignatureInspector`` and connects through
         /// ``XPCUpdaterServiceConnection``.
         ///
-        /// - Parameter serviceName: The bundle identifier of the updater service.
-        ///   Defaults to ``UpdaterServiceLocator/serviceName``.
-        init( serviceName: String = UpdaterServiceLocator.serviceName )
+        /// - Parameters:
+        ///   - serviceName:      The bundle identifier of the updater service.
+        ///                       Defaults to ``UpdaterServiceLocator/serviceName``.
+        ///   - relaunchSentinel: The sentinel the app writes to request a relaunch.
+        init( serviceName: String = UpdaterServiceLocator.serviceName, relaunchSentinel: URL )
         {
             self.init(
                 inspector:         SecurityCodeSignatureInspector(),
                 connector:         XPCUpdaterServiceConnection( serviceName: serviceName ),
-                processIdentifier: ProcessInfo.processInfo.processIdentifier
+                processIdentifier: ProcessInfo.processInfo.processIdentifier,
+                relaunchSentinel:  relaunchSentinel
             )
         }
     }

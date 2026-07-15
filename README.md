@@ -73,12 +73,21 @@ the privileged file work the application itself cannot. Because a sandboxed app
 cannot replace itself, the service runs *off the sandbox*: the update window
 downloads the release asset, then the service validates the download's code
 signature against the running application's identity (same signing identifier and
-Team ID) and replaces the application on disk. The relaunch is a separate,
-user-confirmed step driven by the app itself — the service cannot do it, having
-just replaced its own containing bundle — so when the user chooses to relaunch,
-the app reopens into the new version. If any step fails, or the release asset is
-not a supported archive (`.zip` or `.dmg`), the window falls back to the link
-behavior, so the release always stays reachable.
+Team ID) and replaces the application on disk. Because the download came from the
+internet it carries a quarantine flag — which would block the relaunch (macOS
+refuses to launch a quarantined executable) and gate the reopened app — so, having
+verified the signature, the service clears the quarantine from the installed bundle.
+The relaunch is armed **as the last step of that same install**, off the sandbox:
+the service spawns a small detached
+helper that waits for the application to quit. This has to happen during the
+install — once the install has replaced the app bundle (which contains the
+service), the running app can no longer reach the service. The relaunch stays
+user-confirmed without any further contact with the service: when the user chooses
+to relaunch, the app writes a small sentinel file and quits; the waiting helper
+reopens the new version only if that sentinel is present, so a user who declines is
+never force-relaunched. If any step fails, or the release asset is not a supported
+archive (`.zip` or `.dmg`), the window falls back to the link behavior, so the
+release always stays reachable.
 
 **In-app updates require the Xcode project's products.** A Swift Package Manager
 `.library` cannot embed and sign a nested XPC service, so under SwiftPM only the

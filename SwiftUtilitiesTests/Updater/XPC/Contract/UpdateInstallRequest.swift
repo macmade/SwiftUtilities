@@ -37,7 +37,8 @@ struct Test_UpdateInstallRequest
             target:            URL( fileURLWithPath: "/Applications/App.app" ),
             identity:          Test_UpdateInstallRequest.identity,
             format:            .zip,
-            processIdentifier: 4321
+            processIdentifier: 4321,
+            relaunchSentinel:  URL( fileURLWithPath: "/tmp/relaunch.sentinel" )
         )
     }
 
@@ -57,9 +58,10 @@ struct Test_UpdateInstallRequest
 
         #expect( decoded.archiveURL        == URL( fileURLWithPath: "/tmp/Update.zip" ) )
         #expect( decoded.targetURL         == URL( fileURLWithPath: "/Applications/App.app" ) )
-        #expect( decoded.identity          == Test_UpdateInstallRequest.identity )
-        #expect( decoded.format            == .zip )
-        #expect( decoded.processIdentifier == 4321 )
+        #expect( decoded.identity            == Test_UpdateInstallRequest.identity )
+        #expect( decoded.format              == .zip )
+        #expect( decoded.processIdentifier   == 4321 )
+        #expect( decoded.relaunchSentinelURL == URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
     }
 
     @Test

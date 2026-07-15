@@ -68,6 +68,33 @@ struct Test_AppReplacer
     }
 
     @Test
+    func removesQuarantineFromTheInstalledApplication() async throws
+    {
+        let root = try Test_AppReplacer.makeTempDirectory()
+
+        defer { try? FileManager.default.removeItem( at: root ) }
+
+        let target      = try Test_AppReplacer.makeApp( named: "Target", marker: "old", in: root )
+        let replacement = try Test_AppReplacer.makeApp( named: "Replacement", marker: "new", in: root )
+        let attribute   = "com.apple.quarantine"
+        let value       = Data( "0081;00000000;Safari;".utf8 )
+        let markerPath  = replacement.appendingPathComponent( "Contents/marker.txt" ).path
+
+        value.withUnsafeBytes
+        {
+            #expect( setxattr( replacement.path, attribute, $0.baseAddress, $0.count, 0, XATTR_NOFOLLOW ) == 0 )
+            #expect( setxattr( markerPath,        attribute, $0.baseAddress, $0.count, 0, XATTR_NOFOLLOW ) == 0 )
+        }
+
+        let installed = try AppReplacer().replaceApplication( at: target, with: replacement )
+
+        // The quarantine attribute is gone from the bundle and its contents, so the
+        // installed application is immediately runnable and spawnable.
+        #expect( getxattr( installed.path, attribute, nil, 0, 0, XATTR_NOFOLLOW ) < 0 )
+        #expect( getxattr( installed.appendingPathComponent( "Contents/marker.txt" ).path, attribute, nil, 0, 0, XATTR_NOFOLLOW ) < 0 )
+    }
+
+    @Test
     func throwsWhenReplacementDoesNotExist() async throws
     {
         let root = try Test_AppReplacer.makeTempDirectory()

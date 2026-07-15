@@ -64,21 +64,29 @@ public struct UpdateInstallRequest: XPCMessage, Equatable
     /// exit before relaunching.
     public let processIdentifier: Int32
 
+    /// The POSIX path of the sentinel file the app writes when the user asks to
+    /// relaunch. The relaunch helper the service arms during the install reopens the
+    /// application only if this file is present when the app quits.
+    public let relaunchSentinelPath: String
+
     /// Creates an install request.
     ///
     /// - Parameters:
-    ///   - archive:           A file URL to the downloaded archive.
-    ///   - target:            A file URL to the application bundle to replace.
-    ///   - identity:          The signing identity the extracted application must match.
-    ///   - format:            The archive's format.
-    ///   - processIdentifier: The running application's process identifier.
-    public init( archive: URL, target: URL, identity: CodeSigningIdentity, format: UpdateArchiveFormat, processIdentifier: Int32 )
+    ///   - archive:              A file URL to the downloaded archive.
+    ///   - target:               A file URL to the application bundle to replace.
+    ///   - identity:             The signing identity the extracted application must match.
+    ///   - format:               The archive's format.
+    ///   - processIdentifier:    The running application's process identifier.
+    ///   - relaunchSentinel:     A file URL to the sentinel the app writes to request
+    ///                           a relaunch.
+    public init( archive: URL, target: URL, identity: CodeSigningIdentity, format: UpdateArchiveFormat, processIdentifier: Int32, relaunchSentinel: URL )
     {
-        self.archivePath       = archive.path
-        self.targetPath        = target.path
-        self.identity          = identity
-        self.format            = format
-        self.processIdentifier = processIdentifier
+        self.archivePath          = archive.path
+        self.targetPath           = target.path
+        self.identity             = identity
+        self.format               = format
+        self.processIdentifier    = processIdentifier
+        self.relaunchSentinelPath = relaunchSentinel.path
     }
 
     /// A file URL to the downloaded archive.
@@ -91,5 +99,11 @@ public struct UpdateInstallRequest: XPCMessage, Equatable
     public var targetURL: URL
     {
         URL( fileURLWithPath: self.targetPath )
+    }
+
+    /// A file URL to the sentinel the app writes to request a relaunch.
+    public var relaunchSentinelURL: URL
+    {
+        URL( fileURLWithPath: self.relaunchSentinelPath )
     }
 }

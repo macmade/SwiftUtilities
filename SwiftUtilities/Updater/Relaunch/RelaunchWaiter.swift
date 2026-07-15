@@ -44,6 +44,9 @@ public struct RelaunchWaiter: Sendable
     /// Launches the application bundle at the given URL.
     private let open: @Sendable ( URL ) throws -> Void
 
+    /// Consumes the relaunch-request sentinel, returning whether it was present.
+    private let consumeSentinel: @Sendable ( URL ) -> Bool
+
     /// How long to wait between liveness checks.
     private let pollInterval: TimeInterval
 
@@ -53,37 +56,46 @@ public struct RelaunchWaiter: Sendable
     /// Creates a waiter.
     ///
     /// - Parameters:
-    ///   - pollInterval: How long to wait between liveness checks. Defaults to
-    ///                   0.2 seconds.
-    ///   - timeout:      The longest to wait for the application to exit. Defaults
-    ///                   to 10 minutes; past it the relaunch is abandoned rather
-    ///                   than reopening while the old copy may still run.
-    ///   - isRunning:    Returns whether a process is still running. Defaults to a
-    ///                   signal-0 probe.
-    ///   - open:         Launches the application bundle. Defaults to
-    ///                   ``RelaunchWaiter/launch(_:)``.
+    ///   - pollInterval:    How long to wait between liveness checks. Defaults to
+    ///                      0.2 seconds.
+    ///   - timeout:         The longest to wait for the application to exit. Defaults
+    ///                      to 10 minutes; past it the relaunch is abandoned rather
+    ///                      than reopening while the old copy may still run.
+    ///   - isRunning:       Returns whether a process is still running. Defaults to a
+    ///                      signal-0 probe.
+    ///   - open:            Launches the application bundle. Defaults to
+    ///                      ``RelaunchWaiter/launch(_:)``.
+    ///   - consumeSentinel: Returns whether the relaunch-request sentinel was present,
+    ///                      removing it. Defaults to ``RelaunchWaiter/consume(_:)``.
     public init(
-        pollInterval: TimeInterval                        = 0.2,
-        timeout:      TimeInterval                        = 600,
-        isRunning:    @escaping @Sendable ( Int32 ) -> Bool       = RelaunchWaiter.isProcessRunning,
-        open:         @escaping @Sendable ( URL ) throws -> Void  = RelaunchWaiter.launch
+        pollInterval:    TimeInterval                        = 0.2,
+        timeout:         TimeInterval                        = 600,
+        isRunning:       @escaping @Sendable ( Int32 ) -> Bool       = RelaunchWaiter.isProcessRunning,
+        open:            @escaping @Sendable ( URL ) throws -> Void  = RelaunchWaiter.launch,
+        consumeSentinel: @escaping @Sendable ( URL ) -> Bool         = RelaunchWaiter.consume
     )
     {
-        self.pollInterval = pollInterval
-        self.timeout      = timeout
-        self.isRunning    = isRunning
-        self.open         = open
+        self.pollInterval    = pollInterval
+        self.timeout         = timeout
+        self.isRunning       = isRunning
+        self.open            = open
+        self.consumeSentinel = consumeSentinel
     }
 
-    /// Waits for the given process to exit, then reopens the application.
+    /// Waits for the given process to exit, then reopens the application if asked.
+    ///
+    /// After the process exits, the application is reopened **only if** the sentinel
+    /// is present — the app writes it when the user asks to relaunch, so a user who
+    /// declines is not force-relaunched. The sentinel is removed either way.
     ///
     /// - Parameters:
     ///   - processIdentifier: The application process to wait for.
     ///   - application:       A file URL to the application bundle to reopen.
+    ///   - sentinel:          A file URL to the relaunch-request sentinel.
     ///
     /// - Throws: ``RelaunchError/timedOutWaitingForExit`` if the process does not
     ///   exit within the timeout, or an error from the launch if reopening fails.
-    public func waitForExitThenOpen( processIdentifier: Int32, application: URL ) throws
+    public func waitForExitThenOpen( processIdentifier: Int32, application: URL, sentinel: URL ) throws
     {
         let deadline = Date().addingTimeInterval( self.timeout )
 
@@ -95,6 +107,12 @@ public struct RelaunchWaiter: Sendable
             }
 
             Thread.sleep( forTimeInterval: self.pollInterval )
+        }
+
+        guard self.consumeSentinel( sentinel )
+        else
+        {
+            return
         }
 
         try self.open( application )
@@ -117,6 +135,24 @@ public struct RelaunchWaiter: Sendable
         }
 
         return errno == EPERM
+    }
+
+    /// Consumes the relaunch-request sentinel: reports whether it existed, removing it.
+    ///
+    /// The app writes this file to request a relaunch and the helper reads it once,
+    /// so it is removed whether or not it was present, leaving no stale request
+    /// behind for a later run.
+    ///
+    /// - Parameter sentinel: A file URL to the sentinel.
+    ///
+    /// - Returns: `true` if the sentinel existed (a relaunch was requested).
+    public static func consume( _ sentinel: URL ) -> Bool
+    {
+        let existed = FileManager.default.fileExists( atPath: sentinel.path )
+
+        try? FileManager.default.removeItem( at: sentinel )
+
+        return existed
     }
 
     /// Launches an application bundle via `/usr/bin/open`.

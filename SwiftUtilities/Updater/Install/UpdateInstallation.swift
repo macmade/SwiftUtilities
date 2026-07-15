@@ -88,6 +88,30 @@ public struct UpdateInstallation: UpdateInstaller
     ///   failure the application on disk is left untouched.
     public func install( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL = FileManager.default.temporaryDirectory, progress: @escaping @Sendable ( InstallProgress ) -> Void = { _ in } ) async throws
     {
+        _ = try await self.installReturningLocation( archive: archive, format: format, replacing: target, into: workingDirectory, progress: progress )
+    }
+
+    /// Installs a downloaded update, returning where the application ended up.
+    ///
+    /// Identical to ``install(archive:format:replacing:into:progress:)`` but surfaces
+    /// the installed application's location. `FileManager`'s safe-replace **may
+    /// relocate** the item, so the returned URL — not `target` — is the authoritative
+    /// place the new application lives, and is what a relaunch must reopen.
+    ///
+    /// - Parameters:
+    ///   - archive:          A file URL to the downloaded archive.
+    ///   - format:           The archive's format.
+    ///   - target:           A file URL to the application bundle to replace.
+    ///   - workingDirectory: A fallback directory the installation may write into.
+    ///   - progress:         Invoked as each ``InstallProgress`` phase begins.
+    ///
+    /// - Returns: The URL of the installed application.
+    ///
+    /// - Throws: An error if any step fails; on a validation or deployment-target
+    ///   failure the application on disk is left untouched.
+    @discardableResult
+    public func installReturningLocation( archive: URL, format: UpdateArchiveFormat, replacing target: URL, into workingDirectory: URL = FileManager.default.temporaryDirectory, progress: @escaping @Sendable ( InstallProgress ) -> Void = { _ in } ) async throws -> URL
+    {
         let work = try self.makeWorkingDirectory( for: target, fallback: workingDirectory )
 
         defer
@@ -107,7 +131,7 @@ public struct UpdateInstallation: UpdateInstaller
 
         progress( .replacing )
 
-        _ = try self.replacer.replaceApplication( at: target, with: candidate )
+        return try self.replacer.replaceApplication( at: target, with: candidate )
     }
 
     /// Creates the directory the update is unpacked into.

@@ -92,17 +92,7 @@
             }
         }
 
-        private final class Flag: @unchecked Sendable
-        {
-            private( set ) var value = false
-
-            func set()
-            {
-                self.value = true
-            }
-        }
-
-        private func makeModel( downloader: StubDownloader, installer: StubInstaller, format: UpdateArchiveFormat = .zip, target: URL = URL( fileURLWithPath: "/Applications/App.app" ), stageRelaunch: @escaping @Sendable () -> Void = {}, scheduleRelaunch: @escaping @Sendable () async throws -> Void = {}, state: InAppUpdateViewModel.State = .idle, terminate: @escaping @MainActor () -> Void ) -> InAppUpdateViewModel
+        private func makeModel( downloader: StubDownloader, installer: StubInstaller, format: UpdateArchiveFormat = .zip, target: URL = URL( fileURLWithPath: "/Applications/App.app" ), scheduleRelaunch: @escaping @Sendable () async throws -> Void = {}, state: InAppUpdateViewModel.State = .idle, terminate: @escaping @MainActor () -> Void ) -> InAppUpdateViewModel
         {
             InAppUpdateViewModel(
                 downloader:       downloader,
@@ -110,7 +100,6 @@
                 downloadURL:      URL( fileURLWithPath: "/tmp/App.zip" ),
                 format:           format,
                 target:           target,
-                stageRelaunch:    stageRelaunch,
                 scheduleRelaunch: scheduleRelaunch,
                 terminate:        terminate,
                 state:            state
@@ -235,18 +224,6 @@
             }
 
             #expect( terminator.count == 0 )
-        }
-
-        @Test
-        func startStagesTheRelaunchHelperBeforeInstalling() async
-        {
-            let staged = Flag()
-            let model  = self.makeModel( downloader: StubDownloader( result: URL( fileURLWithPath: "/tmp/New.app" ) ), installer: StubInstaller(), stageRelaunch: { staged.set() } ) {}
-
-            await model.start()
-
-            #expect( staged.value )
-            #expect( model.state == .installed )
         }
 
         @Test

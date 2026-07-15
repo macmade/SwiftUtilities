@@ -34,10 +34,10 @@ public enum RelaunchError: Error, Equatable, Sendable
     /// The relaunch invocation was missing or malformed.
     case invalidInvocation
 
-    /// No staged relaunch helper was available to spawn.
+    /// No relaunch helper executable was available to spawn.
     ///
-    /// The helper is staged before the update replaces the application; this is
-    /// raised if that staged copy is missing when the relaunch is requested.
+    /// The service re-invokes its own executable in relaunch-wait mode; this is
+    /// raised if that executable cannot be located when the relaunch is requested.
     case relaunchHelperUnavailable
 
     /// The detached relaunch process could not be started.

@@ -122,7 +122,8 @@ struct Test_UpdaterService
             target:            URL( fileURLWithPath: "/Applications/App.app" ),
             identity:          Test_UpdaterService.identity,
             format:            format,
-            processIdentifier: processIdentifier
+            processIdentifier: processIdentifier,
+            relaunchSentinel:  URL( fileURLWithPath: "/tmp/relaunch.sentinel" )
         )
     }
 
@@ -325,5 +326,74 @@ struct Test_UpdaterService
         }
 
         #expect( try UpdateInstallResult.decoded( from: replyData ) == .success )
+    }
+
+    private final class SpawnRecorder: @unchecked Sendable
+    {
+        let error: ( any Error & Sendable )?
+
+        private( set ) var executable: URL?
+        private( set ) var arguments:  [ String ]?
+
+        init( error: ( any Error & Sendable )? = nil )
+        {
+            self.error = error
+        }
+
+        func spawn( _ executable: URL, _ arguments: [ String ] ) throws
+        {
+            self.executable = executable
+            self.arguments  = arguments
+
+            if let error = self.error
+            {
+                throw error
+            }
+        }
+    }
+
+    @Test
+    func runArmsRelaunchWithTheHelperAfterASuccessfulInstall() async throws
+    {
+        let executable = URL( fileURLWithPath: "/Applications/App.app/Contents/XPCServices/Updater.xpc/Contents/MacOS/Updater" )
+        let recorder   = SpawnRecorder()
+
+        let result = await UpdaterService.run(
+            request:            try Test_UpdaterService.request( processIdentifier: 4242 ).encoded(),
+            extractor:          StubExtractor( result: URL( fileURLWithPath: "/tmp/New.app" ) ),
+            inspector:          StubInspector(),
+            // The replacer relocates the app, so the relaunch must reopen the
+            // installed location it reports — not the original target.
+            replacer:           StubReplacer( installed: URL( fileURLWithPath: "/Applications/App (Installed).app" ) ),
+            reportProgress:     { _ in },
+            spawnRelaunch:      { try recorder.spawn( $0, $1 ) },
+            relaunchExecutable: { executable }
+        )
+
+        // A successful install arms the relaunch: the helper is spawned in
+        // relaunch-wait mode with the app to wait on, the *installed* app to reopen,
+        // and the sentinel it must find before reopening.
+        #expect( result == .success )
+        #expect( recorder.executable == executable )
+        #expect( recorder.arguments  == [ ProcessRelauncher.waitArgument, "4242", "/Applications/App (Installed).app", "/tmp/relaunch.sentinel" ] )
+    }
+
+    @Test
+    func runDoesNotArmRelaunchWhenTheInstallFails() async throws
+    {
+        let recorder = SpawnRecorder()
+
+        let result = await UpdaterService.run(
+            request:            try Test_UpdaterService.request().encoded(),
+            extractor:          StubExtractor( result: URL( fileURLWithPath: "/tmp/New.app" ) ),
+            inspector:          StubInspector( verificationFails: true ),
+            replacer:           StubReplacer( installed: URL( fileURLWithPath: "/Applications/App.app" ) ),
+            reportProgress:     { _ in },
+            spawnRelaunch:      { try recorder.spawn( $0, $1 ) },
+            relaunchExecutable: { URL( fileURLWithPath: "/tmp/Updater" ) }
+        )
+
+        #expect( result == .failure( from: StubError() ) )
+        #expect( recorder.executable == nil )
     }
 }

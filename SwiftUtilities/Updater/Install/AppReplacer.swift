@@ -52,7 +52,42 @@ public struct AppReplacer: AppReplacing
     public func replaceApplication( at target: URL, with replacement: URL ) throws -> URL
     {
         let resultingURL = try FileManager.default.replaceItemAt( target, withItemAt: replacement, backupItemName: nil, options: [] )
+        let installed    = resultingURL ?? target
 
-        return resultingURL ?? target
+        AppReplacer.removeQuarantine( from: installed )
+
+        return installed
+    }
+
+    /// Recursively removes the `com.apple.quarantine` attribute from a bundle.
+    ///
+    /// A downloaded archive carries this attribute, and macOS then refuses to
+    /// `posix_spawn` any quarantined executable (with `EPERM`) and prompts Gatekeeper
+    /// when opening the app. The in-place relaunch spawns one of the bundle's own
+    /// executables — the updater service — so a quarantined install cannot relaunch
+    /// at all, and the reopened app would be gated. The updater has already validated
+    /// the download's code signature against the running application's identity (same
+    /// signing identifier and Team ID) before this replacement runs, so clearing the
+    /// attribute on the verified, same-developer update is safe and is what makes the
+    /// installed app immediately runnable. Files without the attribute are left
+    /// untouched.
+    ///
+    /// - Parameter url: The installed bundle to clear.
+    static func removeQuarantine( from url: URL )
+    {
+        let attribute = "com.apple.quarantine"
+
+        removexattr( url.path, attribute, XATTR_NOFOLLOW )
+
+        guard let enumerator = FileManager.default.enumerator( at: url, includingPropertiesForKeys: nil )
+        else
+        {
+            return
+        }
+
+        for case let item as URL in enumerator
+        {
+            removexattr( item.path, attribute, XATTR_NOFOLLOW )
+        }
     }
 }

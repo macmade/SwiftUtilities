@@ -122,10 +122,7 @@
         /// The application bundle to replace (the running application).
         private let target: URL
 
-        /// Stages the relaunch helper before the install replaces the application.
-        private let stageRelaunch: @Sendable () -> Void
-
-        /// Spawns the staged relaunch helper for this application (client-side).
+        /// Asks the bundled service to spawn the relaunch helper, off the sandbox.
         private let scheduleRelaunch: @Sendable () async throws -> Void
 
         /// Terminates the application to trigger the relaunch.
@@ -139,21 +136,18 @@
         ///   - downloadURL:      The asset's download URL.
         ///   - format:           The asset's archive format.
         ///   - target:           The application bundle to replace.
-        ///   - stageRelaunch:    Stages the relaunch helper before the install
-        ///                       replaces the application. Best-effort; defaults to a
-        ///                       no-op.
-        ///   - scheduleRelaunch: Spawns the staged relaunch helper (client-side).
+        ///   - scheduleRelaunch: Asks the bundled service to spawn the relaunch
+        ///                       helper, off the sandbox.
         ///   - terminate:        Terminates the application to trigger the relaunch.
         ///   - state:            The initial state. Defaults to ``State/idle``; other
         ///                       values are only useful for previews.
-        init( downloader: UpdateDownloading, installer: UpdateInstaller, downloadURL: URL, format: UpdateArchiveFormat, target: URL, stageRelaunch: @escaping @Sendable () -> Void = {}, scheduleRelaunch: @escaping @Sendable () async throws -> Void, terminate: @escaping @MainActor () -> Void, state: State = .idle )
+        init( downloader: UpdateDownloading, installer: UpdateInstaller, downloadURL: URL, format: UpdateArchiveFormat, target: URL, scheduleRelaunch: @escaping @Sendable () async throws -> Void, terminate: @escaping @MainActor () -> Void, state: State = .idle )
         {
             self.downloader       = downloader
             self.installer        = installer
             self.downloadURL      = downloadURL
             self.format           = format
             self.target           = target
-            self.stageRelaunch    = stageRelaunch
             self.scheduleRelaunch = scheduleRelaunch
             self.terminate        = terminate
             self.state            = state
@@ -161,19 +155,14 @@
 
         /// Runs the update flow up to the point of relaunch, or to a failure.
         ///
-        /// First stages the relaunch helper — this must happen before the install
-        /// replaces the application, while the helper is still on disk. Then downloads
-        /// the asset and installs it (which, off the sandbox, validates and replaces
-        /// the application on disk). On success the state becomes ``State/installed``
-        /// and the flow **stops there**: the application keeps running until the user
-        /// asks to relaunch via ``relaunch()``. On any error the state becomes
+        /// Downloads the asset and installs it (which, off the sandbox, validates and
+        /// replaces the application on disk). On success the state becomes
+        /// ``State/installed`` and the flow **stops there**: the application keeps
+        /// running until the user asks to relaunch via ``relaunch()``, which asks the
+        /// service to spawn the helper. On any error the state becomes
         /// ``State/failed(message:)`` and the application is left running.
         public func start() async
         {
-            // Stage the relaunch helper before anything replaces the application; the
-            // relaunch is then driven by the app itself, not the service.
-            self.stageRelaunch()
-
             do
             {
                 self.advance( to: .downloading( fraction: nil ) )
@@ -305,12 +294,12 @@
             /// Creates a production view model for an available update.
             ///
             /// Wires the real ``UpdateDownloader`` and the ``XPCUpdateInstaller``
-            /// hand-off to the bundled service for the install. The relaunch is driven
-            /// by the app itself: the service's bundle is staged to a cache before the
-            /// install replaces the application, and the user's relaunch request spawns
-            /// that staged copy directly, then terminates the application. The service
-            /// is not contacted after the install — having replaced its own bundle, it
-            /// cannot safely keep running.
+            /// hand-off to the bundled service for the install. The service arms the
+            /// relaunch off the sandbox as the last step of the install (it spawns a
+            /// detached helper), because once the install has replaced the app bundle
+            /// the app can no longer reach the service. The user's relaunch request is
+            /// then a purely local step: the app writes the sentinel file the helper
+            /// watches, then terminates, and the helper reopens the new version.
             ///
             /// - Parameters:
             ///   - downloadURL: The asset's download URL. The update is only run
@@ -328,27 +317,31 @@
                     return nil
                 }
 
-                let processIdentifier = ProcessInfo.processInfo.processIdentifier
+                let sentinel = InAppUpdateViewModel.relaunchSentinelURL()
 
                 self.init(
                     downloader:       UpdateDownloader(),
-                    installer:        XPCUpdateInstaller(),
+                    installer:        XPCUpdateInstaller( relaunchSentinel: sentinel ),
                     downloadURL:      downloadURL,
                     format:           format,
                     target:           target,
-                    stageRelaunch:
-                    {
-                        guard let service = UpdaterServiceLocator.serviceURL
-                        else
-                        {
-                            return
-                        }
-
-                        _ = try? ProcessRelauncher.stageRelaunchBundle( forApplicationAt: target, from: service )
-                    },
-                    scheduleRelaunch: { try ProcessRelauncher.spawnStagedRelaunch( forApplicationAt: target, waitingFor: processIdentifier ) },
+                    scheduleRelaunch: { try Data().write( to: sentinel ) },
                     terminate:        { NSApplication.shared.terminate( nil ) }
                 )
+            }
+
+            /// A unique sentinel location for one in-app update flow.
+            ///
+            /// Placed in the app's temporary directory — the sandbox container's `tmp`
+            /// for a sandboxed app, which the off-sandbox helper can still read. The
+            /// app writes this file to request a relaunch, and passes its path to the
+            /// service (in the install request) so the armed helper watches the same
+            /// path.
+            ///
+            /// - Returns: A file URL to the sentinel.
+            static func relaunchSentinelURL() -> URL
+            {
+                FileManager.default.temporaryDirectory.appendingPathComponent( "com.xs-labs.SwiftUtilities.relaunch-\( UUID().uuidString ).sentinel" )
             }
         }
 

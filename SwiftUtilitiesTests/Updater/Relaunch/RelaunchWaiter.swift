@@ -60,23 +60,43 @@ struct Test_RelaunchWaiter
     }
 
     @Test
-    func opensTheApplicationAfterItExits() throws
+    func opensTheApplicationAfterItExitsWhenTheSentinelIsPresent() throws
     {
         let liveness = Liveness( runningChecks: 3 )
         let recorder = OpenRecorder()
         let app      = URL( fileURLWithPath: "/Applications/App.app" )
 
         let waiter = RelaunchWaiter(
-            pollInterval: 0.001,
-            timeout:      5,
-            isRunning:    { liveness.isRunning( $0 ) },
-            open:         { try recorder.open( $0 ) }
+            pollInterval:    0.001,
+            timeout:         5,
+            isRunning:       { liveness.isRunning( $0 ) },
+            open:            { try recorder.open( $0 ) },
+            consumeSentinel: { _ in true }
         )
 
-        try waiter.waitForExitThenOpen( processIdentifier: 1234, application: app )
+        try waiter.waitForExitThenOpen( processIdentifier: 1234, application: app, sentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
 
         #expect( recorder.opened == [ app ] )
         #expect( liveness.checks == 4 )
+    }
+
+    @Test
+    func doesNotOpenWhenTheUserDidNotRequestRelaunch() throws
+    {
+        let liveness = Liveness( runningChecks: 2 )
+        let recorder = OpenRecorder()
+
+        let waiter = RelaunchWaiter(
+            pollInterval:    0.001,
+            timeout:         5,
+            isRunning:       { liveness.isRunning( $0 ) },
+            open:            { try recorder.open( $0 ) },
+            consumeSentinel: { _ in false }
+        )
+
+        try waiter.waitForExitThenOpen( processIdentifier: 1234, application: URL( fileURLWithPath: "/Applications/App.app" ), sentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
+
+        #expect( recorder.opened.isEmpty )
     }
 
     @Test
@@ -85,17 +105,37 @@ struct Test_RelaunchWaiter
         let recorder = OpenRecorder()
 
         let waiter = RelaunchWaiter(
-            pollInterval: 0.001,
-            timeout:      0.02,
-            isRunning:    { _ in true },
-            open:         { try recorder.open( $0 ) }
+            pollInterval:    0.001,
+            timeout:         0.02,
+            isRunning:       { _ in true },
+            open:            { try recorder.open( $0 ) },
+            consumeSentinel: { _ in true }
         )
 
         #expect( throws: RelaunchError.timedOutWaitingForExit )
         {
-            try waiter.waitForExitThenOpen( processIdentifier: 1234, application: URL( fileURLWithPath: "/Applications/App.app" ) )
+            try waiter.waitForExitThenOpen( processIdentifier: 1234, application: URL( fileURLWithPath: "/Applications/App.app" ), sentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
         }
 
         #expect( recorder.opened.isEmpty )
+    }
+
+    @Test
+    func consumeReportsAndRemovesThePresentSentinel() throws
+    {
+        let sentinel = FileManager.default.temporaryDirectory.appendingPathComponent( "RelaunchWaiterTests.\( UUID().uuidString ).sentinel" )
+
+        try Data().write( to: sentinel )
+
+        #expect( RelaunchWaiter.consume( sentinel ) )
+        #expect( FileManager.default.fileExists( atPath: sentinel.path ) == false )
+    }
+
+    @Test
+    func consumeReportsAnAbsentSentinel()
+    {
+        let sentinel = FileManager.default.temporaryDirectory.appendingPathComponent( "RelaunchWaiterTests.\( UUID().uuidString ).sentinel" )
+
+        #expect( RelaunchWaiter.consume( sentinel ) == false )
     }
 }

@@ -26,18 +26,14 @@ import Foundation
 
 // The updater service executable runs in one of two modes.
 //
-// When re-invoked in relaunch mode by `ProcessRelauncher` (a detached child spawned
-// after a successful install), it waits for the updated application to quit and then
-// reopens it — this branch never touches XPC. Otherwise it runs as the XPC service,
-// listening for install requests from the host application; `resume()` on a service
-// listener does not return.
+// When re-invoked in relaunch mode (a detached child the service spawns off the
+// sandbox after the user asks to relaunch), it waits for the updated application to
+// quit and then reopens it — this branch never touches XPC. Otherwise it runs as the
+// XPC service, listening for install requests from the host application; `resume()`
+// on a service listener does not return.
 if let invocation = ProcessRelauncher.invocation( from: CommandLine.arguments )
 {
-    try? RelaunchWaiter().waitForExitThenOpen( processIdentifier: invocation.processIdentifier, application: invocation.application )
-
-    // This process runs from the staged copy of the service bundle; remove it now
-    // that the application has been reopened. Unlinking the running binary is safe.
-    ProcessRelauncher.removeStagedRelaunchBundle( forApplicationAt: invocation.application )
+    try? RelaunchWaiter().waitForExitThenOpen( processIdentifier: invocation.processIdentifier, application: invocation.application, sentinel: invocation.sentinel )
 }
 else
 {

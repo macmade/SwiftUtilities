@@ -97,7 +97,7 @@ struct Test_XPCUpdateInstaller
     {
         let connector = StubConnector( resultData: try UpdateInstallResult.success.encoded(), progressPhases: [ .extracting, .validating, .replacing ] )
         let collector = ProgressCollector()
-        let installer = XPCUpdateInstaller( inspector: StubInspector(), connector: connector, processIdentifier: 4242 )
+        let installer = XPCUpdateInstaller( inspector: StubInspector(), connector: connector, processIdentifier: 4242, relaunchSentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
 
         try await installer.install( archive: URL( fileURLWithPath: "/tmp/App.zip" ), format: .zip, replacing: URL( fileURLWithPath: "/Applications/App.app" ), into: FileManager.default.temporaryDirectory ) { collector.record( $0 ) }
 
@@ -115,7 +115,7 @@ struct Test_XPCUpdateInstaller
     func throwsWhenTheServiceReportsFailure() async throws
     {
         let connector = StubConnector( resultData: try UpdateInstallResult.failure( reason: "The update could not be installed." ).encoded() )
-        let installer = XPCUpdateInstaller( inspector: StubInspector(), connector: connector, processIdentifier: 1 )
+        let installer = XPCUpdateInstaller( inspector: StubInspector(), connector: connector, processIdentifier: 1, relaunchSentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
 
         await #expect( throws: UpdateInstallError.installationFailed( reason: "The update could not be installed." ) )
         {
@@ -127,7 +127,7 @@ struct Test_XPCUpdateInstaller
     func propagatesIdentityFailureWithoutConnecting() async
     {
         let connector = StubConnector( resultData: Data() )
-        let installer = XPCUpdateInstaller( inspector: StubInspector( error: StubError() ), connector: connector, processIdentifier: 1 )
+        let installer = XPCUpdateInstaller( inspector: StubInspector( error: StubError() ), connector: connector, processIdentifier: 1, relaunchSentinel: URL( fileURLWithPath: "/tmp/relaunch.sentinel" ) )
 
         await #expect( throws: StubError.self )
         {

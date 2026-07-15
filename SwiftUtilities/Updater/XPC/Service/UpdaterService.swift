@@ -42,10 +42,13 @@ import Foundation
 /// application. The listener supplies the production dependencies (the real archive
 /// extractor, Security-backed inspector, and on-disk replacer).
 ///
-/// The service performs only the install. The relaunch is driven by the app itself
-/// (it stages and spawns the helper): a service that has just replaced its own
-/// containing bundle is killed by the hardened runtime as soon as it runs further
-/// code, so it cannot be relied on afterward.
+/// The relaunch is armed as the **last step of a successful install**, not as a
+/// separate later request: once the install replaces the application bundle — which
+/// contains this service — the running app can no longer reach the service (its XPC
+/// connection dies with "Couldn't communicate with a helper application"). So while
+/// the connection is still healthy, the service spawns the detached relaunch helper
+/// off the sandbox; the helper waits for the app to quit and reopens it only if the
+/// user asked to relaunch (a sentinel file the app writes — see ``RelaunchWaiter``).
 public final class UpdaterService: NSObject, UpdaterServiceProtocol
 {
     /// Unpacks the archive and locates the application.
@@ -60,24 +63,41 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     /// Streams each install phase back to the app.
     private let reportProgress: @Sendable ( InstallProgress ) -> Void
 
+    /// Spawns the detached relaunch helper. Injected so the relaunch scheduling can
+    /// be tested without starting a process.
+    private let spawnRelaunch: @Sendable ( URL, [ String ] ) throws -> Void
+
+    /// Resolves the executable to re-invoke in relaunch-wait mode. Injected so the
+    /// relaunch scheduling can be tested without depending on `Bundle.main`.
+    private let relaunchExecutable: @Sendable () -> URL?
+
     /// Creates the exported object from its injected dependencies.
     ///
     /// - Parameters:
-    ///   - extractor:      Unpacks the archive and locates the application.
-    ///   - inspector:      Performs the real code-signature verification.
-    ///   - replacer:       Replaces the application on disk.
-    ///   - reportProgress: Streams each ``InstallProgress`` phase back to the app.
+    ///   - extractor:          Unpacks the archive and locates the application.
+    ///   - inspector:          Performs the real code-signature verification.
+    ///   - replacer:           Replaces the application on disk.
+    ///   - reportProgress:     Streams each ``InstallProgress`` phase back to the app.
+    ///   - spawnRelaunch:      Spawns the detached relaunch helper. Defaults to
+    ///                         ``ProcessRelauncher/spawnDetached(_:_:)``.
+    ///   - relaunchExecutable: Resolves the executable to re-invoke in relaunch-wait
+    ///                         mode. Defaults to the service's own executable
+    ///                         (`Bundle.main.executableURL`).
     public init(
-        extractor:      ArchiveExtracting,
-        inspector:      CodeSignatureInspecting,
-        replacer:       AppReplacing,
-        reportProgress: @escaping @Sendable ( InstallProgress ) -> Void
+        extractor:          ArchiveExtracting,
+        inspector:          CodeSignatureInspecting,
+        replacer:           AppReplacing,
+        reportProgress:     @escaping @Sendable ( InstallProgress ) -> Void,
+        spawnRelaunch:      @escaping @Sendable ( URL, [ String ] ) throws -> Void = ProcessRelauncher.spawnDetached,
+        relaunchExecutable: @escaping @Sendable () -> URL?                         = { Bundle.main.executableURL }
     )
     {
-        self.extractor      = extractor
-        self.inspector      = inspector
-        self.replacer       = replacer
-        self.reportProgress = reportProgress
+        self.extractor          = extractor
+        self.inspector          = inspector
+        self.replacer           = replacer
+        self.reportProgress     = reportProgress
+        self.spawnRelaunch      = spawnRelaunch
+        self.relaunchExecutable = relaunchExecutable
 
         super.init()
     }
@@ -94,19 +114,23 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     ///   - reply:   Called once with an encoded ``UpdateInstallResult``.
     public func installUpdate( _ request: Data, withReply reply: @escaping @Sendable ( Data ) -> Void )
     {
-        let extractor      = self.extractor
-        let inspector      = self.inspector
-        let replacer       = self.replacer
-        let reportProgress = self.reportProgress
+        let extractor          = self.extractor
+        let inspector          = self.inspector
+        let replacer           = self.replacer
+        let reportProgress     = self.reportProgress
+        let spawnRelaunch      = self.spawnRelaunch
+        let relaunchExecutable = self.relaunchExecutable
 
         Task
         {
             let result = await UpdaterService.run(
-                request:        request,
-                extractor:      extractor,
-                inspector:      inspector,
-                replacer:       replacer,
-                reportProgress: reportProgress
+                request:            request,
+                extractor:          extractor,
+                inspector:          inspector,
+                replacer:           replacer,
+                reportProgress:     reportProgress,
+                spawnRelaunch:      spawnRelaunch,
+                relaunchExecutable: relaunchExecutable
             )
 
             reply( UpdaterService.encode( result ) )
@@ -118,25 +142,36 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
     /// This is the testable core, free of the XPC and task plumbing: it decodes the
     /// request, builds the ``UpdateInstallation`` (validating against the request's
     /// identity and verifying the download's deployment target against the host),
-    /// runs it, and maps success or any thrown error to an
-    /// ``UpdateInstallResult``. It never throws — a failure is reported as
+    /// runs it, and — on success — arms the relaunch by spawning the detached helper
+    /// (see ``armRelaunch(processIdentifier:application:sentinel:executableURL:spawn:)``)
+    /// before returning. It never throws — a failure is reported as
     /// ``UpdateInstallResult/failure(reason:)`` — so the caller always has a result
     /// to reply with.
     ///
+    /// The relaunch helper is spawned **here**, as the last step of a successful
+    /// install, while the service and its XPC connection are still healthy: after the
+    /// install replaces the app bundle, the app can no longer reach the service to
+    /// ask for one.
+    ///
     /// - Parameters:
-    ///   - request:        The encoded ``UpdateInstallRequest``.
-    ///   - extractor:      Unpacks the archive and locates the application.
-    ///   - inspector:      Performs the real code-signature verification.
-    ///   - replacer:       Replaces the application on disk.
-    ///   - reportProgress: Streams each phase back to the app.
+    ///   - request:            The encoded ``UpdateInstallRequest``.
+    ///   - extractor:          Unpacks the archive and locates the application.
+    ///   - inspector:          Performs the real code-signature verification.
+    ///   - replacer:           Replaces the application on disk.
+    ///   - reportProgress:     Streams each phase back to the app.
+    ///   - spawnRelaunch:      Spawns the detached relaunch helper.
+    ///   - relaunchExecutable: Resolves the executable to re-invoke in relaunch-wait
+    ///                         mode.
     ///
     /// - Returns: The terminal ``UpdateInstallResult``.
     static func run(
-        request:        Data,
-        extractor:      ArchiveExtracting,
-        inspector:      CodeSignatureInspecting,
-        replacer:       AppReplacing,
-        reportProgress: @escaping @Sendable ( InstallProgress ) -> Void
+        request:            Data,
+        extractor:          ArchiveExtracting,
+        inspector:          CodeSignatureInspecting,
+        replacer:           AppReplacing,
+        reportProgress:     @escaping @Sendable ( InstallProgress ) -> Void,
+        spawnRelaunch:      @Sendable ( URL, [ String ] ) throws -> Void = { _, _ in },
+        relaunchExecutable: @Sendable () -> URL?                          = { nil }
     ) async -> UpdateInstallResult
     {
         do
@@ -146,7 +181,15 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
             let verifier     = DeploymentTargetVerifier()
             let installation = UpdateInstallation( extractor: extractor, validator: validator, verifier: verifier, replacer: replacer )
 
-            try await installation.install( archive: decoded.archiveURL, format: decoded.format, replacing: decoded.targetURL, progress: reportProgress )
+            let installed = try await installation.installReturningLocation( archive: decoded.archiveURL, format: decoded.format, replacing: decoded.targetURL, progress: reportProgress )
+
+            UpdaterService.armRelaunch(
+                processIdentifier: decoded.processIdentifier,
+                application:       installed,
+                sentinel:          decoded.relaunchSentinelURL,
+                executableURL:     relaunchExecutable(),
+                spawn:             spawnRelaunch
+            )
 
             return .success
         }
@@ -154,6 +197,35 @@ public final class UpdaterService: NSObject, UpdaterServiceProtocol
         {
             return .failure( from: error )
         }
+    }
+
+    /// Arms the relaunch by spawning the detached helper, off the sandbox.
+    ///
+    /// Re-invokes the given executable in relaunch-wait mode, passing the application
+    /// to reopen, the process to wait on, and the sentinel the helper checks before
+    /// reopening. This is **best-effort**: a relaunch that cannot be armed (no
+    /// resolvable executable, or a spawn failure) does not fail the install, which
+    /// has already succeeded — the update simply takes effect on the next manual
+    /// launch instead.
+    ///
+    /// - Parameters:
+    ///   - processIdentifier: The application process the helper waits on.
+    ///   - application:       The application bundle to reopen.
+    ///   - sentinel:          The sentinel file the helper checks before reopening.
+    ///   - executableURL:     The executable to re-invoke in relaunch-wait mode, or
+    ///                        `nil` if it cannot be resolved.
+    ///   - spawn:             Spawns the detached helper.
+    static func armRelaunch( processIdentifier: Int32, application: URL, sentinel: URL, executableURL: URL?, spawn: @Sendable ( URL, [ String ] ) throws -> Void )
+    {
+        guard let executableURL
+        else
+        {
+            return
+        }
+
+        let invocation = ProcessRelauncher.Invocation( processIdentifier: processIdentifier, application: application, sentinel: sentinel )
+
+        try? spawn( executableURL, ProcessRelauncher.arguments( for: invocation ) )
     }
 
     /// Encodes a result for the reply block, never failing.
