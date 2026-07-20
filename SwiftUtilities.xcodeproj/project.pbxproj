@@ -17,21 +17,10 @@
 		05398CC62DEECB38005904EC /* UnsafeMutableSendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */; };
 		05398CC82DEECBF1005904EC /* Benchmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC72DEECBF1005904EC /* Benchmark.swift */; };
 		05398CCA2DEECD15005904EC /* GitHubUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CC92DEECD14005904EC /* GitHubUpdater.swift */; };
-		05F00033000000000000000B /* Credit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00033000000000000000A /* Credit.swift */; };
 		05C5278C2DD8E36300843626 /* SwiftUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C527822DD8E36300843626 /* SwiftUtilities.framework */; };
 		05F00001000000000000000B /* UpdateCheckResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00001000000000000000A /* UpdateCheckResult.swift */; };
 		05F00002000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00002000000000000000A /* GitHubUpdater+AppKit.swift */; };
 		05F00003000000000000000B /* GitHubUpdater+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00003000000000000000A /* GitHubUpdater+AppKit.swift */; };
-		05F0003C000000000000000B /* GitHubUpdater+Behavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */; };
-		05F0003E000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003E000000000000000A /* UpdateArchiveFormat.swift */; };
-		05F00044000000000000000B /* CodeSignatureValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00044000000000000000A /* CodeSignatureValidator.swift */; };
-		05F00045000000000000000B /* CodeSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00045000000000000000A /* CodeSigningIdentity.swift */; };
-		05F00046000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */; };
-		05F0004A000000000000000B /* DownloadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004A000000000000000A /* DownloadProgress.swift */; };
-		05F0004B000000000000000B /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004B000000000000000A /* UpdateDownloader.swift */; };
-		05F00050000000000000000B /* ArchiveExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00050000000000000000A /* ArchiveExtractor.swift */; };
-		05F00058000000000000000B /* UpdateInstallation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00058000000000000000A /* UpdateInstallation.swift */; };
-		05F00059000000000000000B /* AppReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00059000000000000000A /* AppReplacer.swift */; };
 		05F00004000000000000000B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F00004000000000000000A /* Localizable.strings */; };
 		05F00006000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00006000000000000000A /* Localization.swift */; };
 		05F00007000000000000000B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00007000000000000000A /* Localization.swift */; };
@@ -51,56 +40,63 @@
 		05F0001D000000000000000B /* MarkdownThematicBreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001D000000000000000A /* MarkdownThematicBreakView.swift */; };
 		05F0001E000000000000000B /* MarkdownInlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001E000000000000000A /* MarkdownInlineRenderer.swift */; };
 		05F0001F000000000000000B /* UpdateAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0001F000000000000000A /* UpdateAvailableView.swift */; };
+		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		05F00030000000000000000B /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00030000000000000000A /* Pill.swift */; };
+		05F00033000000000000000B /* Credit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00033000000000000000A /* Credit.swift */; };
 		05F00035000000000000000B /* Credit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00035000000000000000A /* Credit.swift */; };
 		05F00037000000000000000B /* CreditDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00037000000000000000A /* CreditDetailView.swift */; };
 		05F00038000000000000000B /* CreditRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00038000000000000000A /* CreditRow.swift */; };
 		05F00039000000000000000B /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00039000000000000000A /* CreditsView.swift */; };
 		05F0003A000000000000000B /* CreditsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003A000000000000000A /* CreditsWindowController.swift */; };
-		05F00020000000000000000B /* UpdateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00020000000000000000A /* UpdateWindowController.swift */; };
 		05F0003B000000000000000B /* UpdateBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003B000000000000000A /* UpdateBehavior.swift */; };
+		05F0003C000000000000000B /* GitHubUpdater+Behavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */; };
 		05F0003D000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003D000000000000000A /* UpdateArchiveFormat.swift */; };
+		05F0003E000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003E000000000000000A /* UpdateArchiveFormat.swift */; };
 		05F0003F000000000000000B /* CodeSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003F000000000000000A /* CodeSigningIdentity.swift */; };
 		05F00040000000000000000B /* CodeSignatureError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00040000000000000000A /* CodeSignatureError.swift */; };
 		05F00041000000000000000B /* CodeSignatureInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00041000000000000000A /* CodeSignatureInspecting.swift */; };
 		05F00042000000000000000B /* CodeSignatureValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00042000000000000000A /* CodeSignatureValidator.swift */; };
 		05F00043000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00043000000000000000A /* SecurityCodeSignatureInspector.swift */; };
+		05F00044000000000000000B /* CodeSignatureValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00044000000000000000A /* CodeSignatureValidator.swift */; };
+		05F00045000000000000000B /* CodeSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00045000000000000000A /* CodeSigningIdentity.swift */; };
+		05F00046000000000000000B /* SecurityCodeSignatureInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00046000000000000000A /* SecurityCodeSignatureInspector.swift */; };
 		05F00047000000000000000B /* DownloadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00047000000000000000A /* DownloadProgress.swift */; };
 		05F00048000000000000000B /* UpdateDownloadError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00048000000000000000A /* UpdateDownloadError.swift */; };
 		05F00049000000000000000B /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00049000000000000000A /* UpdateDownloader.swift */; };
+		05F0004A000000000000000B /* DownloadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004A000000000000000A /* DownloadProgress.swift */; };
+		05F0004B000000000000000B /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004B000000000000000A /* UpdateDownloader.swift */; };
 		05F0004C000000000000000B /* UpdateDownloadStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004C000000000000000A /* UpdateDownloadStreamer.swift */; };
 		05F0004D000000000000000B /* ArchiveExtractionError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004D000000000000000A /* ArchiveExtractionError.swift */; };
 		05F0004E000000000000000B /* ArchiveExtracting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004E000000000000000A /* ArchiveExtracting.swift */; };
 		05F0004F000000000000000B /* ArchiveExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0004F000000000000000A /* ArchiveExtractor.swift */; };
+		05F00050000000000000000B /* ArchiveExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00050000000000000000A /* ArchiveExtractor.swift */; };
 		05F00051000000000000000B /* InstallProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00051000000000000000A /* InstallProgress.swift */; };
 		05F00052000000000000000B /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00052000000000000000A /* UpdateInstaller.swift */; };
 		05F00053000000000000000B /* AppReplacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00053000000000000000A /* AppReplacing.swift */; };
 		05F00054000000000000000B /* AppReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00054000000000000000A /* AppReplacer.swift */; };
 		05F00057000000000000000B /* UpdateInstallation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00057000000000000000A /* UpdateInstallation.swift */; };
+		05F00058000000000000000B /* UpdateInstallation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00058000000000000000A /* UpdateInstallation.swift */; };
+		05F00059000000000000000B /* AppReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00059000000000000000A /* AppReplacer.swift */; };
 		05F0005D000000000000000B /* XPCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005D000000000000000A /* XPCMessage.swift */; };
 		05F0005E000000000000000B /* UpdateInstallRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005E000000000000000A /* UpdateInstallRequest.swift */; };
 		05F0005F000000000000000B /* UpdateInstallResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0005F000000000000000A /* UpdateInstallResult.swift */; };
 		05F00060000000000000000B /* UpdaterServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00060000000000000000A /* UpdaterServiceProtocol.swift */; };
 		05F00061000000000000000B /* UpdaterClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00061000000000000000A /* UpdaterClientProtocol.swift */; };
 		05F00062000000000000000B /* InstallProgress+XPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00062000000000000000A /* InstallProgress+XPC.swift */; };
+		05F00063000000000000000B /* XPCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00063000000000000000A /* XPCMessage.swift */; };
+		05F00064000000000000000B /* UpdateInstallRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00064000000000000000A /* UpdateInstallRequest.swift */; };
+		05F00065000000000000000B /* UpdateInstallResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00065000000000000000A /* UpdateInstallResult.swift */; };
 		05F00068000000000000000B /* ExpectedIdentityInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00068000000000000000A /* ExpectedIdentityInspector.swift */; };
 		05F00069000000000000000B /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00069000000000000000A /* UpdaterService.swift */; };
 		05F0006A000000000000000B /* RelaunchError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006A000000000000000A /* RelaunchError.swift */; };
 		05F0006B000000000000000B /* RelaunchWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006B000000000000000A /* RelaunchWaiter.swift */; };
 		05F0006C000000000000000B /* ProcessRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006C000000000000000A /* ProcessRelauncher.swift */; };
+		05F0006D000000000000000B /* ExpectedIdentityInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006D000000000000000A /* ExpectedIdentityInspector.swift */; };
+		05F0006E000000000000000B /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006E000000000000000A /* UpdaterService.swift */; };
+		05F0006F000000000000000B /* RelaunchWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006F000000000000000A /* RelaunchWaiter.swift */; };
+		05F00070000000000000000B /* ProcessRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00070000000000000000A /* ProcessRelauncher.swift */; };
 		05F00071000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00071000000000000000A /* XPCClientVerifier.swift */; };
-		05F0009E000000000000000B /* UpdateInstallError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009E000000000000000A /* UpdateInstallError.swift */; };
-		05F0009F000000000000000B /* UpdaterServiceConnecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009F000000000000000A /* UpdaterServiceConnecting.swift */; };
-		05F000A0000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A0000000000000000A /* XPCUpdateInstaller.swift */; };
-		05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A1000000000000000A /* UpdaterServiceLocator.swift */; };
-		05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A2000000000000000A /* XPCUpdaterClient.swift */; };
-		05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */; };
-		05F000A6000000000000000B /* UpdateDownloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A6000000000000000A /* UpdateDownloading.swift */; };
-		05F000A7000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A7000000000000000A /* InAppUpdateViewModel.swift */; };
-		05F000AB000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000AB000000000000000A /* InAppUpdateViewModel.swift */; };
 		05F00072000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00072000000000000000A /* XPCClientVerifier.swift */; };
-		05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A4000000000000000A /* XPCUpdateInstaller.swift */; };
-		05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A5000000000000000A /* UpdaterServiceLocator.swift */; };
 		05F00074000000000000000B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00074000000000000000A /* main.swift */; };
 		05F00075000000000000000B /* UpdaterServiceListenerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */; };
 		05F00081000000000000000B /* UpdateArchiveFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0003D000000000000000A /* UpdateArchiveFormat.swift */; };
@@ -130,20 +126,17 @@
 		05F0009A000000000000000B /* ProcessRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006C000000000000000A /* ProcessRelauncher.swift */; };
 		05F0009B000000000000000B /* XPCClientVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00071000000000000000A /* XPCClientVerifier.swift */; };
 		05F0009C000000000000000B /* UnsafeSendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05398CB12DEEC91B005904EC /* UnsafeSendable.swift */; };
-		05F00063000000000000000B /* XPCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00063000000000000000A /* XPCMessage.swift */; };
-		05F00064000000000000000B /* UpdateInstallRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00064000000000000000A /* UpdateInstallRequest.swift */; };
-		05F00065000000000000000B /* UpdateInstallResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00065000000000000000A /* UpdateInstallResult.swift */; };
-		05F0006D000000000000000B /* ExpectedIdentityInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006D000000000000000A /* ExpectedIdentityInspector.swift */; };
-		05F0006E000000000000000B /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006E000000000000000A /* UpdaterService.swift */; };
-		05F0006F000000000000000B /* RelaunchWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0006F000000000000000A /* RelaunchWaiter.swift */; };
-		05F00070000000000000000B /* ProcessRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F00070000000000000000A /* ProcessRelauncher.swift */; };
-		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
-		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
-		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
-		AA01ACC0000000000000A002 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000A001 /* WindowAccessor.swift */; };
-		AA01ACC0000000000000B002 /* WindowResolvingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000B001 /* WindowResolvingView.swift */; };
-		C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */; };
-		FCA5E7B0000000000000E002 /* WindowResizeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */; };
+		05F0009E000000000000000B /* UpdateInstallError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009E000000000000000A /* UpdateInstallError.swift */; };
+		05F0009F000000000000000B /* UpdaterServiceConnecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F0009F000000000000000A /* UpdaterServiceConnecting.swift */; };
+		05F000A0000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A0000000000000000A /* XPCUpdateInstaller.swift */; };
+		05F000A1000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A1000000000000000A /* UpdaterServiceLocator.swift */; };
+		05F000A2000000000000000B /* XPCUpdaterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A2000000000000000A /* XPCUpdaterClient.swift */; };
+		05F000A3000000000000000B /* XPCUpdaterServiceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A3000000000000000A /* XPCUpdaterServiceConnection.swift */; };
+		05F000A4000000000000000B /* XPCUpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A4000000000000000A /* XPCUpdateInstaller.swift */; };
+		05F000A5000000000000000B /* UpdaterServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A5000000000000000A /* UpdaterServiceLocator.swift */; };
+		05F000A6000000000000000B /* UpdateDownloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A6000000000000000A /* UpdateDownloading.swift */; };
+		05F000A7000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000A7000000000000000A /* InAppUpdateViewModel.swift */; };
+		05F000AB000000000000000B /* InAppUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000AB000000000000000A /* InAppUpdateViewModel.swift */; };
 		05F000C4000000000000000B /* SkippedVersionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C4000000000000000A /* SkippedVersionStore.swift */; };
 		05F000C5000000000000000B /* GitHubUpdater+Skip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C5000000000000000A /* GitHubUpdater+Skip.swift */; };
 		05F000C6000000000000000B /* SkippedVersionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C6000000000000000A /* SkippedVersionStore.swift */; };
@@ -155,6 +148,13 @@
 		05F000CC000000000000000B /* DeploymentTargetVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000C9000000000000000A /* DeploymentTargetVerifier.swift */; };
 		05F000CD000000000000000B /* DeploymentTargetError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000CA000000000000000A /* DeploymentTargetError.swift */; };
 		05F000CE000000000000000B /* DeploymentTargetVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F000CE000000000000000A /* DeploymentTargetVerifier.swift */; };
+		1C6C7E89554832DF0DCBB293 /* HostingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */; };
+		474CCA57CECE8F4DD39B378F /* Bundle+About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */; };
+		940CCD7E204C1385DA6AC5F6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF8FAA0661E567D42895EFD /* AboutView.swift */; };
+		AA01ACC0000000000000A002 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000A001 /* WindowAccessor.swift */; };
+		AA01ACC0000000000000B002 /* WindowResolvingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01ACC0000000000000B001 /* WindowResolvingView.swift */; };
+		C0062C62273D9F4130A75972 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BBD177D0DC6A97216E65F2 /* AboutWindowController.swift */; };
+		FCA5E7B0000000000000E002 /* WindowResizeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -186,7 +186,6 @@
 		05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsafeMutableSendable.swift; sourceTree = "<group>"; };
 		05398CC72DEECBF1005904EC /* Benchmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Benchmark.swift; sourceTree = "<group>"; };
 		05398CC92DEECD14005904EC /* GitHubUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdater.swift; sourceTree = "<group>"; };
-		05F00033000000000000000A /* Credit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credit.swift; sourceTree = "<group>"; };
 		05C527822DD8E36300843626 /* SwiftUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftUtilitiesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		05D589112DD8E47A000BA644 /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
@@ -262,13 +261,14 @@
 		05F0001D000000000000000A /* MarkdownThematicBreakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownThematicBreakView.swift; sourceTree = "<group>"; };
 		05F0001E000000000000000A /* MarkdownInlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownInlineRenderer.swift; sourceTree = "<group>"; };
 		05F0001F000000000000000A /* UpdateAvailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableView.swift; sourceTree = "<group>"; };
+		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		05F00030000000000000000A /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
+		05F00033000000000000000A /* Credit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credit.swift; sourceTree = "<group>"; };
 		05F00035000000000000000A /* Credit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credit.swift; sourceTree = "<group>"; };
 		05F00037000000000000000A /* CreditDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditDetailView.swift; sourceTree = "<group>"; };
 		05F00038000000000000000A /* CreditRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditRow.swift; sourceTree = "<group>"; };
 		05F00039000000000000000A /* CreditsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditsView.swift; sourceTree = "<group>"; };
 		05F0003A000000000000000A /* CreditsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditsWindowController.swift; sourceTree = "<group>"; };
-		05F00020000000000000000A /* UpdateWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateWindowController.swift; sourceTree = "<group>"; };
 		05F0003B000000000000000A /* UpdateBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBehavior.swift; sourceTree = "<group>"; };
 		05F0003C000000000000000A /* GitHubUpdater+Behavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Behavior.swift"; sourceTree = "<group>"; };
 		05F0003D000000000000000A /* UpdateArchiveFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateArchiveFormat.swift; sourceTree = "<group>"; };
@@ -284,6 +284,8 @@
 		05F00047000000000000000A /* DownloadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgress.swift; sourceTree = "<group>"; };
 		05F00048000000000000000A /* UpdateDownloadError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloadError.swift; sourceTree = "<group>"; };
 		05F00049000000000000000A /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
+		05F0004A000000000000000A /* DownloadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgress.swift; sourceTree = "<group>"; };
+		05F0004B000000000000000A /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
 		05F0004C000000000000000A /* UpdateDownloadStreamer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloadStreamer.swift; sourceTree = "<group>"; };
 		05F0004D000000000000000A /* ArchiveExtractionError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveExtractionError.swift; sourceTree = "<group>"; };
 		05F0004E000000000000000A /* ArchiveExtracting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveExtracting.swift; sourceTree = "<group>"; };
@@ -294,12 +296,17 @@
 		05F00053000000000000000A /* AppReplacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacing.swift; sourceTree = "<group>"; };
 		05F00054000000000000000A /* AppReplacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacer.swift; sourceTree = "<group>"; };
 		05F00057000000000000000A /* UpdateInstallation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallation.swift; sourceTree = "<group>"; };
+		05F00058000000000000000A /* UpdateInstallation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallation.swift; sourceTree = "<group>"; };
+		05F00059000000000000000A /* AppReplacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacer.swift; sourceTree = "<group>"; };
 		05F0005D000000000000000A /* XPCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCMessage.swift; sourceTree = "<group>"; };
 		05F0005E000000000000000A /* UpdateInstallRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallRequest.swift; sourceTree = "<group>"; };
 		05F0005F000000000000000A /* UpdateInstallResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallResult.swift; sourceTree = "<group>"; };
 		05F00060000000000000000A /* UpdaterServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceProtocol.swift; sourceTree = "<group>"; };
 		05F00061000000000000000A /* UpdaterClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterClientProtocol.swift; sourceTree = "<group>"; };
 		05F00062000000000000000A /* InstallProgress+XPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InstallProgress+XPC.swift"; sourceTree = "<group>"; };
+		05F00063000000000000000A /* XPCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCMessage.swift; sourceTree = "<group>"; };
+		05F00064000000000000000A /* UpdateInstallRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallRequest.swift; sourceTree = "<group>"; };
+		05F00065000000000000000A /* UpdateInstallResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallResult.swift; sourceTree = "<group>"; };
 		05F00068000000000000000A /* ExpectedIdentityInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpectedIdentityInspector.swift; sourceTree = "<group>"; };
 		05F00069000000000000000A /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
 		05F0006A000000000000000A /* RelaunchError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaunchError.swift; sourceTree = "<group>"; };
@@ -311,6 +318,11 @@
 		05F00070000000000000000A /* ProcessRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRelauncher.swift; sourceTree = "<group>"; };
 		05F00071000000000000000A /* XPCClientVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCClientVerifier.swift; sourceTree = "<group>"; };
 		05F00072000000000000000A /* XPCClientVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCClientVerifier.swift; sourceTree = "<group>"; };
+		05F00073000000000000000A /* Updater.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = Updater.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		05F00074000000000000000A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceListenerDelegate.swift; sourceTree = "<group>"; };
+		05F00076000000000000000A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		05F00077000000000000000A /* Updater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Updater.entitlements; sourceTree = "<group>"; };
 		05F0009E000000000000000A /* UpdateInstallError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallError.swift; sourceTree = "<group>"; };
 		05F0009F000000000000000A /* UpdaterServiceConnecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceConnecting.swift; sourceTree = "<group>"; };
 		05F000A0000000000000000A /* XPCUpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCUpdateInstaller.swift; sourceTree = "<group>"; };
@@ -322,24 +334,6 @@
 		05F000A6000000000000000A /* UpdateDownloading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloading.swift; sourceTree = "<group>"; };
 		05F000A7000000000000000A /* InAppUpdateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppUpdateViewModel.swift; sourceTree = "<group>"; };
 		05F000AB000000000000000A /* InAppUpdateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppUpdateViewModel.swift; sourceTree = "<group>"; };
-		05F00073000000000000000A /* Updater.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = Updater.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
-		05F00074000000000000000A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterServiceListenerDelegate.swift; sourceTree = "<group>"; };
-		05F00076000000000000000A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		05F00077000000000000000A /* Updater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Updater.entitlements; sourceTree = "<group>"; };
-		05F00058000000000000000A /* UpdateInstallation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallation.swift; sourceTree = "<group>"; };
-		05F00059000000000000000A /* AppReplacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReplacer.swift; sourceTree = "<group>"; };
-		05F0004A000000000000000A /* DownloadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgress.swift; sourceTree = "<group>"; };
-		05F0004B000000000000000A /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
-		05F00063000000000000000A /* XPCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCMessage.swift; sourceTree = "<group>"; };
-		05F00064000000000000000A /* UpdateInstallRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallRequest.swift; sourceTree = "<group>"; };
-		05F00065000000000000000A /* UpdateInstallResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstallResult.swift; sourceTree = "<group>"; };
-		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
-		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
-		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
-		AA01ACC0000000000000A001 /* WindowAccessor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
-		AA01ACC0000000000000B001 /* WindowResolvingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResolvingView.swift; sourceTree = "<group>"; };
-		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
 		05F000C4000000000000000A /* SkippedVersionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedVersionStore.swift; sourceTree = "<group>"; };
 		05F000C5000000000000000A /* GitHubUpdater+Skip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitHubUpdater+Skip.swift"; sourceTree = "<group>"; };
 		05F000C6000000000000000A /* SkippedVersionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedVersionStore.swift; sourceTree = "<group>"; };
@@ -348,6 +342,12 @@
 		05F000C9000000000000000A /* DeploymentTargetVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetVerifier.swift; sourceTree = "<group>"; };
 		05F000CA000000000000000A /* DeploymentTargetError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetError.swift; sourceTree = "<group>"; };
 		05F000CE000000000000000A /* DeploymentTargetVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeploymentTargetVerifier.swift; sourceTree = "<group>"; };
+		1EF8FAA0661E567D42895EFD /* AboutView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Bundle+About.swift"; sourceTree = "<group>"; };
+		7BC0B6D370A14F1E0EB31840 /* HostingWindowController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostingWindowController.swift; sourceTree = "<group>"; };
+		AA01ACC0000000000000A001 /* WindowAccessor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
+		AA01ACC0000000000000B001 /* WindowResolvingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResolvingView.swift; sourceTree = "<group>"; };
+		FCA5E7B0000000000000E001 /* WindowResizeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WindowResizeObserver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -396,17 +396,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		05F00078000000000000000A /* UpdaterService */ = {
-			isa = PBXGroup;
-			children = (
-				05F00074000000000000000A /* main.swift */,
-				05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */,
-				05F00076000000000000000A /* Info.plist */,
-				05F00077000000000000000A /* Updater.entitlements */,
-			);
-			path = UpdaterService;
-			sourceTree = "<group>";
-		};
 		05D5890C2DD8E46E000BA644 /* SwiftUtilitiesTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -416,14 +405,6 @@
 				05F00016000000000000000A /* Utilities */,
 			);
 			path = SwiftUtilitiesTests;
-			sourceTree = "<group>";
-		};
-		05F00034000000000000000A /* Credits */ = {
-			isa = PBXGroup;
-			children = (
-				05F00033000000000000000A /* Credit.swift */,
-			);
-			path = Credits;
 			sourceTree = "<group>";
 		};
 		05D5890F2DD8E470000BA644 /* SwiftUtilities */ = {
@@ -598,6 +579,133 @@
 			path = Updater;
 			sourceTree = "<group>";
 		};
+		05F00012000000000000000A /* Markdown */ = {
+			isa = PBXGroup;
+			children = (
+				05F00008000000000000000A /* MarkdownBlock.swift */,
+				05F00009000000000000000A /* MarkdownInline.swift */,
+				05F0000A000000000000000A /* MarkdownListItem.swift */,
+				05F0000B000000000000000A /* MarkdownCheckbox.swift */,
+				05F0000C000000000000000A /* MarkdownContent.swift */,
+				05F00017000000000000000A /* MarkdownView.swift */,
+				05F00018000000000000000A /* MarkdownHeadingView.swift */,
+				05F00019000000000000000A /* MarkdownParagraphView.swift */,
+				05F0001A000000000000000A /* MarkdownListView.swift */,
+				05F0001B000000000000000A /* MarkdownBlockQuoteView.swift */,
+				05F0001C000000000000000A /* MarkdownCodeBlockView.swift */,
+				05F0001D000000000000000A /* MarkdownThematicBreakView.swift */,
+				05F0001E000000000000000A /* MarkdownInlineRenderer.swift */,
+			);
+			path = Markdown;
+			sourceTree = "<group>";
+		};
+		05F00013000000000000000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				05398CAD2DEEC91B005904EC /* Benchmark.swift */,
+				05398CAF2DEEC91B005904EC /* RuntimeError.swift */,
+				05398CB02DEEC91B005904EC /* UnsafeMutableSendable.swift */,
+				05398CB12DEEC91B005904EC /* UnsafeSendable.swift */,
+				05F00006000000000000000A /* Localization.swift */,
+				05F00004000000000000000A /* Localizable.strings */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		05F00014000000000000000A /* Updater */ = {
+			isa = PBXGroup;
+			children = (
+				05F000BA000000000000000A /* GitHub */,
+				05F000BB000000000000000A /* Download */,
+				05F000BC000000000000000A /* Archive */,
+				05F000BD000000000000000A /* CodeSigning */,
+				05F000BE000000000000000A /* Install */,
+				05F000BF000000000000000A /* Relaunch */,
+				05F00067000000000000000A /* XPC */,
+				05F000C3000000000000000A /* UI */,
+			);
+			path = Updater;
+			sourceTree = "<group>";
+		};
+		05F00015000000000000000A /* Markdown */ = {
+			isa = PBXGroup;
+			children = (
+				05F0000E000000000000000A /* MarkdownContent.swift */,
+			);
+			path = Markdown;
+			sourceTree = "<group>";
+		};
+		05F00016000000000000000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				05398CC72DEECBF1005904EC /* Benchmark.swift */,
+				05398CB72DEEC939005904EC /* RuntimeError.swift */,
+				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
+				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
+				05F00007000000000000000A /* Localization.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		05F00032000000000000000A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				05F00030000000000000000A /* Pill.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		05F00034000000000000000A /* Credits */ = {
+			isa = PBXGroup;
+			children = (
+				05F00033000000000000000A /* Credit.swift */,
+			);
+			path = Credits;
+			sourceTree = "<group>";
+		};
+		05F00036000000000000000A /* Credits */ = {
+			isa = PBXGroup;
+			children = (
+				05F00035000000000000000A /* Credit.swift */,
+				05F00037000000000000000A /* CreditDetailView.swift */,
+				05F00038000000000000000A /* CreditRow.swift */,
+				05F00039000000000000000A /* CreditsView.swift */,
+				05F0003A000000000000000A /* CreditsWindowController.swift */,
+			);
+			path = Credits;
+			sourceTree = "<group>";
+		};
+		05F00066000000000000000A /* XPC */ = {
+			isa = PBXGroup;
+			children = (
+				05F000B6000000000000000A /* Contract */,
+				05F000B7000000000000000A /* Service */,
+				05F000B8000000000000000A /* Client */,
+			);
+			path = XPC;
+			sourceTree = "<group>";
+		};
+		05F00067000000000000000A /* XPC */ = {
+			isa = PBXGroup;
+			children = (
+				05F000C0000000000000000A /* Contract */,
+				05F000C1000000000000000A /* Service */,
+				05F000C2000000000000000A /* Client */,
+			);
+			path = XPC;
+			sourceTree = "<group>";
+		};
+		05F00078000000000000000A /* UpdaterService */ = {
+			isa = PBXGroup;
+			children = (
+				05F00074000000000000000A /* main.swift */,
+				05F00075000000000000000A /* UpdaterServiceListenerDelegate.swift */,
+				05F00076000000000000000A /* Info.plist */,
+				05F00077000000000000000A /* Updater.entitlements */,
+			);
+			path = UpdaterService;
+			sourceTree = "<group>";
+		};
 		05F000B0000000000000000A /* GitHub */ = {
 			isa = PBXGroup;
 			children = (
@@ -673,26 +781,6 @@
 			path = Relaunch;
 			sourceTree = "<group>";
 		};
-		05F000B9000000000000000A /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				05F000A7000000000000000A /* InAppUpdateViewModel.swift */,
-				05F0001F000000000000000A /* UpdateAvailableView.swift */,
-				05F00020000000000000000A /* UpdateWindowController.swift */,
-			);
-			path = UI;
-			sourceTree = "<group>";
-		};
-		05F00066000000000000000A /* XPC */ = {
-			isa = PBXGroup;
-			children = (
-				05F000B6000000000000000A /* Contract */,
-				05F000B7000000000000000A /* Service */,
-				05F000B8000000000000000A /* Client */,
-			);
-			path = XPC;
-			sourceTree = "<group>";
-		};
 		05F000B6000000000000000A /* Contract */ = {
 			isa = PBXGroup;
 			children = (
@@ -727,52 +815,14 @@
 			path = Client;
 			sourceTree = "<group>";
 		};
-		05F00012000000000000000A /* Markdown */ = {
+		05F000B9000000000000000A /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				05F00008000000000000000A /* MarkdownBlock.swift */,
-				05F00009000000000000000A /* MarkdownInline.swift */,
-				05F0000A000000000000000A /* MarkdownListItem.swift */,
-				05F0000B000000000000000A /* MarkdownCheckbox.swift */,
-				05F0000C000000000000000A /* MarkdownContent.swift */,
-				05F00017000000000000000A /* MarkdownView.swift */,
-				05F00018000000000000000A /* MarkdownHeadingView.swift */,
-				05F00019000000000000000A /* MarkdownParagraphView.swift */,
-				05F0001A000000000000000A /* MarkdownListView.swift */,
-				05F0001B000000000000000A /* MarkdownBlockQuoteView.swift */,
-				05F0001C000000000000000A /* MarkdownCodeBlockView.swift */,
-				05F0001D000000000000000A /* MarkdownThematicBreakView.swift */,
-				05F0001E000000000000000A /* MarkdownInlineRenderer.swift */,
+				05F000A7000000000000000A /* InAppUpdateViewModel.swift */,
+				05F0001F000000000000000A /* UpdateAvailableView.swift */,
+				05F00020000000000000000A /* UpdateWindowController.swift */,
 			);
-			path = Markdown;
-			sourceTree = "<group>";
-		};
-		05F00013000000000000000A /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-				05398CAD2DEEC91B005904EC /* Benchmark.swift */,
-				05398CAF2DEEC91B005904EC /* RuntimeError.swift */,
-				05398CB02DEEC91B005904EC /* UnsafeMutableSendable.swift */,
-				05398CB12DEEC91B005904EC /* UnsafeSendable.swift */,
-				05F00006000000000000000A /* Localization.swift */,
-				05F00004000000000000000A /* Localizable.strings */,
-			);
-			path = Utilities;
-			sourceTree = "<group>";
-		};
-		05F00014000000000000000A /* Updater */ = {
-			isa = PBXGroup;
-			children = (
-				05F000BA000000000000000A /* GitHub */,
-				05F000BB000000000000000A /* Download */,
-				05F000BC000000000000000A /* Archive */,
-				05F000BD000000000000000A /* CodeSigning */,
-				05F000BE000000000000000A /* Install */,
-				05F000BF000000000000000A /* Relaunch */,
-				05F00067000000000000000A /* XPC */,
-				05F000C3000000000000000A /* UI */,
-			);
-			path = Updater;
+			path = UI;
 			sourceTree = "<group>";
 		};
 		05F000BA000000000000000A /* GitHub */ = {
@@ -835,24 +885,6 @@
 			path = Relaunch;
 			sourceTree = "<group>";
 		};
-		05F000C3000000000000000A /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				05F000AB000000000000000A /* InAppUpdateViewModel.swift */,
-			);
-			path = UI;
-			sourceTree = "<group>";
-		};
-		05F00067000000000000000A /* XPC */ = {
-			isa = PBXGroup;
-			children = (
-				05F000C0000000000000000A /* Contract */,
-				05F000C1000000000000000A /* Service */,
-				05F000C2000000000000000A /* Client */,
-			);
-			path = XPC;
-			sourceTree = "<group>";
-		};
 		05F000C0000000000000000A /* Contract */ = {
 			isa = PBXGroup;
 			children = (
@@ -881,24 +913,12 @@
 			path = Client;
 			sourceTree = "<group>";
 		};
-		05F00015000000000000000A /* Markdown */ = {
+		05F000C3000000000000000A /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				05F0000E000000000000000A /* MarkdownContent.swift */,
+				05F000AB000000000000000A /* InAppUpdateViewModel.swift */,
 			);
-			path = Markdown;
-			sourceTree = "<group>";
-		};
-		05F00016000000000000000A /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-				05398CC72DEECBF1005904EC /* Benchmark.swift */,
-				05398CB72DEEC939005904EC /* RuntimeError.swift */,
-				05398CC52DEECB37005904EC /* UnsafeMutableSendable.swift */,
-				05398CC32DEECA56005904EC /* UnsafeSendable.swift */,
-				05F00007000000000000000A /* Localization.swift */,
-			);
-			path = Utilities;
+			path = UI;
 			sourceTree = "<group>";
 		};
 		B30B0C7655D31455310CA29C /* About */ = {
@@ -909,26 +929,6 @@
 				30BE1D00E9AC8E1B92BF71CE /* Bundle+About.swift */,
 			);
 			path = About;
-			sourceTree = "<group>";
-		};
-		05F00032000000000000000A /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				05F00030000000000000000A /* Pill.swift */,
-			);
-			path = Components;
-			sourceTree = "<group>";
-		};
-		05F00036000000000000000A /* Credits */ = {
-			isa = PBXGroup;
-			children = (
-				05F00035000000000000000A /* Credit.swift */,
-				05F00037000000000000000A /* CreditDetailView.swift */,
-				05F00038000000000000000A /* CreditRow.swift */,
-				05F00039000000000000000A /* CreditsView.swift */,
-				05F0003A000000000000000A /* CreditsWindowController.swift */,
-			);
-			path = Credits;
 			sourceTree = "<group>";
 		};
 		F76ED22C2C0BE7CFED28589D /* Windows */ = {
@@ -944,22 +944,11 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		05C5277D2DD8E36300843626 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
 		05C527812DD8E36300843626 /* SwiftUtilities */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 05C527942DD8E36300843626 /* Build configuration list for PBXNativeTarget "SwiftUtilities" */;
 			buildPhases = (
-				05C5277D2DD8E36300843626 /* Headers */,
 				05C5277E2DD8E36300843626 /* Sources */,
 				05C5277F2DD8E36300843626 /* Frameworks */,
 				05C527802DD8E36300843626 /* Resources */,
@@ -976,6 +965,21 @@
 			productName = SwiftFITS;
 			productReference = 05C527822DD8E36300843626 /* SwiftUtilities.framework */;
 			productType = "com.apple.product-type.framework";
+		};
+		05F00079000000000000000A /* Updater */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05F0007B000000000000000A /* Build configuration list for PBXNativeTarget "Updater" */;
+			buildPhases = (
+				05F0007A000000000000000A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Updater;
+			productName = Updater;
+			productReference = 05F00073000000000000000A /* Updater.xpc */;
+			productType = "com.apple.product-type.xpc-service";
 		};
 		05F175C32DD8E36300843626 /* SwiftUtilitiesTests */ = {
 			isa = PBXNativeTarget;
@@ -995,21 +999,6 @@
 			productReference = 05C5278B2DD8E36300843626 /* SwiftUtilitiesTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		05F00079000000000000000A /* Updater */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 05F0007B000000000000000A /* Build configuration list for PBXNativeTarget "Updater" */;
-			buildPhases = (
-				05F0007A000000000000000A /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Updater;
-			productName = Updater;
-			productReference = 05F00073000000000000000A /* Updater.xpc */;
-			productType = "com.apple.product-type.xpc-service";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1024,10 +1013,10 @@
 						CreatedOnToolsVersion = 16.3;
 						LastSwiftMigration = 1630;
 					};
-					05F175C32DD8E36300843626 = {
+					05F00079000000000000000A = {
 						CreatedOnToolsVersion = 16.3;
 					};
-					05F00079000000000000000A = {
+					05F175C32DD8E36300843626 = {
 						CreatedOnToolsVersion = 16.3;
 					};
 				};
