@@ -86,19 +86,13 @@
         #endif
 
         @Test
-        func behaviorDefaultsToLinkAtConstruction() async throws
-        {
-            let updater = try #require( GitHubUpdater( owner: "apple", repository: "swift" ) )
-
-            #expect( updater.behavior == .link )
-        }
-
-        @Test
         func behaviorReflectsConstructionValue() async throws
         {
-            let updater = try #require( GitHubUpdater( owner: "apple", repository: "swift", behavior: .inApp ) )
+            let updater1 = try #require( GitHubUpdater( owner: "apple", repository: "swift", behavior: .link ) )
+            let updater2 = try #require( GitHubUpdater( owner: "apple", repository: "swift", behavior: .inApp ) )
 
-            #expect( updater.behavior == .inApp )
+            #expect( updater1.behavior == .link )
+            #expect( updater2.behavior == .inApp )
         }
     }
 

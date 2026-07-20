@@ -36,7 +36,7 @@ struct Test_GitHubUpdater
     @Test
     func initialize() async throws
     {
-        let updater = GitHubUpdater( owner: "apple", repository: "swift" )
+        let updater = GitHubUpdater( owner: "apple", repository: "swift", behavior: .link )
 
         #expect( updater                     != nil )
         #expect( updater?.owner              == "apple" )

@@ -82,11 +82,10 @@ public final class GitHubUpdater: Sendable
     /// - Parameters:
     ///   - owner:      The owner (user or organization) of the repository.
     ///   - repository: The name of the repository.
-    ///   - behavior:   How an available update is delivered to the user. Defaults
-    ///                 to ``UpdateBehavior/link``.
+    ///   - behavior:   How an available update is delivered to the user.
     ///
     /// - Returns: `nil` if a valid releases URL cannot be built from the supplied values.
-    public convenience init?( owner: String, repository: String, behavior: UpdateBehavior = .link )
+    public convenience init?( owner: String, repository: String, behavior: UpdateBehavior )
     {
         self.init(
             owner:          owner,
