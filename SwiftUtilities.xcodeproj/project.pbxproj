@@ -951,6 +951,7 @@
 			buildConfigurationList = 05F0007B000000000000000A /* Build configuration list for PBXNativeTarget "Updater" */;
 			buildPhases = (
 				05F0007A000000000000000A /* Sources */,
+				05F0007E000000000000000A /* Set Bundle Version */,
 			);
 			buildRules = (
 			);
@@ -1042,6 +1043,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		05F0007E000000000000000A /* Set Bundle Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Set Bundle Version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Set the bundle version (CFBundleVersion) to the number of commits in the repository.\n\nif ! command -v git >/dev/null 2>&1 ; then\n    echo \"error: git not found\"\n    exit 1\nfi\n\ncount=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null)\n\nif [ -z \"$count\" ] ; then\n    echo \"error: not a git repository\"\n    exit 1\nfi\n\nplist=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n\nif [ ! -f \"$plist\" ] ; then\n    echo \"error: $plist not found\"\n    exit 1\nfi\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $count\" \"$plist\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string $count\" \"$plist\"\n\necho \"Set CFBundleVersion to $count\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		05C5277E2DD8E36300843626 /* Sources */ = {
