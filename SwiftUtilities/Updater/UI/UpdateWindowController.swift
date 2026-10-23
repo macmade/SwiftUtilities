@@ -237,9 +237,9 @@
             }
             onChange:
             {
-                Task
+                [ weak self ] in Task
                 {
-                    [ weak self ] in await self?.updateCloseControl()
+                    await self?.updateCloseControl()
                 }
             }
         }
